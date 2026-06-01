@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Horlogerie">
+<meta name="description" content="Gestión de colección de relojes">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<title>Horlogerie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- INTRO SPLASH -->
+  <div class="intro" id="intro">
+    <div class="intro-logo">Horlogerie</div>
+    <div class="intro-line"></div>
+    <div class="intro-sub">Colección Personal</div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="showView('home')" id="nav-home">
+      <i class="ti ti-layout-grid" aria-hidden="true"></i>
+      <span class="nav-label">Colección</span>
+    </div>
+    <div class="nav-item" onclick="showView('history')" id="nav-history">
+      <i class="ti ti-calendar-stats" aria-hidden="true"></i>
+      <span class="nav-label">Historial</span>
+    </div>
+    <div class="nav-item" onclick="showView('settings')" id="nav-settings">
+      <i class="ti ti-settings" aria-hidden="true"></i>
+      <span class="nav-label">Ajustes</span>
+    </div>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openAddModal()" aria-label="Añadir reloj">
+    <i class="ti ti-plus" aria-hidden="true"></i>
+  </button>
+
+  <!-- ========== HOME VIEW ========== -->
+  <div class="view active" id="view-home">
+    <div class="app-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
+        <div style="width:28px;"></div>
+        <div>
+          <div class="app-title">Horlogerie</div>
+          <div class="app-subtitle">Colección Personal</div>
+        </div>
+        <div id="sync-status-indicator" onclick="syncManual()" style="cursor:pointer;width:28px;display:flex;align-items:center;justify-content:center;" title="Sincronizar">
+          <i class="ti ti-cloud" style="color:var(--mid);font-size:18px;"></i>
+        </div>
+      </div>
+    </div>
+    <div class="status-bar" id="status-bar">
+      <div class="status-item">
+        <div class="status-dot dot-none" id="status-dot"></div>
+        <span id="status-text">Ningún reloj activo</span>
+      </div>
+      <div class="active-watch-name" id="status-watch-name"></div>
+    </div>
+    <div class="watches-grid" id="watches-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <div class="empty-icon">⌚</div>
+      <div class="empty-title">Tu colección está vacía</div>
+      <div class="empty-text">Pulsa el botón <strong>+</strong> para añadir tu primer reloj</div>
+    </div>
+  </div>
+
+  <!-- ========== DETAIL VIEW ========== -->
+  <div class="view" id="view-detail">
+    <div class="detail-header">
+      <button class="back-btn" onclick="showView('home')" aria-label="Volver">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      </button>
+      <div class="detail-title-wrap">
+        <div class="detail-brand" id="d-brand"></div>
+        <div class="detail-name" id="d-name"></div>
+      </div>
+      <button class="back-btn" onclick="openEditModal(currentWatchId)" aria-label="Editar">
+        <i class="ti ti-edit" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="detail-img-wrap">
+      <div class="detail-img-placeholder" id="d-img-placeholder"></div>
+      <img id="d-img" style="display:none" alt="Foto del reloj">
+    </div>
+    <div class="detail-body">
+      <div id="d-wear-info" style="display:none;" class="wear-info-box">
+        <div class="wear-info-label">Puesto actualmente</div>
+        <div class="wear-info-days" id="d-days">0</div>
+        <div class="wear-info-since" id="d-since"></div>
+      </div>
+      <div id="d-actions"></div>
+
+      <div class="section-title">Especificaciones</div>
+      <div class="specs-grid" id="d-specs"></div>
+
+      <div id="d-price-box" style="display:none;" class="price-box">
+        <div class="price-label">Precio de mercado estimado</div>
+        <div class="price-value" id="d-price"></div>
+        <div class="price-note" id="d-price-note"></div>
+      </div>
+
+      <button class="action-btn btn-search" onclick="fetchWatchDetails(currentWatchId)" id="d-fetch-btn">
+        <i class="ti ti-wand" aria-hidden="true"></i> Buscar información completa
+      </button>
+      <div id="d-fetch-status"></div>
+
+      <div id="d-notes-section" style="margin-top:6px;margin-bottom:10px;">
+        <div class="section-title" style="margin-bottom:6px;">Notas</div>
+        <div id="d-notes-val" style="font-size:13px;color:var(--mid);line-height:1.6;background:var(--dark2);border:0.5px solid var(--glass-border);border-radius:10px;padding:10px 12px;min-height:38px;"></div>
+      </div>
+
+      <div style="height:6px;"></div>
+      <button class="action-btn btn-delete" onclick="deleteWatch(currentWatchId)">
+        <i class="ti ti-trash" aria-hidden="true"></i> Eliminar reloj
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== HISTORY VIEW ========== -->
+  <div class="view" id="view-history">
+    <div class="app-header">
+      <div class="app-title" style="font-size:20px;">Historial</div>
+      <div class="app-subtitle">Registro de uso</div>
+    </div>
+    <div class="history-watch-selector" id="history-selector"></div>
+    <div class="history-body" id="history-body"></div>
+  </div>
+
+  <!-- ========== ADD/EDIT MODAL ========== -->
+  <div class="modal-overlay" id="add-modal" style="display:none;" onclick="closeModalIfOutside(event)">
+    <div class="modal-sheet" id="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-title-text">Añadir Reloj</div>
+
+      <div class="form-field">
+        <label class="form-label">Foto del reloj</label>
+        <div class="photo-upload-area" id="photo-area" onclick="openPhotoSheet()">
+          <i class="ti ti-camera" style="font-size:32px;color:var(--mid);" aria-hidden="true"></i>
+          <div class="photo-upload-label">Toca para añadir foto</div>
+          <img id="photo-preview" style="display:none;" alt="Vista previa">
+        </div>
+        <!-- Two separate inputs: one for camera, one for library -->
+        <input type="file" id="photo-input-camera"  accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoUpload(event)">
+        <input type="file" id="photo-input-library" accept="image/*"                       style="display:none;" onchange="handlePhotoUpload(event)">
+      </div>
+
+      <button class="identify-btn" id="identify-btn" onclick="identifyWatch()" style="display:none;">
+        <i class="ti ti-sparkles" aria-hidden="true"></i> Identificar reloj con IA
+      </button>
+      <div id="identify-status"></div>
+
+      <!-- Editable result fields shown after AI identification -->
+      <div id="identify-result-fields" style="display:none;">
+        <div class="identify-result-box">
+          <div class="identify-result-title">Resultado IA — edita si es necesario</div>
+          <div class="form-field" style="margin-bottom:10px;">
+            <label class="form-label">Marca identificada</label>
+            <input class="form-input" id="ir-brand" placeholder="Marca...">
+          </div>
+          <div class="form-field" style="margin-bottom:10px;">
+            <label class="form-label">Modelo identificado</label>
+            <input class="form-input" id="ir-model" placeholder="Modelo...">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div class="form-field" style="margin-bottom:0;">
+              <label class="form-label">Referencia</label>
+              <input class="form-input" id="ir-ref" placeholder="Ref...">
+            </div>
+            <div class="form-field" style="margin-bottom:0;">
+              <label class="form-label">Tipo</label>
+              <select class="form-input form-select" id="ir-type">
+                <option value="automatic">Automático</option>
+                <option value="quartz">Cuarzo</option>
+                <option value="manual">Manual</option>
+              </select>
+            </div>
+          </div>
+          <button class="modal-btn modal-btn-save" style="width:100%;padding:12px;" onclick="applyIdentifyResult()">
+            <i class="ti ti-check"></i> Usar estos datos
+          </button>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Marca</label>
+        <input class="form-input" id="f-brand" placeholder="Rolex, Omega, Seiko...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Modelo</label>
+        <input class="form-input" id="f-model" placeholder="Submariner, Speedmaster...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Referencia (opcional)</label>
+        <input class="form-input" id="f-ref" placeholder="116610LN, 311.30.42.30.01.005...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Tipo de movimiento</label>
+        <select class="form-input form-select" id="f-type">
+          <option value="automatic">Automático</option>
+          <option value="quartz">Cuarzo</option>
+          <option value="manual">Cuerda manual</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Notas personales (opcional)</label>
+        <textarea class="form-input" id="f-notes" rows="2" placeholder="Número de serie, fecha de compra..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeAddModal()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" id="modal-save-btn" onclick="saveWatch()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SETTINGS VIEW ========== -->
+  <div class="view" id="view-settings">
+    <div class="app-header">
+      <div class="app-title" style="font-size:20px;">Ajustes</div>
+      <div class="app-subtitle">Exportar y gestionar</div>
+    </div>
+
+    <div class="settings-body">
+
+      <!-- SYNC SECTION -->
+      <div class="settings-section-title">Sincronización en la nube</div>
+
+      <div class="settings-card" id="sync-card" onclick="syncManual()" style="border-color:rgba(76,175,80,0.3);">
+        <div class="settings-card-icon" style="background:rgba(76,175,80,0.1);border-color:rgba(76,175,80,0.25);">
+          <i class="ti ti-cloud-upload" style="color:#4CAF50;font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Sincronizar ahora</div>
+          <div class="settings-card-sub" id="sync-last-time">Sube y descarga tu colección de Cloudflare KV</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <div class="settings-info-box">
+        <i class="ti ti-info-circle" style="color:var(--gold);font-size:14px;flex-shrink:0;margin-top:1px;"></i>
+        <div>Los datos se guardan en <strong>Cloudflare KV</strong> y están disponibles en cualquier dispositivo o navegador. La sincronización es automática al añadir o modificar relojes.</div>
+      </div>
+
+      <!-- EXPORT SECTION -->
+      <div class="settings-section-title">Exportar colección</div>
+
+      <div class="settings-card export-card" onclick="handleExportPDF()">
+        <div class="settings-card-icon" style="background:rgba(184,150,62,0.12);border-color:rgba(184,150,62,0.3);">
+          <i class="ti ti-file-type-pdf" style="color:var(--gold-light);font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Exportar PDF</div>
+          <div class="settings-card-sub">Fichas de cada reloj con fotos, specs, historial y precio</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <!-- COLLECTION STATS -->
+      <div class="settings-section-title" style="margin-top:20px;">Colección</div>
+      <div class="settings-stats-grid" id="settings-stats"></div>
+
+      <!-- Advanced stats -->
+      <div class="settings-section-title" style="margin-top:14px;">Análisis de uso</div>
+      <div id="settings-advanced-stats"></div>
+
+      <!-- DATA SECTION -->
+      <div class="settings-section-title" style="margin-top:20px;">Datos</div>
+
+      <div class="settings-card" onclick="handleExportJSON()">
+        <div class="settings-card-icon" style="background:rgba(100,150,220,0.1);border-color:rgba(100,150,220,0.25);">
+          <i class="ti ti-database-export" style="color:#8aabdc;font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Copia de seguridad (JSON)</div>
+          <div class="settings-card-sub">Exporta todos los datos para restaurar más tarde</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <div class="settings-card" onclick="handleImportJSON()">
+        <div class="settings-card-icon" style="background:rgba(100,150,220,0.1);border-color:rgba(100,150,220,0.25);">
+          <i class="ti ti-database-import" style="color:#8aabdc;font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Restaurar copia de seguridad</div>
+          <div class="settings-card-sub">Importa un JSON previamente exportado</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+      <input type="file" id="import-json-input" accept=".json" style="display:none;" onchange="processImportJSON(event)">
+
+      <!-- ABOUT -->
+      <div class="settings-section-title" style="margin-top:20px;">Acerca de</div>
+      <div class="settings-about">
+        <div style="font-family:var(--font-display);font-size:20px;color:var(--gold-light);letter-spacing:2px;">Horlogerie</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:4px;">Colección Personal de Relojes · v1.0</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:2px;">Datos guardados localmente en este dispositivo</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========== PHOTO SOURCE SHEET ========== -->
+  <div class="modal-overlay" id="photo-sheet" style="display:none;" onclick="closePhotoSheetIfOutside(event)">
+    <div class="modal-sheet" style="padding-bottom:max(24px,env(safe-area-inset-bottom));">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="font-size:17px;margin-bottom:18px;">Añadir foto</div>
+      <button class="photo-source-btn" onclick="choosePhotoSource('camera')">
+        <i class="ti ti-camera" style="font-size:22px;color:var(--gold-light);"></i>
+        <div>
+          <div class="photo-source-title">Hacer una foto</div>
+          <div class="photo-source-sub">Abre la cámara del dispositivo</div>
+        </div>
+      </button>
+      <button class="photo-source-btn" onclick="choosePhotoSource('library')">
+        <i class="ti ti-photo" style="font-size:22px;color:var(--gold-light);"></i>
+        <div>
+          <div class="photo-source-title">Elegir de la librería</div>
+          <div class="photo-source-sub">Selecciona una foto existente</div>
+        </div>
+      </button>
+      <button class="modal-btn modal-btn-cancel" style="width:100%;margin-top:8px;" onclick="closePhotoSheet()">Cancelar</button>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<script src="./js/storage.js"></script>
+<script src="./js/api.js"></script>
+<script src="./js/sync.js"></script>
+<script src="./js/export.js"></script>
+<script src="./js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/horlogerie/sw.js', { scope: '/horlogerie/' }).catch(() => {});
+    });
+  }
+  // Start cloud sync after a short delay (let app render first)
+  window.addEventListener('load', () => setTimeout(syncAuto, 1200));
+</script>
+</body>
+</html>
