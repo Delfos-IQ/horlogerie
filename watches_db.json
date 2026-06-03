@@ -1,0 +1,902 @@
+[
+  {
+    "id": 1,
+    "brand": "Berny",
+    "model": "Open Heart Automatic",
+    "ref": "AM5813L",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Seagull ST6800S",
+      "movimiento": "Automático, 21600 bph, 17 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Azul marino Sunburst",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~79 USD · 72 EUR",
+      "note": "AliExpress oficial / Amazon"
+    },
+    "_source": "local_db",
+    "notas": "Corazón abierto a las 12h"
+  },
+  {
+    "id": 2,
+    "brand": "Berny",
+    "model": "Submariner Homage",
+    "ref": "AM5009L",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "42h",
+      "diametro": "42mm",
+      "grosor": "13mm"
+    },
+    "price": {
+      "value": "~65 USD · 59 EUR",
+      "note": "AliExpress oficial"
+    },
+    "_source": "local_db",
+    "notas": "Bisel unidireccional cerámica"
+  },
+  {
+    "id": 3,
+    "brand": "Berny",
+    "model": "Dress Classic",
+    "ref": "AM5106",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Seagull ST1702",
+      "movimiento": "Automático, 21600 bph, 17 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Piel Cuero marrón",
+      "esfera": "Blanco Sunray",
+      "caja": "Acero 316L",
+      "resistencia": "30m / 3 ATM",
+      "reserva": "38h",
+      "diametro": "38mm",
+      "grosor": "9mm"
+    },
+    "price": {
+      "value": "~55 USD · 50 EUR",
+      "note": "AliExpress oficial"
+    },
+    "_source": "local_db",
+    "notas": "Reloj vestir clásico"
+  },
+  {
+    "id": 4,
+    "brand": "Berny",
+    "model": "Field Watch",
+    "ref": "AM6009M",
+    "type": "quartz",
+    "specs": {
+      "calibre": "Miyota 2315",
+      "movimiento": "Cuarzo, 5 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Nylon NATO verde",
+      "esfera": "Verde oliva Mate",
+      "caja": "Acero 316L",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "",
+      "diametro": "40mm",
+      "grosor": "10mm"
+    },
+    "price": {
+      "value": "~38 USD · 34 EUR",
+      "note": "Amazon"
+    },
+    "_source": "local_db",
+    "notas": "Estilo militar"
+  },
+  {
+    "id": 5,
+    "brand": "Pagani Design",
+    "model": "Sub Homage",
+    "ref": "PD-1651",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Acero oyster",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~65 USD · 59 EUR",
+      "note": "AliExpress oficial"
+    },
+    "_source": "local_db",
+    "notas": "Hommage Submariner"
+  },
+  {
+    "id": 6,
+    "brand": "Pagani Design",
+    "model": "Royal Oak Homage",
+    "ref": "PD-1706",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Integrado Acero",
+      "esfera": "Azul Tapicería",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "10mm"
+    },
+    "price": {
+      "value": "~85 USD · 77 EUR",
+      "note": "AliExpress oficial"
+    },
+    "_source": "local_db",
+    "notas": "Hommage Royal Oak"
+  },
+  {
+    "id": 7,
+    "brand": "Pagani Design",
+    "model": "GMT",
+    "ref": "PD-1662",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Seagull ST2130",
+      "movimiento": "Automático, 28800 bph, 21 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Negro/Rojo Mate",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "38h",
+      "diametro": "40mm",
+      "grosor": "13mm"
+    },
+    "price": {
+      "value": "~89 USD · 81 EUR",
+      "note": "AliExpress oficial"
+    },
+    "_source": "local_db",
+    "notas": "Bisel GMT cerámica bicolor"
+  },
+  {
+    "id": 8,
+    "brand": "Pagani Design",
+    "model": "Chrono",
+    "ref": "PD-1751",
+    "type": "quartz",
+    "specs": {
+      "calibre": "VK63",
+      "movimiento": "Cuarzo",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Azul Sunburst",
+      "caja": "Acero 316L",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "",
+      "diametro": "43mm",
+      "grosor": "13mm"
+    },
+    "price": {
+      "value": "~75 USD · 68 EUR",
+      "note": "AliExpress oficial"
+    },
+    "_source": "local_db",
+    "notas": "Cronógrafo meca-quartz VK63"
+  },
+  {
+    "id": 9,
+    "brand": "Pagani Design",
+    "model": "Pilot",
+    "ref": "PD-1649",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Cuero Cuero negro",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "42h",
+      "diametro": "42mm",
+      "grosor": "14mm"
+    },
+    "price": {
+      "value": "~55 USD · 50 EUR",
+      "note": "AliExpress oficial"
+    },
+    "_source": "local_db",
+    "notas": "Estilo aviador"
+  },
+  {
+    "id": 10,
+    "brand": "San Martin",
+    "model": "Diver SN0121",
+    "ref": "SN0121-G",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Doble domo",
+      "brazalete": "Acero Jubilee",
+      "esfera": "Verde Sunburst",
+      "caja": "Acero 316L",
+      "resistencia": "300m / 30 ATM",
+      "reserva": "41h",
+      "diametro": "38mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~220 USD · 200 EUR",
+      "note": "San Martin oficial"
+    },
+    "_source": "local_db",
+    "notas": "Diver calidad superior"
+  },
+  {
+    "id": 11,
+    "brand": "San Martin",
+    "model": "Field Watch",
+    "ref": "SN031",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Nylon NATO",
+      "esfera": "Verde oliva Mate",
+      "caja": "Titanio",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "41h",
+      "diametro": "39mm",
+      "grosor": "11mm"
+    },
+    "price": {
+      "value": "~195 USD · 178 EUR",
+      "note": "San Martin oficial"
+    },
+    "_source": "local_db",
+    "notas": "Titanio ligero"
+  },
+  {
+    "id": 12,
+    "brand": "San Martin",
+    "model": "Dress",
+    "ref": "SN015",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Piel Cuero marrón clairo",
+      "esfera": "Blanco crema Satinado",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "41h",
+      "diametro": "38mm",
+      "grosor": "9mm"
+    },
+    "price": {
+      "value": "~185 USD · 168 EUR",
+      "note": "San Martin oficial"
+    },
+    "_source": "local_db",
+    "notas": "Acabado muy cuidado"
+  },
+  {
+    "id": 13,
+    "brand": "San Martin",
+    "model": "Tuna",
+    "ref": "SN009",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Caucho Caucho negro",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L + Funda cerámica",
+      "resistencia": "300m / 30 ATM",
+      "reserva": "41h",
+      "diametro": "48mm",
+      "grosor": "15mm"
+    },
+    "price": {
+      "value": "~210 USD · 191 EUR",
+      "note": "San Martin oficial"
+    },
+    "_source": "local_db",
+    "notas": "Caja shroud estilo Tuna"
+  },
+  {
+    "id": 14,
+    "brand": "Cadisen",
+    "model": "Skeleton",
+    "ref": "C8202",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 82S7",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Piel Cuero marrón",
+      "esfera": "Esqueleto",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~55 USD · 50 EUR",
+      "note": "Amazon / AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Movimiento visible"
+  },
+  {
+    "id": 15,
+    "brand": "Cadisen",
+    "model": "Classic",
+    "ref": "C8206",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Azul Sunburst",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~49 USD · 44 EUR",
+      "note": "Amazon"
+    },
+    "_source": "local_db",
+    "notas": "Relación calidad-precio"
+  },
+  {
+    "id": 16,
+    "brand": "Cadisen",
+    "model": "Chrono VK63",
+    "ref": "C9174",
+    "type": "quartz",
+    "specs": {
+      "calibre": "VK63",
+      "movimiento": "Cuarzo",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "",
+      "diametro": "42mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~65 USD · 59 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Meca-quartz"
+  },
+  {
+    "id": 17,
+    "brand": "OBLVLO",
+    "model": "Fly-Wheel Tourbillon",
+    "ref": "VM-GB",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Manual – ST8000",
+      "movimiento": "Automático, 21600 bph, 19 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Cuero Cuero azul",
+      "esfera": "Esqueleto azul",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "50h",
+      "diametro": "42mm",
+      "grosor": "14mm"
+    },
+    "price": {
+      "value": "~350 USD · 318 EUR",
+      "note": "OBLVLO oficial"
+    },
+    "_source": "local_db",
+    "notas": "Tourbillon visible manual wind"
+  },
+  {
+    "id": 18,
+    "brand": "OBLVLO",
+    "model": "GMT Diver",
+    "ref": "GLT-BGB",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 9015",
+      "movimiento": "Automático, 28800 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Azul/Verde Sunburst",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "42h",
+      "diametro": "43mm",
+      "grosor": "13mm"
+    },
+    "price": {
+      "value": "~299 USD · 272 EUR",
+      "note": "OBLVLO oficial"
+    },
+    "_source": "local_db",
+    "notas": "GMT bicolor cerámica"
+  },
+  {
+    "id": 19,
+    "brand": "OBLVLO",
+    "model": "Pilot",
+    "ref": "VM-PPB",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Cuero Cuero marrón",
+      "esfera": "Azul Sunburst",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "41h",
+      "diametro": "44mm",
+      "grosor": "14mm"
+    },
+    "price": {
+      "value": "~189 USD · 172 EUR",
+      "note": "OBLVLO oficial"
+    },
+    "_source": "local_db",
+    "notas": "Gran fecha"
+  },
+  {
+    "id": 20,
+    "brand": "Seagull",
+    "model": "1963 Chronograph",
+    "ref": "M199S",
+    "type": "manual",
+    "specs": {
+      "calibre": "Seagull ST19",
+      "movimiento": "Manual, 18000 bph, 17 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Piel Cuero marrón",
+      "esfera": "Blanco Satinado",
+      "caja": "Acero 316L",
+      "resistencia": "30m / 3 ATM",
+      "reserva": "44h",
+      "diametro": "38mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~188 USD · 171 EUR",
+      "note": "Seagull oficial"
+    },
+    "_source": "local_db",
+    "notas": "Cronógrafo chino icónico reissue"
+  },
+  {
+    "id": 21,
+    "brand": "Seagull",
+    "model": "Classic Dress",
+    "ref": "819.12",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Seagull 2801-1",
+      "movimiento": "Automático, 21600 bph, 23 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Piel Cuero negro",
+      "esfera": "Blanco Satinado",
+      "caja": "Acero 316L",
+      "resistencia": "30m / 3 ATM",
+      "reserva": "38h",
+      "diametro": "40mm",
+      "grosor": "9mm"
+    },
+    "price": {
+      "value": "~175 USD · 159 EUR",
+      "note": "Seagull oficial"
+    },
+    "_source": "local_db",
+    "notas": "Movimiento in-house"
+  },
+  {
+    "id": 22,
+    "brand": "Seagull",
+    "model": "Skeleton",
+    "ref": "M182S",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Seagull ST2130",
+      "movimiento": "Automático, 28800 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Cuero Cuero marrón",
+      "esfera": "Esqueleto",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "38h",
+      "diametro": "40mm",
+      "grosor": "11mm"
+    },
+    "price": {
+      "value": "~155 USD · 141 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Esfera decorada"
+  },
+  {
+    "id": 23,
+    "brand": "Seagull",
+    "model": "Tourbillon",
+    "ref": "T021",
+    "type": "manual",
+    "specs": {
+      "calibre": "Seagull ST8000",
+      "movimiento": "Manual, 21600 bph, 19 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Piel Cuero negro",
+      "esfera": "Esqueleto",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "",
+      "diametro": "40mm",
+      "grosor": "11mm"
+    },
+    "price": {
+      "value": "~650 USD · 592 EUR",
+      "note": "Seagull oficial"
+    },
+    "_source": "local_db",
+    "notas": "Tourbillon manual in-house"
+  },
+  {
+    "id": 24,
+    "brand": "CIGA Design",
+    "model": "Blue Planet",
+    "ref": "M031",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 9015",
+      "movimiento": "Automático, 28800 bph, 24 rubíes",
+      "cristal": "Zafiro · Domo",
+      "brazalete": "Silicona Caucho azul",
+      "esfera": "Azul Gradiente",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "42h",
+      "diametro": "42mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~199 USD · 181 EUR",
+      "note": "CIGA oficial"
+    },
+    "_source": "local_db",
+    "notas": "Red Dot Award winner"
+  },
+  {
+    "id": 25,
+    "brand": "CIGA Design",
+    "model": "X Series Titanium",
+    "ref": "X031",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 9015",
+      "movimiento": "Automático, 28800 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Titanio Integrado",
+      "esfera": "Esqueleto",
+      "caja": "Titanio",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "10mm"
+    },
+    "price": {
+      "value": "~245 USD · 223 EUR",
+      "note": "CIGA oficial"
+    },
+    "_source": "local_db",
+    "notas": "Diseño esqueleto avant-garde"
+  },
+  {
+    "id": 26,
+    "brand": "CIGA Design",
+    "model": "U Series",
+    "ref": "U031",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 9015",
+      "movimiento": "Automático, 28800 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "42h",
+      "diametro": "42mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~189 USD · 172 EUR",
+      "note": "CIGA oficial"
+    },
+    "_source": "local_db",
+    "notas": "Premio diseño internacional"
+  },
+  {
+    "id": 27,
+    "brand": "Carnival",
+    "model": "Diver",
+    "ref": "CA8816",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~65 USD · 59 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Super luminoso"
+  },
+  {
+    "id": 28,
+    "brand": "Carnival",
+    "model": "Skeleton",
+    "ref": "CA8813",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Seagull ST2130",
+      "movimiento": "Automático, 28800 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Cuero Cuero marrón",
+      "esfera": "Esqueleto",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "38h",
+      "diametro": "40mm",
+      "grosor": "11mm"
+    },
+    "price": {
+      "value": "~75 USD · 68 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Bisel facetado"
+  },
+  {
+    "id": 29,
+    "brand": "Carnival",
+    "model": "GMT",
+    "ref": "CA8808",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Mineral · Plano",
+      "brazalete": "Acero Acero",
+      "esfera": "Azul/Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "42h",
+      "diametro": "42mm",
+      "grosor": "13mm"
+    },
+    "price": {
+      "value": "~79 USD · 72 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "GMT bicolor"
+  },
+  {
+    "id": 30,
+    "brand": "Reef Tiger",
+    "model": "Diver Sport Auto",
+    "ref": "RGA3035",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 9015",
+      "movimiento": "Automático, 28800 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Caucho Caucho",
+      "esfera": "Azul Mate",
+      "caja": "Acero 316L",
+      "resistencia": "300m / 30 ATM",
+      "reserva": "42h",
+      "diametro": "45mm",
+      "grosor": "14mm"
+    },
+    "price": {
+      "value": "~185 USD · 168 EUR",
+      "note": "Amazon / RT oficial"
+    },
+    "_source": "local_db",
+    "notas": "200m ISO diver"
+  },
+  {
+    "id": 31,
+    "brand": "Reef Tiger",
+    "model": "Explorer",
+    "ref": "RGA830A",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Nylon NATO",
+      "esfera": "Verde Mate",
+      "caja": "Acero 316L",
+      "resistencia": "100m / 10 ATM",
+      "reserva": "42h",
+      "diametro": "42mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~125 USD · 114 EUR",
+      "note": "Amazon"
+    },
+    "_source": "local_db",
+    "notas": "Campo militar"
+  },
+  {
+    "id": 32,
+    "brand": "Reef Tiger",
+    "model": "Dress Classic",
+    "ref": "RGA821",
+    "type": "automatic",
+    "specs": {
+      "calibre": "Miyota 8215",
+      "movimiento": "Automático, 21600 bph, 21 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Piel Cuero negro",
+      "esfera": "Blanco Satinado",
+      "caja": "Acero 316L",
+      "resistencia": "50m / 5 ATM",
+      "reserva": "42h",
+      "diametro": "40mm",
+      "grosor": "9mm"
+    },
+    "price": {
+      "value": "~115 USD · 105 EUR",
+      "note": "Amazon"
+    },
+    "_source": "local_db",
+    "notas": "Reloj vestir"
+  },
+  {
+    "id": 33,
+    "brand": "Steeldive",
+    "model": "SD1975S Tuna",
+    "ref": "SD1975S",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Caucho Caucho negro",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L + Funda",
+      "resistencia": "300m / 30 ATM",
+      "reserva": "41h",
+      "diametro": "48mm",
+      "grosor": "15mm"
+    },
+    "price": {
+      "value": "~88 USD · 80 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Funda cerámica intercambiable"
+  },
+  {
+    "id": 34,
+    "brand": "Steeldive",
+    "model": "SD1964S Sub",
+    "ref": "SD1964S",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Oyster",
+      "esfera": "Azul Mate",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "41h",
+      "diametro": "40mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~78 USD · 71 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Bisel cerámica"
+  },
+  {
+    "id": 35,
+    "brand": "Steeldive",
+    "model": "SD1973 Bronze",
+    "ref": "SD1973",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Domo",
+      "brazalete": "Cuero Cuero marrón",
+      "esfera": "Verde Sunburst",
+      "caja": "Bronce",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "41h",
+      "diametro": "42mm",
+      "grosor": "14mm"
+    },
+    "price": {
+      "value": "~95 USD · 86 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Caja bronce patina"
+  },
+  {
+    "id": 36,
+    "brand": "Steeldive",
+    "model": "SD1952 Batiscafo",
+    "ref": "SD1952",
+    "type": "automatic",
+    "specs": {
+      "calibre": "NH35A",
+      "movimiento": "Automático, 21600 bph, 24 rubíes",
+      "cristal": "Zafiro · Plano",
+      "brazalete": "Acero Bracelet",
+      "esfera": "Negro Mate",
+      "caja": "Acero 316L",
+      "resistencia": "200m / 20 ATM",
+      "reserva": "41h",
+      "diametro": "42mm",
+      "grosor": "12mm"
+    },
+    "price": {
+      "value": "~72 USD · 65 EUR",
+      "note": "AliExpress"
+    },
+    "_source": "local_db",
+    "notas": "Hommage Blancpain Fifty Fathoms"
+  }
+]
