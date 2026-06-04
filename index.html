@@ -42,6 +42,10 @@
       <i class="ti ti-calendar-stats" aria-hidden="true"></i>
       <span class="nav-label">Historial</span>
     </div>
+    <div class="nav-item" onclick="showView('wishlist')" id="nav-wishlist">
+      <i class="ti ti-heart" aria-hidden="true"></i>
+      <span class="nav-label">Deseos</span>
+    </div>
     <div class="nav-item" onclick="showView('settings')" id="nav-settings">
       <i class="ti ti-settings" aria-hidden="true"></i>
       <span class="nav-label">Ajustes</span>
@@ -140,6 +144,138 @@
     </div>
     <div class="history-watch-selector" id="history-selector"></div>
     <div class="history-body" id="history-body"></div>
+  </div>
+
+  <!-- ========== WISHLIST VIEW ========== -->
+  <div class="view" id="view-wishlist">
+    <div class="app-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
+        <div style="width:28px;"></div>
+        <div>
+          <div class="app-title" style="font-size:20px;">Lista de Deseos</div>
+          <div class="app-subtitle">Modelos que quieres tener</div>
+        </div>
+        <button onclick="openWishlistAdd()" style="background:none;border:none;color:var(--gold-light);font-size:22px;cursor:pointer;width:28px;">
+          <i class="ti ti-plus"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Export banner -->
+    <div class="wishlist-export-banner" id="wishlist-export-banner" style="display:none;">
+      <div>
+        <div style="font-size:13px;color:var(--light);font-weight:500;">Exportar a base de datos</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:2px;">
+          Los relojes con specs completas se añaden a <code>watches_db.json</code>
+        </div>
+      </div>
+      <button class="wishlist-export-btn" onclick="exportWishlistToDb()">
+        <i class="ti ti-database-export"></i> Exportar
+      </button>
+    </div>
+
+    <div id="wishlist-list" style="padding:16px;"></div>
+
+    <div class="empty-state" id="wishlist-empty" style="display:none;">
+      <div class="empty-icon">🤩</div>
+      <div class="empty-title">Sin deseos todavía</div>
+      <div class="empty-text">Pulsa <strong>+</strong> para añadir relojes que quieres tener.<br>Rellena las specs y expórtalas a la base de datos.</div>
+    </div>
+  </div>
+
+  <!-- ========== WISHLIST ITEM MODAL ========== -->
+  <div class="modal-overlay" id="wishlist-modal" style="display:none;" onclick="closeWishlistModalIfOutside(event)">
+    <div class="modal-sheet" style="max-height:92dvh;">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="wl-modal-title">Añadir a lista de deseos</div>
+
+      <div class="form-field">
+        <label class="form-label">Marca *</label>
+        <input class="form-input" id="wl-brand" placeholder="Berny, Pagani Design, San Martin...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Modelo *</label>
+        <input class="form-input" id="wl-model" placeholder="Open Heart, PD-1651...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Referencia</label>
+        <input class="form-input" id="wl-ref" placeholder="AM5813L...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Tipo de movimiento</label>
+        <select class="form-input form-select" id="wl-type">
+          <option value="automatic">Automático</option>
+          <option value="quartz">Cuarzo</option>
+          <option value="manual">Cuerda manual</option>
+        </select>
+      </div>
+
+      <div class="wl-specs-header">
+        <span>Especificaciones técnicas</span>
+        <span style="font-size:10px;color:var(--mid);">Completa las que conozcas</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Calibre</label>
+          <input class="form-input" id="wl-calibre" placeholder="NH35A, Miyota 8215...">
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Cristal</label>
+          <input class="form-input" id="wl-cristal" placeholder="Zafiro plano...">
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Diámetro</label>
+          <input class="form-input" id="wl-diametro" placeholder="40mm">
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Grosor</label>
+          <input class="form-input" id="wl-grosor" placeholder="12mm">
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Agua</label>
+          <input class="form-input" id="wl-resistencia" placeholder="200m / 20 ATM">
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Reserva marcha</label>
+          <input class="form-input" id="wl-reserva" placeholder="42h">
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Caja material</label>
+        <input class="form-input" id="wl-caja" placeholder="Acero 316L, Titanio...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Brazalete</label>
+        <input class="form-input" id="wl-brazalete" placeholder="Acero oyster, NATO...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Esfera</label>
+        <input class="form-input" id="wl-esfera" placeholder="Azul sunburst, índices...">
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Precio estimado (€)</label>
+        <input class="form-input" id="wl-precio" placeholder="~85 EUR">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Dónde comprarlo / Notas</label>
+        <textarea class="form-input" id="wl-notas" rows="2" placeholder="AliExpress tienda oficial, Amazon..."></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Prioridad</label>
+        <select class="form-input form-select" id="wl-priority">
+          <option value="high">🔥 Alta — lo quiero pronto</option>
+          <option value="medium" selected>⭐ Media — en algún momento</option>
+          <option value="low">💭 Baja — algún día</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeWishlistModal()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" id="wl-save-btn" onclick="saveWishlistItem()">Guardar</button>
+      </div>
+    </div>
   </div>
 
   <!-- ========== ADD/EDIT MODAL ========== -->
@@ -241,6 +377,7 @@
 <script src="./js/storage.js"></script>
 <script src="./js/api.js"></script>
 <script src="./js/sync.js"></script>
+<script src="./js/wishlist.js"></script>
 <script src="./js/export.js"></script>
 <script src="./js/app.js"></script>
 <script>

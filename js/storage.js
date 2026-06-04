@@ -247,3 +247,85 @@ window.restoreFromCloud = restoreFromCloud;
 
 // Init
 loadData();
+
+/* ═══════════════════════════════════════
+   WISHLIST — stored in localStorage
+   Separate from watches collection.
+═══════════════════════════════════════ */
+const WL_KEY = 'horlogerie_wishlist_v1';
+
+function getWishlist() {
+  try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]'); } catch { return []; }
+}
+
+function saveWishlist(items) {
+  try { localStorage.setItem(WL_KEY, JSON.stringify(items)); } catch {}
+}
+
+function addWishlistItem(data) {
+  const items = getWishlist();
+  const item = {
+    id:       'wl_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    brand:    data.brand    || '',
+    model:    data.model    || '',
+    ref:      data.ref      || '',
+    type:     data.type     || 'automatic',
+    priority: data.priority || 'medium',
+    precio:   data.precio   || '',
+    notas:    data.notas    || '',
+    specs: {
+      calibre:    data.calibre    || '',
+      cristal:    data.cristal    || '',
+      diametro:   data.diametro   || '',
+      grosor:     data.grosor     || '',
+      resistencia:data.resistencia|| '',
+      reserva:    data.reserva    || '',
+      caja:       data.caja       || '',
+      brazalete:  data.brazalete  || '',
+      esfera:     data.esfera     || '',
+    },
+    created: Date.now(),
+  };
+  items.push(item);
+  saveWishlist(items);
+  return item;
+}
+
+function updateWishlistItem(id, changes) {
+  const items = getWishlist();
+  const idx = items.findIndex(i => i.id === id);
+  if (idx === -1) return null;
+  Object.assign(items[idx], changes);
+  if (changes.calibre !== undefined || changes.cristal !== undefined) {
+    items[idx].specs = { ...items[idx].specs, ...changes };
+  }
+  saveWishlist(items);
+  return items[idx];
+}
+
+function deleteWishlistItem(id) {
+  saveWishlist(getWishlist().filter(i => i.id !== id));
+}
+
+function promoteWishlistToCollection(id) {
+  const item = getWishlist().find(i => i.id === id);
+  if (!item) return null;
+  // Map wishlist item to watch format
+  return {
+    brand: item.brand,
+    model: item.model,
+    ref:   item.ref,
+    type:  item.type,
+    notes: item.notas,
+    photo: null,
+    specs: item.specs,
+    price: item.precio ? { value: item.precio, note: 'Precio objetivo' } : null,
+  };
+}
+
+window.getWishlist          = getWishlist;
+window.saveWishlist         = saveWishlist;
+window.addWishlistItem      = addWishlistItem;
+window.updateWishlistItem   = updateWishlistItem;
+window.deleteWishlistItem   = deleteWishlistItem;
+window.promoteWishlistToCollection = promoteWishlistToCollection;

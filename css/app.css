@@ -906,3 +906,302 @@ textarea.form-input { resize: none; line-height: 1.5; }
   height: 0.5px;
   background: var(--glass-border);
 }
+
+/* ===== WISHLIST ===== */
+.wishlist-export-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 16px 0;
+  background: var(--dark2);
+  border: 0.5px solid rgba(184,150,62,0.4);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.wishlist-export-btn {
+  background: var(--gold);
+  color: var(--dark);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.wishlist-export-btn:active { opacity: 0.7; }
+
+.wl-card {
+  background: var(--dark2);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+.wl-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+.wl-priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.wl-card-titles { flex: 1; min-width: 0; }
+.wl-card-brand {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.wl-card-model {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wl-card-ref {
+  font-size: 11px;
+  color: var(--mid);
+  margin-top: 1px;
+}
+.wl-card-actions {
+  display: flex;
+  gap: 8px;
+}
+.wl-action-btn {
+  background: none;
+  border: 0.5px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--mid);
+  cursor: pointer;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.wl-action-btn:active { opacity: 0.7; }
+.wl-action-buy { border-color: rgba(76,175,80,0.4); color: #4CAF50; }
+.wl-action-delete { border-color: rgba(220,80,80,0.3); color: rgba(220,80,80,0.8); }
+
+.wl-specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0 14px 14px;
+  border-top: 0.5px solid var(--glass-border);
+  padding-top: 10px;
+}
+.wl-spec {
+  background: var(--dark3);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.wl-spec-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--mid); }
+.wl-spec-value { font-size: 12px; color: var(--light); margin-top: 2px; font-weight: 500; }
+.wl-notes {
+  font-size: 12px;
+  color: var(--mid);
+  padding: 0 14px 12px;
+  line-height: 1.5;
+}
+.wl-completeness {
+  padding: 6px 14px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wl-progress-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--dark3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.wl-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--gold);
+  transition: width 0.3s;
+}
+.wl-progress-label { font-size: 10px; color: var(--mid); white-space: nowrap; }
+
+.wl-specs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+  padding-top: 4px;
+  border-top: 0.5px solid var(--glass-border);
+}
+
+/* ═══════════════════════════════════════
+   WISHLIST
+═══════════════════════════════════════ */
+
+/* Export banner */
+.wishlist-export-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 16px 0;
+  background: rgba(184,150,62,0.08);
+  border: 0.5px solid rgba(184,150,62,0.35);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.wishlist-export-btn {
+  background: var(--gold);
+  color: var(--dark);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.wishlist-export-btn:active { opacity: 0.75; }
+
+/* Wishlist card */
+.wl-card {
+  background: var(--dark2);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.wl-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 8px;
+}
+.wl-priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.wl-card-title { flex: 1; min-width: 0; }
+.wl-brand {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.wl-model {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wl-ref { font-size: 12px; color: var(--mid); font-weight: 400; }
+
+.wl-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.wl-btn-icon {
+  background: none;
+  border: 0.5px solid var(--glass-border);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mid);
+  cursor: pointer;
+  font-size: 15px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.wl-btn-icon:active { color: var(--light); border-color: var(--gold); }
+.wl-btn-danger:active { color: rgba(220,80,80,0.8); border-color: rgba(220,80,80,0.4); }
+
+.wl-card-body {
+  padding: 0 14px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.wl-precio {
+  font-size: 13px;
+  color: var(--gold-light);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.wl-spec-count {
+  font-size: 11px;
+  color: var(--mid);
+}
+.wl-notas {
+  width: 100%;
+  font-size: 11px;
+  color: var(--mid);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Specs preview chips */
+.wl-specs-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 14px 12px;
+  border-top: 0.5px solid var(--glass-border);
+}
+.wl-spec-chip {
+  background: var(--dark3);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--light);
+}
+
+/* Specs section header in modal */
+.wl-specs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 16px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 0.5px solid var(--glass-border);
+}
