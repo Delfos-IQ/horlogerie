@@ -34,6 +34,44 @@ function durationDays(startTs, endTs) {
 function daysSince(ts) {
   return Math.floor((Date.now() - ts) / 86400000);
 }
+
+/**
+ * Format elapsed time since a timestamp with smart granularity:
+ *   < 1h   → "23 min"
+ *   < 24h  → "5h 12min"
+ *   < 48h  → "1 día 3h"
+ *   ≥ 48h  → "3 días 4h"
+ */
+function elapsedSince(ts) {
+  const totalMs  = Date.now() - ts;
+  const totalMin = Math.floor(totalMs / 60000);
+  const hours    = Math.floor(totalMin / 60);
+  const minutes  = totalMin % 60;
+  const days     = Math.floor(hours / 24);
+  const remHours = hours % 24;
+
+  if (totalMin < 60) {
+    return `${totalMin} min`;
+  } else if (hours < 24) {
+    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+  } else if (days === 1) {
+    return remHours > 0 ? `1 día ${remHours}h` : `1 día`;
+  } else {
+    return remHours > 0 ? `${days} días ${remHours}h` : `${days} días`;
+  }
+}
+
+/** Short version for the grid card badge */
+function elapsedShort(ts) {
+  const totalMs  = Date.now() - ts;
+  const totalMin = Math.floor(totalMs / 60000);
+  const hours    = Math.floor(totalMin / 60);
+  const days     = Math.floor(hours / 24);
+  if (totalMin < 60)  return `${totalMin}min`;
+  if (hours < 24)     return `${hours}h`;
+  if (days === 1)     return `1 día`;
+  return `${days} días`;
+}
 function formatDate(ts) {
   return new Date(ts).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
 }
@@ -87,7 +125,6 @@ function renderHome() {
   grid.innerHTML = ws.map(w => {
     const isActive = !!w.wearStart;
     const locked   = !!(activeW && !isActive);
-    const days     = isActive ? daysSince(w.wearStart) : null;
     return `
       <div class="watch-card${locked ? ' locked' : ''}${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}">
         <div class="watch-img-wrap">
@@ -101,7 +138,7 @@ function renderHome() {
         <div class="watch-info">
           <div class="watch-brand">${escHtml(w.brand)}</div>
           <div class="watch-model">${escHtml(w.model)}</div>
-          ${isActive ? `<div class="days-badge">Día ${days + 1}</div>` : ''}
+          ${isActive ? `<div class="days-badge">${elapsedShort(w.wearStart)}</div>` : ''}
         </div>
       </div>`;
   }).join('');
@@ -121,14 +158,10 @@ function renderRecommendation(ws, activeW) {
   const ranked = rankWatchesByNeed(ws);
   if (!ranked.length) { banner.innerHTML = ''; return; }
 
-  const { watch: w, daysSinceLastWorn } = ranked[0];
+  const { watch: w, daysSinceLastWorn, msSince } = ranked[0];
   const color = daysSinceLastWorn === null || daysSinceLastWorn > 25 ? '#e57373'
     : daysSinceLastWorn > 14 ? '#D4AF6A' : '#4CAF50';
-  const text = daysSinceLastWorn === null
-    ? 'Nunca usado — ¡el aceite se seca!'
-    : daysSinceLastWorn > 25 ? `Hace ${daysSinceLastWorn} días — necesita movimiento`
-    : daysSinceLastWorn > 14 ? `Hace ${daysSinceLastWorn} días — ponértelo pronto`
-    : `Hace ${daysSinceLastWorn} días — al día`;
+  const text = formatLastWorn(daysSinceLastWorn, msSince);
 
   banner.innerHTML = `
     <div class="recommendation-card" data-rec-id="${escHtml(w.id)}">
@@ -146,12 +179,24 @@ function renderRecommendation(ws, activeW) {
 function rankWatchesByNeed(ws) {
   return ws.filter(w => !w.wearStart).map(w => {
     const all = [...(w.history || [])];
-    const lastWorn = all.length ? Math.max(...all.map(i => i.end || i.start)) : null;
-    const daysSinceLastWorn = lastWorn ? Math.floor((Date.now() - lastWorn) / 86400000) : null;
+    const lastEnd = all.length ? Math.max(...all.map(i => i.end || i.start)) : null;
+    const msSince = lastEnd ? Date.now() - lastEnd : null;
+    const daysSinceLastWorn = msSince ? Math.floor(msSince / 86400000) : null;
     const base = daysSinceLastWorn === null ? 9999 : daysSinceLastWorn;
     const score = (w.type === 'automatic' || w.type === 'manual') ? base * 1.3 : base;
-    return { watch: w, daysSinceLastWorn, score };
+    return { watch: w, daysSinceLastWorn, msSince, score };
   }).sort((a, b) => b.score - a.score);
+}
+
+function formatLastWorn(daysSince, msSince) {
+  if (msSince === null) return 'Nunca usado — ¡el aceite se seca!';
+  if (daysSince === 0) {
+    const h = Math.floor(msSince / 3600000);
+    return h < 1 ? 'Hace menos de 1h' : `Hace ${h}h`;
+  }
+  if (daysSince > 25) return `Hace ${daysSince} días — necesita movimiento`;
+  if (daysSince > 14) return `Hace ${daysSince} días — ponértelo pronto`;
+  return `Hace ${daysSince} días — al día`;
 }
 
 /* ─── DETAIL ─── */
@@ -191,17 +236,29 @@ function openDetail(id) {
 }
 
 function updateDayCounter(w) {
-  const d = daysSince(w.wearStart);
+  const elapsed = elapsedSince(w.wearStart);
   const el = document.getElementById('d-days');
   const se = document.getElementById('d-since');
-  if (el) el.textContent = `${d + 1} ${d === 0 ? 'día' : 'días'}`;
-  if (se) se.textContent = `Desde el ${formatDate(w.wearStart)}`;
+  if (el) el.textContent = elapsed;
+  if (se) {
+    const started = formatDate(w.wearStart);
+    const startTime = new Date(w.wearStart).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+    se.textContent = `Desde el ${started} a las ${startTime}`;
+  }
 }
 function startActiveTimer(id) {
   stopActiveTimer();
   const w = getWatch(id);
   if (!w?.wearStart) return;
-  _activeTimer = setInterval(() => { const c = getWatch(id); if (c?.wearStart) updateDayCounter(c); }, 60000);
+  // Update every 60 seconds — fine enough for h/min display
+  _activeTimer = setInterval(() => {
+    const c = getWatch(id);
+    if (!c?.wearStart) { stopActiveTimer(); return; }
+    updateDayCounter(c);
+    // Also refresh the grid badge if visible
+    const badge = document.querySelector(`.watch-card[data-id="${id}"] .days-badge`);
+    if (badge) badge.textContent = elapsedShort(c.wearStart);
+  }, 60000);
 }
 function stopActiveTimer() {
   if (_activeTimer) { clearInterval(_activeTimer); _activeTimer = null; }
@@ -553,10 +610,12 @@ function renderHistoryBody() {
     <div class="month-group">
       <div class="month-label">${month}</div>
       ${intervals.map(i => {
-        const d = durationDays(i.start, i.end || Date.now());
+        const dur = i.active
+          ? elapsedSince(i.start)
+          : `${durationDays(i.start, i.end)} días`;
         return `<div class="interval-row">
-          <div class="interval-dates">${formatDate(i.start)} → ${i.active ? 'hoy' : formatDate(i.end)}</div>
-          <div class="interval-duration">${d}d${i.active ? ' <span style="color:#4CAF50">●</span>' : ''}</div>
+          <div class="interval-dates">${formatDate(i.start)} → ${i.active ? 'ahora' : formatDate(i.end)}</div>
+          <div class="interval-duration">${dur}${i.active ? ' <span style="color:#4CAF50">●</span>' : ''}</div>
         </div>`;
       }).join('')}
     </div>`).join('');
