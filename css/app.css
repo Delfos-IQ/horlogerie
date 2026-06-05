@@ -1205,3 +1205,73 @@ textarea.form-input { resize: none; line-height: 1.5; }
   padding-bottom: 6px;
   border-bottom: 0.5px solid var(--glass-border);
 }
+
+/* ═══════════════════════════════════════
+   SESSION / MULTI-USER
+═══════════════════════════════════════ */
+.session-id-card {
+  background: var(--dark2);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 8px;
+}
+.session-id-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.session-id-value {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--light);
+  word-break: break-all;
+  background: var(--dark3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.session-id-hint {
+  font-size: 11px;
+  color: var(--mid);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.session-btn-row {
+  display: flex;
+  gap: 8px;
+}
+.session-btn {
+  flex: 1;
+  background: var(--dark3);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: border-color 0.15s;
+}
+.session-btn:active { border-color: var(--gold); }
+
+/* QR Modal */
+.qr-container {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.qr-container img {
+  border-radius: 10px;
+  width: 200px;
+  height: 200px;
+}

@@ -1,11 +1,29 @@
 /**
- * sync.js v2 — Cloud sync via Cloudflare KV
- * Photos travel with the payload (base64 in KV value).
- * Uses restoreFromCloud() from storage.js to properly split meta/photos.
+ * sync.js v3 — Per-user cloud sync
+ *
+ * Each user gets a UUID generated on first launch.
+ * That UUID is the key in Cloudflare KV: user:{id}:watches
+ *
+ * To use on a second device, the user shares their Session ID
+ * and enters it on the new device.
  */
 
-const SYNC_META_KEY = 'horlogerie_sync_v2';
+const SYNC_META_KEY = 'horlogerie_session_v1';
 const SYNC_EL       = 'sync-status-indicator';
+
+/* ── Session ID ── */
+function getSessionId() {
+  const meta = getSyncMeta();
+  if (meta.userId) return meta.userId;
+  // Generate new UUID for this user
+  const id = crypto.randomUUID ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+  setSyncMeta({ userId: id });
+  return id;
+}
 
 function getSyncMeta() {
   try { return JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}'); } catch { return {}; }
@@ -14,14 +32,15 @@ function setSyncMeta(d) {
   localStorage.setItem(SYNC_META_KEY, JSON.stringify({ ...getSyncMeta(), ...d }));
 }
 
+/* ── UI ── */
 function setSyncUI(state, msg) {
   const el = document.getElementById(SYNC_EL);
   if (!el) return;
   const cfg = {
-    syncing: { icon: 'ti-refresh',     color: 'var(--mid)',             spin: true  },
-    ok:      { icon: 'ti-cloud-check', color: '#4CAF50',                spin: false },
-    error:   { icon: 'ti-cloud-x',     color: 'rgba(220,80,80,0.8)',    spin: false },
-    idle:    { icon: 'ti-cloud',       color: 'var(--mid)',             spin: false },
+    syncing: { icon: 'ti-refresh',     color: 'var(--mid)', spin: true  },
+    ok:      { icon: 'ti-cloud-check', color: '#4CAF50',    spin: false },
+    error:   { icon: 'ti-cloud-x',     color: 'rgba(220,80,80,0.8)', spin: false },
+    idle:    { icon: 'ti-cloud',       color: 'var(--mid)', spin: false },
   }[state] || { icon: 'ti-cloud', color: 'var(--mid)', spin: false };
   el.innerHTML = `<i class="ti ${cfg.icon}" style="color:${cfg.color};font-size:18px;${cfg.spin ? 'animation:spin 1s linear infinite;' : ''}"></i>`;
   el.title = msg || '';
@@ -31,13 +50,14 @@ function setSyncUI(state, msg) {
 async function syncPush() {
   setSyncUI('syncing', 'Guardando en la nube…');
   try {
-    const ws  = await getWatchesWithPhotos();
-    const res = await fetch(`${CONFIG.WORKER_URL}/sync/push`, {
-      method: 'POST',
+    const userId = getSessionId();
+    const ws     = await getWatchesWithPhotos();
+    const res    = await fetch(`${CONFIG.WORKER_URL}/sync/push`, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ watches: ws })
+      body:    JSON.stringify({ userId, watches: ws }),
     });
-    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+    if (!res.ok) throw new Error((await res.json().catch(()=>({}))).error || `HTTP ${res.status}`);
     const data = await res.json();
     setSyncMeta({ lastPush: data.updatedAt });
     setSyncUI('ok', `Sincronizado · ${new Date(data.updatedAt).toLocaleTimeString('es-ES')}`);
@@ -53,7 +73,8 @@ async function syncPush() {
 async function syncPull(silent = false) {
   if (!silent) setSyncUI('syncing', 'Descargando…');
   try {
-    const res = await fetch(`${CONFIG.WORKER_URL}/sync/pull`);
+    const userId = getSessionId();
+    const res    = await fetch(`${CONFIG.WORKER_URL}/sync/pull?userId=${encodeURIComponent(userId)}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
@@ -81,13 +102,43 @@ async function syncPull(silent = false) {
   }
 }
 
+/* ── IMPORT SESSION (switch to another user's data) ── */
+async function importSession(userId) {
+  setSyncUI('syncing', 'Verificando sesión…');
+  try {
+    // Check if this userId exists in KV
+    const res = await fetch(`${CONFIG.WORKER_URL}/sync/exists?userId=${encodeURIComponent(userId)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.exists) throw new Error('Sesión no encontrada. Comprueba el ID.');
+
+    // Switch to this userId and pull their data
+    setSyncMeta({ userId, lastPush: 0 });
+    const pulled = await syncPull(false);
+    if (pulled) {
+      showToast('Sesión importada correctamente');
+      return true;
+    }
+    return false;
+  } catch (e) {
+    setSyncUI('error', e.message);
+    showToast('Error: ' + e.message);
+    return false;
+  }
+}
+
 /* ── AUTO (on app start) ── */
 async function syncAuto() {
+  // Ensure user has a session ID
+  getSessionId();
+
   const pulled = await syncPull(true);
-  if (pulled) { renderHome(); if (typeof renderSettings === 'function') renderSettings(); }
+  if (pulled) {
+    renderHome();
+    if (typeof renderSettings === 'function') renderSettings();
+  }
   setSyncUI('idle', 'Toca para sincronizar');
 
-  // Debounced push: 3s after last save
   let _t = null;
   window._debouncedPush = () => { clearTimeout(_t); _t = setTimeout(syncPush, 3000); };
 }
@@ -101,7 +152,9 @@ async function syncManual() {
   showToast('Sincronización completada');
 }
 
-window.syncPush   = syncPush;
-window.syncPull   = syncPull;
-window.syncAuto   = syncAuto;
-window.syncManual = syncManual;
+window.syncPush      = syncPush;
+window.syncPull      = syncPull;
+window.syncAuto      = syncAuto;
+window.syncManual    = syncManual;
+window.getSessionId  = getSessionId;
+window.importSession = importSession;

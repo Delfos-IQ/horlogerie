@@ -373,6 +373,145 @@
 
 </div><!-- #app -->
 
+  <!-- ========== SETTINGS VIEW ========== -->
+  <div class="view" id="view-settings" style="display:none;">
+    <div class="app-header">
+      <div class="app-title" style="font-size:20px;">Ajustes</div>
+      <div class="app-subtitle">Cuenta y datos</div>
+    </div>
+
+    <div style="padding:16px;padding-bottom:32px;">
+
+      <!-- SESSION -->
+      <div class="settings-section-title">Mi sesión</div>
+
+      <div class="session-id-card" id="session-id-card">
+        <div class="session-id-label">Tu ID de sesión</div>
+        <div class="session-id-value" id="session-id-display">—</div>
+        <div class="session-id-hint">Comparte este ID para acceder a tu colección desde otro dispositivo</div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="session-btn" onclick="copySessionId()">
+            <i class="ti ti-copy"></i> Copiar
+          </button>
+          <button class="session-btn" onclick="showQR()">
+            <i class="ti ti-qrcode"></i> QR
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-card" onclick="openImportSession()" style="margin-top:8px;">
+        <div class="settings-card-icon" style="background:rgba(100,150,220,0.1);border-color:rgba(100,150,220,0.25);">
+          <i class="ti ti-device-mobile" style="color:#8aabdc;font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Usar en otro dispositivo</div>
+          <div class="settings-card-sub">Introduce el ID de sesión de tu otro dispositivo</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <!-- SYNC -->
+      <div class="settings-section-title" style="margin-top:20px;">Sincronización</div>
+
+      <div class="settings-card" onclick="syncManual()" style="border-color:rgba(76,175,80,0.3);">
+        <div class="settings-card-icon" style="background:rgba(76,175,80,0.1);border-color:rgba(76,175,80,0.25);">
+          <i class="ti ti-cloud-upload" style="color:#4CAF50;font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Sincronizar ahora</div>
+          <div class="settings-card-sub" id="sync-last-time">Sube y descarga tu colección</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <!-- STATS -->
+      <div class="settings-section-title" style="margin-top:20px;">Colección</div>
+      <div class="settings-stats-grid" id="settings-stats"></div>
+      <div class="settings-section-title" style="margin-top:14px;">Análisis de uso</div>
+      <div id="settings-advanced-stats"></div>
+
+      <!-- EXPORT -->
+      <div class="settings-section-title" style="margin-top:20px;">Exportar</div>
+
+      <div class="settings-card" onclick="handleExportPDF()">
+        <div class="settings-card-icon" style="background:rgba(184,150,62,0.12);border-color:rgba(184,150,62,0.3);">
+          <i class="ti ti-file-type-pdf" style="color:var(--gold-light);font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Exportar PDF</div>
+          <div class="settings-card-sub">Fichas de cada reloj con fotos, specs e historial</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <div class="settings-card" onclick="handleExportJSON()">
+        <div class="settings-card-icon" style="background:rgba(100,150,220,0.1);border-color:rgba(100,150,220,0.25);">
+          <i class="ti ti-database-export" style="color:#8aabdc;font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Copia de seguridad (JSON)</div>
+          <div class="settings-card-sub">Exporta todos los datos para restaurar más tarde</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <div class="settings-card" onclick="handleImportJSON()">
+        <div class="settings-card-icon" style="background:rgba(100,150,220,0.1);border-color:rgba(100,150,220,0.25);">
+          <i class="ti ti-database-import" style="color:#8aabdc;font-size:22px;"></i>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Restaurar copia</div>
+          <div class="settings-card-sub">Importa un JSON previamente exportado</div>
+        </div>
+        <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+      <input type="file" id="import-json-input" accept=".json" style="display:none;" onchange="processImportJSON(event)">
+
+      <!-- ABOUT -->
+      <div class="settings-section-title" style="margin-top:20px;">Acerca de</div>
+      <div class="settings-about">
+        <div style="font-family:var(--font-display);font-size:20px;color:var(--gold-light);letter-spacing:2px;">Horlogerie</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:4px;">v1.0 · Colección Personal de Relojes</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:2px;">Datos guardados localmente en este dispositivo</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Import session modal -->
+  <div class="modal-overlay" id="import-session-modal" style="display:none;" onclick="if(event.target.id==='import-session-modal')closeImportSession()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Usar en este dispositivo</div>
+      <div style="font-size:13px;color:var(--mid);margin-bottom:14px;line-height:1.6;">
+        Introduce el ID de sesión de tu otro dispositivo para cargar tu colección aquí.
+      </div>
+      <div class="form-field">
+        <label class="form-label">ID de sesión</label>
+        <input class="form-input" id="import-session-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" style="font-family:monospace;font-size:13px;">
+      </div>
+      <div id="import-session-status" style="font-size:12px;color:var(--mid);margin-bottom:12px;min-height:16px;"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeImportSession()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" onclick="handleImportSession()">Importar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR modal -->
+  <div class="modal-overlay" id="qr-modal" style="display:none;" onclick="if(event.target.id==='qr-modal')document.getElementById('qr-modal').style.display='none'">
+    <div class="modal-sheet" style="text-align:center;">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Tu código QR</div>
+      <div style="font-size:13px;color:var(--mid);margin-bottom:16px;">Escanéalo desde el otro dispositivo para importar tu sesión</div>
+      <div id="qr-container" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
+      <div id="qr-session-id" style="font-family:monospace;font-size:11px;color:var(--mid);word-break:break-all;padding:8px;background:var(--dark3);border-radius:8px;margin-bottom:14px;"></div>
+      <button class="modal-btn modal-btn-cancel" style="width:100%;" onclick="document.getElementById('qr-modal').style.display='none'">Cerrar</button>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
 <script src="./js/db.js"></script>
 <script src="./js/storage.js"></script>
 <script src="./js/api.js"></script>
