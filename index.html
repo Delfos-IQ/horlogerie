@@ -383,7 +383,25 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: '/Horlogerie/' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js', { scope: '/Horlogerie/' })
+        .then(reg => {
+          // Check for updates every time the app is opened
+          reg.update();
+
+          // Listen for new SW taking control → reload to get latest version
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
+        })
+        .catch(() => {});
+
+      // Also listen for SW_UPDATED message from the new SW
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data?.type === 'SW_UPDATED') {
+          // Small delay so the SW fully activates before reload
+          setTimeout(() => window.location.reload(), 200);
+        }
+      });
     });
   }
   // Start cloud sync after a short delay (let app render first)

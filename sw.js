@@ -1,12 +1,17 @@
 /**
- * sw.js v5 — Service Worker
- * Index is at repo root → GitHub Pages serves from /Horlogerie/
+ * sw.js v6 — Network-first for app shell
+ *
+ * Strategy:
+ *  - HTML/JS/CSS: network-first → always get latest version
+ *  - Fonts/icons: cache-first → fast loading, rarely change
+ *  - API calls:   always network
+ *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE_STATIC  = 'horlogerie-static-v5';
-const CACHE_RUNTIME = 'horlogerie-runtime-v5';
-const BASE = '/Horlogerie';
+const CACHE   = 'horlogerie-v6';
+const BASE    = '/Horlogerie';
 
+// Files to pre-cache on install
 const SHELL = [
   `${BASE}/`,
   `${BASE}/index.html`,
@@ -25,86 +30,93 @@ const SHELL = [
   `${BASE}/favicon.ico`,
 ];
 
-const EXTERNAL = [
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap',
-  'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css',
-];
-
+/* ── INSTALL: pre-cache shell, skip waiting immediately ── */
 self.addEventListener('install', e => {
-  e.waitUntil((async () => {
-    const staticCache = await caches.open(CACHE_STATIC);
-    await staticCache.addAll(SHELL);
-    const runtimeCache = await caches.open(CACHE_RUNTIME);
-    await Promise.allSettled(EXTERNAL.map(url =>
-      fetch(url, { mode: 'cors' })
-        .then(res => { if (res.ok) runtimeCache.put(url, res); })
-    ));
-    await self.skipWaiting();
-  })());
-});
-
-self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys
-        .filter(k => k !== CACHE_STATIC && k !== CACHE_RUNTIME)
-        .map(k => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
+    caches.open(CACHE)
+      .then(c => c.addAll(SHELL))
+      .then(() => self.skipWaiting())   // activate new SW immediately
   );
 });
 
+/* ── ACTIVATE: delete old caches, claim all clients ── */
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())   // take control of all open tabs
+      .then(() => {
+        // Tell all clients to reload now that new SW is active
+        self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
+        });
+      })
+  );
+});
+
+/* ── FETCH ── */
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  if (url.hostname.includes('workers.dev') || url.hostname.includes('groq.com')) {
+  // 1. API calls — always network, never cache
+  if (url.hostname.includes('workers.dev') ||
+      url.hostname.includes('groq.com') ||
+      url.hostname.includes('api.ebay.com')) {
     e.respondWith(fetch(e.request).catch(() =>
       new Response(JSON.stringify({ error: 'Offline' }), {
-        status: 503, headers: { 'Content-Type': 'application/json' }
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
       })
     ));
     return;
   }
 
-  if (url.hostname === 'fonts.googleapis.com') {
-    e.respondWith(networkFirstCache(e.request, CACHE_RUNTIME));
+  // 2. External fonts & icons — cache-first (they never change)
+  if (url.hostname === 'fonts.gstatic.com' ||
+      url.hostname.includes('jsdelivr.net') ||
+      url.hostname === 'fonts.googleapis.com') {
+    e.respondWith(cacheFirst(e.request));
     return;
   }
 
-  if (url.hostname === 'fonts.gstatic.com' || url.hostname.includes('jsdelivr.net')) {
-    e.respondWith(cacheFirstNetwork(e.request, CACHE_RUNTIME));
-    return;
-  }
-
-  e.respondWith(cacheFirstNetwork(e.request, CACHE_STATIC));
+  // 3. App shell (HTML, JS, CSS, JSON) — network-first
+  //    → Always fetches latest from GitHub Pages
+  //    → Falls back to cache if offline
+  e.respondWith(networkFirst(e.request));
 });
 
-async function networkFirstCache(request, cacheName) {
+/* ── Network-first: try network, update cache, fallback to cache ── */
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE);
   try {
-    const res = await fetch(request);
-    if (res.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, res.clone());
+    const fresh = await fetch(request, { cache: 'no-cache' });
+    if (fresh.ok) {
+      // Update cache with fresh response
+      cache.put(request, fresh.clone());
     }
-    return res;
+    return fresh;
   } catch {
-    const cached = await caches.match(request);
-    return cached || new Response('', { status: 503 });
+    // Offline — serve from cache
+    const cached = await cache.match(request);
+    return cached || cache.match(`${BASE}/index.html`) ||
+      new Response('Sin conexión', { status: 503 });
   }
 }
 
-async function cacheFirstNetwork(request, cacheName) {
+/* ── Cache-first: serve from cache, fetch if missing ── */
+async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
   try {
-    const res = await fetch(request);
-    if (res.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, res.clone());
+    const fresh = await fetch(request);
+    if (fresh.ok) {
+      const cache = await caches.open(CACHE);
+      cache.put(request, fresh.clone());
     }
-    return res;
+    return fresh;
   } catch {
-    return caches.match(`${BASE}/index.html`) ||
-           new Response('', { status: 503 });
+    return new Response('', { status: 503 });
   }
 }
