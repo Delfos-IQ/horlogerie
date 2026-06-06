@@ -189,6 +189,22 @@
       <div class="modal-handle"></div>
       <div class="modal-title" id="wl-modal-title">Añadir a lista de deseos</div>
 
+      <!-- URL IMPORT -->
+      <div id="wl-url-section">
+        <div class="form-field">
+          <label class="form-label"><i class="ti ti-link" style="font-size:11px;"></i> Importar desde URL</label>
+          <div style="display:flex;gap:8px;">
+            <input class="form-input" id="wl-url-input" placeholder="https://tienda.com/reloj-automatico..." style="flex:1;" type="url">
+            <button class="wl-url-btn" id="wl-url-btn" onclick="importFromUrl()">
+              <i class="ti ti-download"></i>
+            </button>
+          </div>
+        </div>
+        <div id="wl-url-status" style="font-size:12px;color:var(--mid);padding:0 2px 8px;min-height:18px;line-height:1.5;"></div>
+      </div>
+
+      <div class="modal-divider"><span>o introduce manualmente</span></div>
+
       <div class="form-field">
         <label class="form-label">Marca *</label>
         <input class="form-input" id="wl-brand" placeholder="Berny, Pagani Design, San Martin...">

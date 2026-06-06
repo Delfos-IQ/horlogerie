@@ -31,6 +31,7 @@ export default {
     try {
       if (url.pathname === '/identify'    && request.method === 'POST')   return await handleIdentify(request, env);
       if (url.pathname === '/details'     && request.method === 'POST')   return await handleDetails(request, env);
+      if (url.pathname === '/import-url'  && request.method === 'POST')   return await handleImportUrl(request, env);
       if (url.pathname === '/sync/push'   && request.method === 'POST')   return await handleSyncPush(request, env);
       if (url.pathname === '/sync/pull'   && request.method === 'GET')    return await handleSyncPull(request, env);
       if (url.pathname === '/sync/clear'  && request.method === 'DELETE') return await handleSyncClear(request, env);
@@ -52,6 +53,178 @@ function userKey(userId) {
   const safe = userId.replace(/[^a-zA-Z0-9-]/g, '');
   if (safe.length < 8) throw new Error('Invalid userId after sanitization');
   return `user:${safe}:watches`;
+}
+
+/* ═══════════════════════════════════════
+   IMPORT URL — Extract specs from product page
+═══════════════════════════════════════ */
+async function handleImportUrl(request, env) {
+  const { url: pageUrl } = await request.json();
+  if (!pageUrl) return cors({ error: 'Missing url' }, 400);
+
+  let parsedUrl;
+  try { parsedUrl = new URL(pageUrl); } catch { return cors({ error: 'URL inválida' }, 400); }
+
+  const hostname = parsedUrl.hostname.replace('www.', '');
+
+  // Amazon, AliExpress, eBay block datacenter IPs.
+  // Use Groq compound-beta (native web search) to read those pages instead.
+  const useGroqSearch = [
+    'amazon.com','amazon.es','amazon.co.uk','amazon.de','amazon.fr',
+    'aliexpress.com','aliexpress.es','aliexpress.ru','alibaba.com',
+    'ebay.com','ebay.es','ebay.co.uk',
+  ].some(b => hostname.endsWith(b));
+
+  if (useGroqSearch) {
+    return await importViaGroqSearch(env, pageUrl, hostname);
+  }
+
+  // Fetch the page
+  let html = '';
+  try {
+    const res = await fetch(pageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
+        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+      },
+      redirect: 'follow',
+    });
+    if (res.ok) html = await res.text();
+  } catch (e) { console.warn('URL fetch failed:', e.message); }
+
+  if (!html) {
+    return cors({ _blocked: true, _domain: hostname,
+      _message: 'No se pudo acceder a la página. Prueba con otra tienda.' }, 200);
+  }
+
+  // Extract structured data from the HTML
+  const structured = extractJsonLd(html);
+  const meta       = extractMeta(html);
+  const title      = (html.match(/<title[^>]*>([^<]+)<\/title>/i) || [])[1]?.trim() || '';
+  const bodyText   = html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .slice(0, 3500);
+
+  const context = [
+    title           ? `Título: ${title}` : '',
+    meta.desc       ? `Descripción: ${meta.desc}` : '',
+    structured.name ? `Producto JSON-LD: ${structured.name}` : '',
+    structured.brand? `Marca JSON-LD: ${structured.brand}` : '',
+    structured.price? `Precio JSON-LD: ${structured.price}` : '',
+    bodyText        ? `Texto página:\n${bodyText}` : '',
+  ].filter(Boolean).join('\n\n');
+
+  // Groq extracts the specs
+  const groqRes = await groqCall(env, MODEL_VISION, [{
+    role: 'user',
+    content: `You are a watch spec extractor. Read the product page content and extract watch data.
+Return ONLY valid JSON, no markdown. Empty string if not found. NEVER invent.
+
+${context}
+
+JSON to return:
+{"brand":"","model":"","ref":"","type":"automatic|quartz|manual",
+ "calibre":"","cristal":"","diametro":"","grosor":"","resistencia":"",
+ "reserva":"","caja":"","brazalete":"","esfera":"",
+ "precio":"price with currency if found","notas":"other relevant info 1-2 sentences"}`
+  }], 600, 0.05);
+
+  const text   = groqRes?.choices?.[0]?.message?.content || '{}';
+  const result = parseJSON(text);
+
+  // JSON-LD data overrides LLM guesses for brand/price
+  if (structured.brand && !result.brand) result.brand = structured.brand;
+  if (structured.name  && !result.model) result.model = structured.name;
+  if (structured.price && !result.precio) result.precio = structured.price;
+
+  result._source = hostname;
+  result._title  = title;
+  return cors(result, 200);
+}
+
+/* ── compound-beta reads Amazon/AliExpress via web search ── */
+async function importViaGroqSearch(env, pageUrl, hostname) {
+  const prompt = `Visit this product page and extract ALL watch technical specifications: ${pageUrl}
+
+Read every detail on the page carefully. Include movement/caliber name, crystal type, water resistance,
+case dimensions, case material, bracelet, dial color, and price.
+Return ONLY valid JSON (no markdown, no backticks, no explanation):
+{"brand":"","model":"","ref":"","type":"automatic or quartz or manual",
+ "calibre":"movement name (e.g. Miyota 8215, NH35A, Seagull ST2130, VK63)",
+ "cristal":"crystal type and shape","diametro":"mm","grosor":"mm",
+ "resistencia":"meters and ATM","reserva":"hours (empty for quartz)",
+ "caja":"case material","brazalete":"strap/bracelet","esfera":"dial color and features",
+ "precio":"price with currency as shown","notas":"other specs 1-2 sentences"}
+Use empty string "" for any field not found. NEVER invent data.`;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'compound-beta',
+        max_tokens: 700,
+        temperature: 0.05,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (res.ok) {
+      const data   = await res.json();
+      const text   = data.choices?.[0]?.message?.content || '{}';
+      const result = parseJSON(text);
+      if (result && (result.brand || result.model || result.calibre)) {
+        result._source = hostname;
+        result._method = 'compound_web';
+        return cors(result, 200);
+      }
+    }
+  } catch (e) { console.warn('compound-beta failed:', e.message); }
+
+  // Fallback
+  return cors({
+    _blocked: true,
+    _domain:  hostname,
+    _message: `No se pudo leer la página de ${hostname}. Introduce los datos manualmente.`,
+  }, 200);
+}
+
+
+function extractJsonLd(html) {
+  const out = { name:'', brand:'', price:'' };
+  const re  = /<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    try {
+      const items = [].concat(JSON.parse(m[1]));
+      for (const d of items) {
+        if (!out.name  && d.name)  out.name  = String(d.name);
+        if (!out.brand && d.brand) out.brand = typeof d.brand === 'string' ? d.brand : d.brand?.name || '';
+        if (!out.price && d.offers) {
+          const o = [].concat(d.offers)[0];
+          if (o?.price) out.price = `${o.price} ${o.priceCurrency || 'EUR'}`;
+        }
+      }
+    } catch {}
+  }
+  return out;
+}
+
+function extractMeta(html) {
+  const get = (attr, val) => {
+    const r1 = new RegExp(`<meta[^>]+${attr}=["']${val}["'][^>]+content=["']([^"']+)["']`, 'i');
+    const r2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+${attr}=["']${val}["']`, 'i');
+    return (html.match(r1) || html.match(r2) || [])[1] || '';
+  };
+  return { desc: get('name','description') || get('property','og:description') };
 }
 
 /* ═══════════════════════════════════════
