@@ -23,8 +23,7 @@ const SHELL = [
   `${BASE}/js/export.js`,
   `${BASE}/js/app.js`,
   `${BASE}/manifest.json`,
-  `${BASE}/watches_db.json`,
-  `${BASE}/icons/icon-192.png`,
+  `${BASE}/watches_db.json`,  `${BASE}/icons/icon-192.png`,
   `${BASE}/icons/icon-512.png`,
   `${BASE}/icons/apple-touch-icon.png`,
   `${BASE}/favicon.ico`,
@@ -60,10 +59,11 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // 1. API calls — always network, never cache
+  // 1. API calls + version.json — always network, never cache
   if (url.hostname.includes('workers.dev') ||
       url.hostname.includes('groq.com') ||
-      url.hostname.includes('api.ebay.com')) {
+      url.hostname.includes('api.ebay.com') ||
+      url.pathname.endsWith('/version.json')) {
     e.respondWith(fetch(e.request).catch(() =>
       new Response(JSON.stringify({ error: 'Offline' }), {
         status: 503,
