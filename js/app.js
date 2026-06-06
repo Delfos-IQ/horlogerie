@@ -1138,7 +1138,7 @@ window.handleImportSession = handleImportSession;
    Works on iOS PWA where SW update is unreliable.
 ══════════════════════════════════════════════════════ */
 
-const APP_VERSION = '1.2.0'; // Must match version.json
+const APP_VERSION = '1.3.0'; // Must match version.json
 
 async function initVersionCheck() {
   // Show current version in UI
