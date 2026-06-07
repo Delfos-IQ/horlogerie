@@ -8,8 +8,8 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v7';
-const BASE    = '/Horlogerie';
+const CACHE   = 'horlogerie-v8';
+const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
 const SHELL = [

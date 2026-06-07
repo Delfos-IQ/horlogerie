@@ -6,10 +6,10 @@
 <script>
 (function() {
   if (!('serviceWorker' in navigator)) return;
-  // Unregister any SW not scoped to /Horlogerie/
+  // Unregister any SW not scoped to /horlogerie/
   navigator.serviceWorker.getRegistrations().then(regs => {
     regs.forEach(reg => {
-      if (reg.scope && !reg.scope.includes('/Horlogerie/')) {
+      if (reg.scope && !reg.scope.includes('/horlogerie/')) {
         reg.unregister();
       }
     });
@@ -558,7 +558,7 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: '/Horlogerie/' })
+      navigator.serviceWorker.register('./sw.js', { scope: '/horlogerie/' })
         .then(reg => {
           // Check for updates every time the app is opened
           reg.update();
