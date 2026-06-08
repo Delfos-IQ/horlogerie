@@ -2,18 +2,16 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<!-- SW KILLER: runs before anything else. Removes stale service workers from old versions. -->
+<!-- CACHE KILLER v9: aggressively removes all stale SW caches -->
 <script>
-(function() {
-  if (!('serviceWorker' in navigator)) return;
-  // Unregister any SW not scoped to /horlogerie/
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => {
-      if (reg.scope && !reg.scope.includes('/horlogerie/')) {
-        reg.unregister();
-      }
-    });
-  });
+(async function() {
+  if (!('serviceWorker' in navigator) || !('caches' in window)) return;
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== 'horlogerie-v9').map(k => caches.delete(k)));
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.filter(r => !r.scope.includes('/horlogerie/')).map(r => r.unregister()));
+  } catch(e) {}
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -31,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-<link rel="stylesheet" href="./css/app.css">
+<link rel="stylesheet" href="./css/app.css?v=1.4.1">
 </head>
 <body>
 <div id="app">
@@ -549,12 +547,12 @@
 
 </div><!-- #app -->
 
-<script src="./js/db.js"></script>
-<script src="./js/storage.js"></script>
-<script src="./js/api.js"></script>
-<script src="./js/sync.js"></script>
-<script src="./js/export.js"></script>
-<script src="./js/app.js"></script>
+<script src="./js/db.js?v=1.4.1"></script>
+<script src="./js/storage.js?v=1.4.1"></script>
+<script src="./js/api.js?v=1.4.1"></script>
+<script src="./js/sync.js?v=1.4.1"></script>
+<script src="./js/export.js?v=1.4.1"></script>
+<script src="./js/app.js?v=1.4.1"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
