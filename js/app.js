@@ -1138,29 +1138,31 @@ window.handleImportSession = handleImportSession;
    Works on iOS PWA where SW update is unreliable.
 ══════════════════════════════════════════════════════ */
 
-const APP_VERSION = '1.4.1'; // Must match version.json
+const APP_VERSION = '1.4.2'; // Must match version.json
 
 async function initVersionCheck() {
-  // Show current version in UI
-  const vEl = document.getElementById('app-version-display');
-  const dEl = document.getElementById('app-version-date');
-  if (vEl) vEl.textContent = APP_VERSION;
+  // Populate all version display elements
+  const vEl  = document.getElementById('app-version-display');
+  const vEl2 = document.getElementById('app-version-display2');
+  if (vEl)  vEl.textContent  = APP_VERSION;
+  if (vEl2) vEl2.textContent = APP_VERSION;
 
   // Silent check on every launch — fetch version.json bypassing cache
   try {
-    const res = await fetch('./version.json?t=' + Date.now(), {
-      cache: 'no-store'
-    });
+    const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
+    const dEl = document.getElementById('app-version-date');
     if (dEl && data.date) dEl.textContent = `Publicada el ${data.date}`;
     if (data.version && data.version !== APP_VERSION) {
-      // New version available — show banner and force reload
       showUpdateBanner(data.version, data.notes);
+      // Also highlight the top button in settings
+      const topBtn = document.getElementById('update-top-btn');
+      const topSub = document.getElementById('update-top-sub');
+      if (topBtn) topBtn.style.borderColor = '#4CAF50';
+      if (topSub) topSub.innerHTML = `<span style="color:#4CAF50;font-weight:500;">⬆ Nueva versión ${data.version} disponible</span>`;
     }
-  } catch {
-    // Offline — skip silently
-  }
+  } catch { /* Offline — skip */ }
 }
 
 function showUpdateBanner(newVersion, notes) {
@@ -1191,10 +1193,15 @@ function showUpdateBanner(newVersion, notes) {
 }
 
 async function checkForUpdate() {
-  const btn = document.getElementById('check-update-btn');
-  const status = document.getElementById('update-status');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Comprobando…'; }
-  if (status) status.textContent = '';
+  // Update both the header icon and the settings button
+  const headerIcon = document.getElementById('update-btn-icon');
+  const btn        = document.getElementById('check-update-btn');
+  const status     = document.getElementById('update-status');
+
+  // Spinning animation on header icon
+  if (headerIcon) headerIcon.style.animation = 'spin 1s linear infinite';
+  if (btn)    { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Comprobando…'; }
+  if (status) { status.textContent = ''; }
 
   try {
     const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
@@ -1207,40 +1214,37 @@ async function checkForUpdate() {
     if (dEl && data.date) dEl.textContent = `Publicada el ${data.date}`;
 
     if (data.version && data.version !== APP_VERSION) {
+      // New version — show gold icon + toast
+      if (headerIcon) {
+        headerIcon.style.animation = '';
+        headerIcon.style.color = 'var(--gold)';
+        headerIcon.className = 'ti ti-arrow-bar-to-down';
+      }
       if (status) {
         status.style.color = '#4CAF50';
-        status.innerHTML = `✓ Nueva versión <strong>${data.version}</strong> disponible. Actualizando…`;
+        status.innerHTML = `⬆️ Nueva versión <strong>${data.version}</strong> — actualizando…`;
       }
-      setTimeout(() => applyUpdate(), 1200);
+      showToast(`Nueva versión ${data.version} disponible. Instalando…`, 3000);
+      setTimeout(() => applyUpdate(), 1500);
     } else {
-      if (status) {
-        status.style.color = '#4CAF50';
-        status.textContent = '✓ Ya tienes la versión más reciente';
+      // Already up to date
+      if (headerIcon) {
+        headerIcon.style.animation = '';
+        headerIcon.style.color = '#4CAF50';
+        setTimeout(() => {
+          if (headerIcon) { headerIcon.style.color = 'var(--mid)'; }
+        }, 2000);
       }
+      if (status) { status.style.color = '#4CAF50'; status.textContent = '✓ Ya tienes la versión más reciente'; }
+      showToast('✓ App al día — versión ' + APP_VERSION);
     }
   } catch (e) {
-    if (status) {
-      status.style.color = 'rgba(220,80,80,0.8)';
-      status.textContent = 'Sin conexión. Conéctate e inténtalo de nuevo.';
-    }
+    if (headerIcon) { headerIcon.style.animation = ''; headerIcon.style.color = 'rgba(220,80,80,0.8)'; }
+    if (status) { status.style.color = 'rgba(220,80,80,0.8)'; status.textContent = 'Sin conexión'; }
+    showToast('Sin conexión — no se pudo comprobar');
   }
 
   if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-refresh"></i> Buscar actualización'; }
-}
-
-async function applyUpdate() {
-  // 1. Unregister SW so it doesn't serve stale cache
-  if ('serviceWorker' in navigator) {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(regs.map(r => r.unregister()));
-  }
-  // 2. Clear all caches
-  if ('caches' in window) {
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => caches.delete(k)));
-  }
-  // 3. Hard reload — browser fetches everything fresh
-  window.location.reload(true);
 }
 
 window.checkForUpdate = checkForUpdate;
