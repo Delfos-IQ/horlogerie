@@ -169,11 +169,45 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   <!-- ========== HISTORY VIEW ========== -->
   <div class="view" id="view-history">
     <div class="app-header">
-      <div class="app-title" style="font-size:20px;">Historial</div>
-      <div class="app-subtitle">Registro de uso</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
+        <div style="width:28px;"></div>
+        <div>
+          <div class="app-title" style="font-size:20px;">Historial</div>
+          <div class="app-subtitle">Registro de uso</div>
+        </div>
+        <div style="width:28px;"></div>
+      </div>
     </div>
-    <div class="history-watch-selector" id="history-selector"></div>
-    <div class="history-body" id="history-body"></div>
+
+    <!-- Mode toggle: Ranking / Detalle -->
+    <div class="history-mode-toggle">
+      <button class="history-mode-btn active" id="btn-mode-ranking" onclick="setHistoryMode('ranking')">
+        <i class="ti ti-chart-bar"></i> Ranking
+      </button>
+      <button class="history-mode-btn" id="btn-mode-detail" onclick="setHistoryMode('detail')">
+        <i class="ti ti-list-details"></i> Detalle
+      </button>
+    </div>
+
+    <!-- RANKING MODE -->
+    <div id="history-ranking-view">
+      <!-- Metric tabs: días / sesiones -->
+      <div class="ranking-metric-tabs">
+        <button class="ranking-metric-btn active" id="btn-metric-days" onclick="setRankingMetric('days')">
+          Días de uso
+        </button>
+        <button class="ranking-metric-btn" id="btn-metric-sessions" onclick="setRankingMetric('sessions')">
+          Sesiones
+        </button>
+      </div>
+      <div id="ranking-body" style="padding:0 16px 16px;"></div>
+    </div>
+
+    <!-- DETAIL MODE -->
+    <div id="history-detail-view" style="display:none;">
+      <div class="history-watch-selector" id="history-selector"></div>
+      <div class="history-body" id="history-body"></div>
+    </div>
   </div>
 
   <!-- ========== WISHLIST VIEW ========== -->
