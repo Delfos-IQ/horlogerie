@@ -248,20 +248,26 @@ async function handleSyncPull(request, env) {
   if (!env.HORLOGERIE_KV) return cors({ error: 'KV not configured.' }, 503);
   const url    = new URL(request.url);
   const userId = url.searchParams.get('userId');
-  if (!userId) return cors({ error: 'Missing userId' }, 400);
-
-  const key = userKey(userId);
-  const raw = await env.HORLOGERIE_KV.get(key);
-  if (!raw) return cors({ watches: [], updatedAt: null, exists: false }, 200);
-  const data = JSON.parse(raw);
-  return cors({ ...data, exists: true }, 200);
+  // Return empty instead of 400 — graceful handling for first launch / corrupted state
+  if (!userId || userId.length < 8) {
+    return cors({ watches: [], updatedAt: null, exists: false }, 200);
+  }
+  try {
+    const key = userKey(userId);
+    const raw = await env.HORLOGERIE_KV.get(key);
+    if (!raw) return cors({ watches: [], updatedAt: null, exists: false }, 200);
+    const data = JSON.parse(raw);
+    return cors({ ...data, exists: true }, 200);
+  } catch(e) {
+    return cors({ watches: [], updatedAt: null, exists: false }, 200);
+  }
 }
 
 async function handleSyncExists(request, env) {
   if (!env.HORLOGERIE_KV) return cors({ error: 'KV not configured.' }, 503);
   const url    = new URL(request.url);
   const userId = url.searchParams.get('userId');
-  if (!userId) return cors({ error: 'Missing userId' }, 400);
+  if (!userId || userId.length < 8) return cors({ exists: false }, 200);
 
   const key   = userKey(userId);
   const value = await env.HORLOGERIE_KV.get(key, { type: 'text' });

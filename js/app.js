@@ -104,6 +104,7 @@ function showView(v) {
 function renderHome() {
   const grid  = document.getElementById('watches-grid');
   const empty = document.getElementById('empty-state');
+  if (!grid || !empty) return;   // DOM not ready yet
   const ws    = getWatches();
   const activeW = getActiveWatch();
 
@@ -1247,6 +1248,21 @@ async function checkForUpdate() {
   if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-refresh"></i> Buscar actualización'; }
 }
 
+async function applyUpdate() {
+  showToast('Reinstalando… la app se reiniciará');
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch(e) {}
+  setTimeout(() => window.location.reload(true), 300);
+}
+window.applyUpdate    = applyUpdate;
 window.checkForUpdate = checkForUpdate;
 window.applyUpdate    = applyUpdate;
 
