@@ -8,20 +8,20 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v10';
+const CACHE   = 'horlogerie-v11';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
 const SHELL = [
   `${BASE}/`,
   `${BASE}/index.html`,
-  `${BASE}/css/app.css?v=1.4.2`,
-  `${BASE}/js/db.js?v=1.4.2`,
-  `${BASE}/js/storage.js?v=1.4.2`,
-  `${BASE}/js/api.js?v=1.4.2`,
-  `${BASE}/js/sync.js?v=1.4.2`,
-  `${BASE}/js/export.js?v=1.4.2`,
-  `${BASE}/js/app.js?v=1.4.2`,
+  `${BASE}/css/app.css?v=1.5.0`,
+  `${BASE}/js/db.js?v=1.5.0`,
+  `${BASE}/js/storage.js?v=1.5.0`,
+  `${BASE}/js/api.js?v=1.5.0`,
+  `${BASE}/js/sync.js?v=1.5.0`,
+  `${BASE}/js/export.js?v=1.5.0`,
+  `${BASE}/js/app.js?v=1.5.0`,
   `${BASE}/manifest.json`,
   `${BASE}/watches_db.json`,  `${BASE}/icons/icon-192.png`,
   `${BASE}/icons/icon-512.png`,
