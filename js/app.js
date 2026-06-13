@@ -116,7 +116,7 @@ function renderHome() {
   if (!ws.length) {
     grid.style.display = 'none';
     empty.style.display = 'flex';
-    document.getElementById('recommendation-banner').innerHTML = '';
+    const _rb = document.getElementById('recommendation-banner'); if (_rb) _rb.innerHTML = '';
     return;
   }
   grid.style.display = 'grid';
@@ -1324,7 +1324,7 @@ window.handleImportSession = handleImportSession;
    Works on iOS PWA where SW update is unreliable.
 ══════════════════════════════════════════════════════ */
 
-const APP_VERSION = '1.5.0'; // Must match version.json
+const APP_VERSION = '1.5.1'; // Must match version.json
 
 async function initVersionCheck() {
   // Populate all version display elements
