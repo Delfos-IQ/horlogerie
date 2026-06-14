@@ -35,7 +35,7 @@
 :root{
   --gold:#B8963E;--gold-light:#D4AF6A;--gold-pale:#F5EDD6;
   --dark:#0D0D0D;--dark2:#1A1A1A;--dark3:#2A2A2A;
-  --mid:#666;--light:#E8E2D8;--white:#FAF8F4;
+  --mid:#888;--light:#E8E2D8;--white:#FAF8F4;
   --glass-border:rgba(184,150,62,0.25);
   --radius:14px;
   --font-display:'Cormorant Garamond',serif;
@@ -103,6 +103,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 <link rel="stylesheet" href="./css/app.css?v=1.5.1">
 </head>
 <body>
+<a href="#view-home" class="sr-only skip-link">Saltar al contenido principal</a>
 <div id="app">
 
   <!-- INTRO SPLASH -->
@@ -113,23 +114,23 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   </div>
 
   <!-- TOAST -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <div class="nav-item active" onclick="showView('home')" id="nav-home">
+  <nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+    <div class="nav-item active" role="tab" aria-selected="true" aria-controls="view-home" tabindex="0" onclick="showView('home')" id="nav-home">
       <i class="ti ti-layout-grid" aria-hidden="true"></i>
       <span class="nav-label">Colección</span>
     </div>
-    <div class="nav-item" onclick="showView('history')" id="nav-history">
+    <div class="nav-item" role="tab" aria-selected="false" aria-controls="view-history" tabindex="0" onclick="showView('history')" id="nav-history">
       <i class="ti ti-calendar-stats" aria-hidden="true"></i>
       <span class="nav-label">Historial</span>
     </div>
-    <div class="nav-item" onclick="showView('wishlist')" id="nav-wishlist">
+    <div class="nav-item" role="tab" aria-selected="false" aria-controls="view-wishlist" tabindex="0" onclick="showView('wishlist')" id="nav-wishlist">
       <i class="ti ti-heart" aria-hidden="true"></i>
       <span class="nav-label">Deseos</span>
     </div>
-    <div class="nav-item" onclick="showView('settings')" id="nav-settings">
+    <div class="nav-item" role="tab" aria-selected="false" aria-controls="view-settings" tabindex="0" onclick="showView('settings')" id="nav-settings">
       <i class="ti ti-settings" aria-hidden="true"></i>
       <span class="nav-label">Ajustes</span>
     </div>
@@ -141,7 +142,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   </button>
 
   <!-- ========== HOME VIEW ========== -->
-  <div class="view active" id="view-home">
+  <div class="view active" id="view-home" role="main" aria-label="Colección de relojes">
     <div class="app-header">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
         <div id="update-btn" onclick="checkForUpdate()" title="Buscar actualización"
@@ -174,7 +175,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   </div>
 
   <!-- ========== DETAIL VIEW ========== -->
-  <div class="view" id="view-detail">
+  <div class="view" id="view-detail" role="region" aria-label="Detalle del reloj">
     <div class="detail-header">
       <button class="back-btn" onclick="showView('home')" aria-label="Volver">
         <i class="ti ti-arrow-left" aria-hidden="true"></i>
@@ -217,14 +218,14 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       </div>
 
       <div style="height:6px;"></div>
-      <button class="action-btn btn-delete" onclick="deleteWatch(currentWatchId)">
+      <button class="action-btn btn-delete" aria-label="Eliminar reloj" onclick="deleteWatch(currentWatchId)">
         <i class="ti ti-trash" aria-hidden="true"></i> Eliminar reloj
       </button>
     </div>
   </div>
 
   <!-- ========== HISTORY VIEW ========== -->
-  <div class="view" id="view-history">
+  <div class="view" id="view-history" role="region" aria-label="Historial de uso">
     <div class="app-header">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
         <div style="width:28px;"></div>
@@ -238,10 +239,10 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 
     <!-- Mode toggle: Ranking / Detalle -->
     <div class="history-mode-toggle">
-      <button class="history-mode-btn active" id="btn-mode-ranking" onclick="setHistoryMode('ranking')">
+      <button class="history-mode-btn active" id="btn-mode-ranking" aria-label="Vista ranking" onclick="setHistoryMode('ranking')">
         <i class="ti ti-chart-bar"></i> Ranking
       </button>
-      <button class="history-mode-btn" id="btn-mode-detail" onclick="setHistoryMode('detail')">
+      <button class="history-mode-btn" id="btn-mode-detail" aria-label="Vista detalle por reloj" onclick="setHistoryMode('detail')">
         <i class="ti ti-list-details"></i> Detalle
       </button>
     </div>
@@ -250,10 +251,10 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
     <div id="history-ranking-view">
       <!-- Metric tabs: días / sesiones -->
       <div class="ranking-metric-tabs">
-        <button class="ranking-metric-btn active" id="btn-metric-days" onclick="setRankingMetric('days')">
+        <button class="ranking-metric-btn active" id="btn-metric-days" aria-label="Ordenar por días de uso" onclick="setRankingMetric('days')">
           Días de uso
         </button>
-        <button class="ranking-metric-btn" id="btn-metric-sessions" onclick="setRankingMetric('sessions')">
+        <button class="ranking-metric-btn" id="btn-metric-sessions" aria-label="Ordenar por número de sesiones" onclick="setRankingMetric('sessions')">
           Sesiones
         </button>
       </div>
@@ -268,7 +269,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   </div>
 
   <!-- ========== WISHLIST VIEW ========== -->
-  <div class="view" id="view-wishlist">
+  <div class="view" id="view-wishlist" role="region" aria-label="Lista de deseos">
     <div class="app-header">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
         <div style="width:28px;"></div>
@@ -276,7 +277,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
           <div class="app-title" style="font-size:20px;">Lista de Deseos</div>
           <div class="app-subtitle">Modelos que quieres tener</div>
         </div>
-        <button onclick="openWishlistAdd()" style="background:none;border:none;color:var(--gold-light);font-size:22px;cursor:pointer;width:28px;">
+        <button aria-label="Añadir reloj a la lista de deseos" onclick="openWishlistAdd()" style="background:none;border:none;color:var(--gold-light);font-size:22px;cursor:pointer;width:28px;">
           <i class="ti ti-plus"></i>
         </button>
       </div>
@@ -290,7 +291,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
           Los relojes con specs completas se añaden a <code>watches_db.json</code>
         </div>
       </div>
-      <button class="wishlist-export-btn" onclick="exportWishlistToDb()">
+      <button class="wishlist-export-btn" aria-label="Exportar lista de deseos a JSON" onclick="exportWishlistToDb()">
         <i class="ti ti-database-export"></i> Exportar
       </button>
     </div>
@@ -305,7 +306,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   </div>
 
   <!-- ========== WISHLIST ITEM MODAL ========== -->
-  <div class="modal-overlay" id="wishlist-modal" style="display:none;" onclick="closeWishlistModalIfOutside(event)">
+  <div class="modal-overlay" id="wishlist-modal" role="dialog" aria-modal="true" aria-label="Reloj deseado" style="display:none;" onclick="closeWishlistModalIfOutside(event)">
     <div class="modal-sheet" style="max-height:92dvh;">
       <div class="modal-handle"></div>
       <div class="modal-title" id="wl-modal-title">Añadir a lista de deseos</div>
@@ -315,8 +316,8 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         <div class="form-field">
           <label class="form-label"><i class="ti ti-link" style="font-size:11px;"></i> Importar desde URL</label>
           <div style="display:flex;gap:8px;">
-            <input class="form-input" id="wl-url-input" placeholder="https://tienda.com/reloj-automatico..." style="flex:1;" type="url">
-            <button class="wl-url-btn" id="wl-url-btn" onclick="importFromUrl()">
+            <input class="form-input" id="wl-url-input" aria-label="URL del producto" placeholder="https://tienda.com/reloj-automatico..." style="flex:1;" type="url">
+            <button class="wl-url-btn" id="wl-url-btn" aria-label="Importar especificaciones desde URL" onclick="importFromUrl()">
               <i class="ti ti-download"></i>
             </button>
           </div>
@@ -328,15 +329,15 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 
       <div class="form-field">
         <label class="form-label">Marca *</label>
-        <input class="form-input" id="wl-brand" placeholder="Berny, Pagani Design, San Martin...">
+        <input class="form-input" id="wl-brand" aria-label="Marca del reloj" placeholder="Berny, Pagani Design, San Martin...">
       </div>
       <div class="form-field">
         <label class="form-label">Modelo *</label>
-        <input class="form-input" id="wl-model" placeholder="Open Heart, PD-1651...">
+        <input class="form-input" id="wl-model" aria-label="Modelo del reloj" placeholder="Open Heart, PD-1651...">
       </div>
       <div class="form-field">
         <label class="form-label">Referencia</label>
-        <input class="form-input" id="wl-ref" placeholder="AM5813L...">
+        <input class="form-input" id="wl-ref" aria-label="Referencia del modelo" placeholder="AM5813L...">
       </div>
       <div class="form-field">
         <label class="form-label">Tipo de movimiento</label>
@@ -355,45 +356,45 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         <div class="form-field" style="margin-bottom:0;">
           <label class="form-label">Calibre</label>
-          <input class="form-input" id="wl-calibre" placeholder="NH35A, Miyota 8215...">
+          <input class="form-input" id="wl-calibre" aria-label="Calibre del movimiento" placeholder="NH35A, Miyota 8215...">
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label class="form-label">Cristal</label>
-          <input class="form-input" id="wl-cristal" placeholder="Zafiro plano...">
+          <input class="form-input" id="wl-cristal" aria-label="Tipo de cristal" placeholder="Zafiro plano...">
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label class="form-label">Diámetro</label>
-          <input class="form-input" id="wl-diametro" placeholder="40mm">
+          <input class="form-input" id="wl-diametro" aria-label="Diámetro en mm" placeholder="40mm">
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label class="form-label">Grosor</label>
-          <input class="form-input" id="wl-grosor" placeholder="12mm">
+          <input class="form-input" id="wl-grosor" aria-label="Grosor en mm" placeholder="12mm">
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label class="form-label">Agua</label>
-          <input class="form-input" id="wl-resistencia" placeholder="200m / 20 ATM">
+          <input class="form-input" id="wl-resistencia" aria-label="Resistencia al agua" placeholder="200m / 20 ATM">
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label class="form-label">Reserva marcha</label>
-          <input class="form-input" id="wl-reserva" placeholder="42h">
+          <input class="form-input" id="wl-reserva" aria-label="Reserva de marcha" placeholder="42h">
         </div>
       </div>
       <div class="form-field">
         <label class="form-label">Caja material</label>
-        <input class="form-input" id="wl-caja" placeholder="Acero 316L, Titanio...">
+        <input class="form-input" id="wl-caja" aria-label="Material de la caja" placeholder="Acero 316L, Titanio...">
       </div>
       <div class="form-field">
         <label class="form-label">Brazalete</label>
-        <input class="form-input" id="wl-brazalete" placeholder="Acero oyster, NATO...">
+        <input class="form-input" id="wl-brazalete" aria-label="Tipo de brazalete" placeholder="Acero oyster, NATO...">
       </div>
       <div class="form-field">
         <label class="form-label">Esfera</label>
-        <input class="form-input" id="wl-esfera" placeholder="Azul sunburst, índices...">
+        <input class="form-input" id="wl-esfera" aria-label="Color de la esfera" placeholder="Azul sunburst, índices...">
       </div>
 
       <div class="form-field">
         <label class="form-label">Precio estimado (€)</label>
-        <input class="form-input" id="wl-precio" placeholder="~85 EUR">
+        <input class="form-input" id="wl-precio" aria-label="Precio objetivo" placeholder="~85 EUR">
       </div>
       <div class="form-field">
         <label class="form-label">Dónde comprarlo / Notas</label>
@@ -409,14 +410,14 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       </div>
 
       <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" onclick="closeWishlistModal()">Cancelar</button>
-        <button class="modal-btn modal-btn-save" id="wl-save-btn" onclick="saveWishlistItem()">Guardar</button>
+        <button class="modal-btn modal-btn-cancel" aria-label="Cancelar" onclick="closeWishlistModal()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" id="wl-save-btn" aria-label="Guardar reloj deseado" onclick="saveWishlistItem()">Guardar</button>
       </div>
     </div>
   </div>
 
   <!-- ========== ADD/EDIT MODAL ========== -->
-  <div class="modal-overlay" id="add-modal" style="display:none;" onclick="closeModalIfOutside(event)">
+  <div class="modal-overlay" id="add-modal" role="dialog" aria-modal="true" aria-label="Añadir reloj" style="display:none;" onclick="closeModalIfOutside(event)">
     <div class="modal-sheet" id="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-title-text">Añadir Reloj</div>
@@ -426,7 +427,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         <div class="form-field">
           <label class="form-label">Buscar en base de datos</label>
           <div style="position:relative;">
-            <input class="form-input" id="db-search-input"
+            <input class="form-input" id="db-search-input" aria-label="Buscar reloj en la base de datos"
               placeholder="Berny Open Heart, Pagani PD-1651..."
               autocomplete="off"
               oninput="handleDbSearch(this.value)">
@@ -478,38 +479,38 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       </div>
 
       <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" onclick="closeAddModal()">Cancelar</button>
-        <button class="modal-btn modal-btn-save" id="modal-save-btn" onclick="saveWatch()">Guardar</button>
+        <button class="modal-btn modal-btn-cancel" aria-label="Cancelar" onclick="closeAddModal()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" id="modal-save-btn" aria-label="Guardar reloj" onclick="saveWatch()">Guardar</button>
       </div>
     </div>
   </div>
 
   <!-- ========== PHOTO SOURCE SHEET ========== -->
   <!-- ========== PHOTO SOURCE SHEET ========== -->
-  <div class="modal-overlay" id="photo-sheet" style="display:none;" onclick="closePhotoSheetIfOutside(event)">
+  <div class="modal-overlay" id="photo-sheet" role="dialog" aria-modal="true" aria-label="Seleccionar foto" style="display:none;" onclick="closePhotoSheetIfOutside(event)">
     <div class="modal-sheet" style="padding-bottom:max(24px,env(safe-area-inset-bottom));">
       <div class="modal-handle"></div>
       <div class="modal-title" style="font-size:17px;margin-bottom:18px;">Añadir foto</div>
-      <button class="photo-source-btn" onclick="choosePhotoSource('camera')">
+      <button class="photo-source-btn" aria-label="Tomar foto con cámara" onclick="choosePhotoSource('camera')">
         <i class="ti ti-camera" style="font-size:22px;color:var(--gold-light);"></i>
         <div>
           <div class="photo-source-title">Hacer una foto</div>
           <div class="photo-source-sub">Abre la cámara del dispositivo</div>
         </div>
       </button>
-      <button class="photo-source-btn" onclick="choosePhotoSource('library')">
+      <button class="photo-source-btn" aria-label="Elegir foto de la galería" onclick="choosePhotoSource('library')">
         <i class="ti ti-photo" style="font-size:22px;color:var(--gold-light);"></i>
         <div>
           <div class="photo-source-title">Elegir de la librería</div>
           <div class="photo-source-sub">Selecciona una foto existente</div>
         </div>
       </button>
-      <button class="modal-btn modal-btn-cancel" style="width:100%;margin-top:8px;" onclick="closePhotoSheet()">Cancelar</button>
+      <button class="modal-btn modal-btn-cancel" aria-label="Cancelar" style="width:100%;margin-top:8px;" onclick="closePhotoSheet()">Cancelar</button>
     </div>
   </div>
 
   <!-- ========== SETTINGS VIEW ========== -->
-  <div class="view" id="view-settings">
+  <div class="view" id="view-settings" role="region" aria-label="Ajustes">
     <div class="app-header">
       <div class="app-title" style="font-size:20px;">Ajustes</div>
       <div class="app-subtitle">Cuenta y datos</div>
@@ -518,7 +519,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
     <div style="padding:16px;padding-bottom:32px;">
 
       <!-- UPDATE BUTTON — top of settings, always visible -->
-      <button class="update-top-btn" id="update-top-btn" onclick="checkForUpdate()">
+      <button class="update-top-btn" id="update-top-btn" aria-label="Buscar actualización de la app" onclick="checkForUpdate()">
         <i class="ti ti-refresh" id="update-top-icon"></i>
         <div class="update-top-text">
           <span class="update-top-title">Actualizar app</span>
@@ -536,10 +537,10 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         <div class="session-id-value" id="session-id-display">—</div>
         <div class="session-id-hint">Comparte este ID para acceder a tu colección desde otro dispositivo</div>
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="session-btn" onclick="copySessionId()">
+          <button class="session-btn" aria-label="Copiar ID de sesión al portapapeles" onclick="copySessionId()">
             <i class="ti ti-copy"></i> Copiar
           </button>
-          <button class="session-btn" onclick="showQR()">
+          <button class="session-btn" aria-label="Mostrar código QR de sesión" onclick="showQR()">
             <i class="ti ti-qrcode"></i> QR
           </button>
         </div>
@@ -568,6 +569,16 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
           <div class="settings-card-sub" id="sync-last-time">Sube y descarga tu colección</div>
         </div>
         <i class="ti ti-chevron-right settings-card-arrow"></i>
+      </div>
+
+      <!-- Cloud storage size indicator -->
+      <div id="cloud-size-info" style="display:flex;align-items:center;gap:8px;padding:8px 4px 0;font-size:11px;color:var(--mid);">
+        <i class="ti ti-database" style="font-size:13px;"></i>
+        <span id="cloud-size-text">Comprobando tamaño…</span>
+        <div id="cloud-size-bar" style="flex:1;height:3px;background:var(--dark3);border-radius:2px;overflow:hidden;">
+          <div id="cloud-size-fill" style="height:100%;width:0%;background:var(--gold);border-radius:2px;transition:width 0.4s ease;"></div>
+        </div>
+        <span id="cloud-size-max" style="flex-shrink:0;">/ 3MB</span>
       </div>
 
       <!-- STATS -->
@@ -622,7 +633,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         </div>
         <div style="font-size:11px;color:var(--mid);margin-top:2px;" id="app-version-date"></div>
         <div style="height:12px;"></div>
-        <button class="action-btn btn-search" id="check-update-btn" onclick="checkForUpdate()" style="margin-bottom:0;font-size:13px;padding:11px;">
+        <button class="action-btn btn-search" id="check-update-btn" aria-label="Buscar actualización de la app" onclick="checkForUpdate()" style="margin-bottom:0;font-size:13px;padding:11px;">
           <i class="ti ti-refresh"></i> Buscar actualización
         </button>
         <div id="update-status" style="font-size:12px;color:var(--mid);margin-top:8px;min-height:18px;text-align:center;"></div>
@@ -632,7 +643,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   </div>
 
   <!-- Import session modal -->
-  <div class="modal-overlay" id="import-session-modal" style="display:none;" onclick="if(event.target.id==='import-session-modal')closeImportSession()">
+  <div class="modal-overlay" id="import-session-modal" role="dialog" aria-modal="true" aria-label="Importar sesión" style="display:none;" onclick="if(event.target.id==='import-session-modal')closeImportSession()">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-title">Usar en este dispositivo</div>
@@ -641,44 +652,44 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       </div>
       <div class="form-field">
         <label class="form-label">ID de sesión</label>
-        <input class="form-input" id="import-session-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" style="font-family:monospace;font-size:13px;">
+        <input class="form-input" id="import-session-input" aria-label="ID de sesión a importar" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" style="font-family:monospace;font-size:13px;">
       </div>
       <div id="import-session-status" style="font-size:12px;color:var(--mid);margin-bottom:12px;min-height:16px;"></div>
       <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" onclick="closeImportSession()">Cancelar</button>
-        <button class="modal-btn modal-btn-save" onclick="handleImportSession()">Importar</button>
+        <button class="modal-btn modal-btn-cancel" aria-label="Cancelar importación de sesión" onclick="closeImportSession()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" aria-label="Importar sesión" onclick="handleImportSession()">Importar</button>
       </div>
     </div>
   </div>
 
   <!-- QR modal -->
-  <div class="modal-overlay" id="qr-modal" style="display:none;" onclick="if(event.target.id==='qr-modal')document.getElementById('qr-modal').style.display='none'">
+  <div class="modal-overlay" id="qr-modal" role="dialog" aria-modal="true" aria-label="Código QR de sesión" style="display:none;" onclick="if(event.target.id==='qr-modal')document.getElementById('qr-modal').style.display='none'">
     <div class="modal-sheet" style="text-align:center;">
       <div class="modal-handle"></div>
       <div class="modal-title">Tu código QR</div>
       <div style="font-size:13px;color:var(--mid);margin-bottom:16px;">Escanéalo desde el otro dispositivo para importar tu sesión</div>
       <div id="qr-container" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
       <div id="qr-session-id" style="font-family:monospace;font-size:11px;color:var(--mid);word-break:break-all;padding:8px;background:var(--dark3);border-radius:8px;margin-bottom:14px;"></div>
-      <button class="modal-btn modal-btn-cancel" style="width:100%;" onclick="document.getElementById('qr-modal').style.display='none'">Cerrar</button>
+      <button class="modal-btn modal-btn-cancel" aria-label="Cerrar QR" style="width:100%;" onclick="document.getElementById('qr-modal').style.display='none'">Cerrar</button>
     </div>
   </div>
 
 </div><!-- #app -->
 
-<script src="./js/db.js?v=1.6.1"></script>
-<script src="./js/storage.js?v=1.6.1"></script>
-<script src="./js/api.js?v=1.6.1"></script>
-<script src="./js/sync.js?v=1.6.1"></script>
-<script src="./js/export.js?v=1.6.1"></script>
-<script src="./js/modules/core.js?v=1.6.1"></script>
-<script src="./js/modules/home-detail.js?v=1.6.1"></script>
-<script src="./js/modules/modals.js?v=1.6.1"></script>
-<script src="./js/modules/history.js?v=1.6.1"></script>
-<script src="./js/modules/settings.js?v=1.6.1"></script>
-<script src="./js/modules/wishlist.js?v=1.6.1"></script>
-<script src="./js/modules/session.js?v=1.6.1"></script>
-<script src="./js/modules/updates.js?v=1.6.1"></script>
-<script src="./js/modules/url-import.js?v=1.6.1"></script>
+<script src="./js/db.js?v=1.8.0"></script>
+<script src="./js/storage.js?v=1.8.0"></script>
+<script src="./js/api.js?v=1.8.0"></script>
+<script src="./js/sync.js?v=1.8.0"></script>
+<script src="./js/export.js?v=1.8.0"></script>
+<script src="./js/modules/core.js?v=1.8.0"></script>
+<script src="./js/modules/home-detail.js?v=1.8.0"></script>
+<script src="./js/modules/modals.js?v=1.8.0"></script>
+<script src="./js/modules/history.js?v=1.8.0"></script>
+<script src="./js/modules/settings.js?v=1.8.0"></script>
+<script src="./js/modules/wishlist.js?v=1.8.0"></script>
+<script src="./js/modules/session.js?v=1.8.0"></script>
+<script src="./js/modules/updates.js?v=1.8.0"></script>
+<script src="./js/modules/url-import.js?v=1.8.0"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

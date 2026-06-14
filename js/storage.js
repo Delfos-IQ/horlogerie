@@ -85,15 +85,22 @@ async function idbGetAllPhotos() {
 }
 
 /* ─── Photo compression → WebP ─── */
-async function compressPhoto(dataUrl, maxDim = 900, quality = 0.82) {
+/**
+ * Compresses a photo to a target suitable for cloud sync.
+ * maxDim 600px × quality 0.72 → ~40-60KB per photo (was 900px/0.82 → ~120-150KB)
+ * A 30-watch collection stays under 2MB total in KV.
+ */
+async function compressPhoto(dataUrl, maxDim = 600, quality = 0.72) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
       const scale  = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w      = Math.round(img.width  * scale);
+      const h      = Math.round(img.height * scale);
       const canvas = document.createElement('canvas');
-      canvas.width  = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       // Try WebP first (smaller), fallback to JPEG
       const webp = canvas.toDataURL('image/webp', quality);
       const jpeg = canvas.toDataURL('image/jpeg', quality);

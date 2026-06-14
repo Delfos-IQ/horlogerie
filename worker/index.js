@@ -81,6 +81,7 @@ export default {
       if (pathname === '/sync/pull'   && method === 'GET')    return await handleSyncPull(request, env, origin);
       if (pathname === '/sync/exists' && method === 'GET')    return await handleSyncExists(request, env, origin);
       if (pathname === '/sync/clear'  && method === 'DELETE') return await handleSyncClear(request, env, origin);
+      if (pathname === '/sync/size'   && method === 'GET')    return await handleSyncSize(request, env, origin);
       if (pathname === '/import-url'  && method === 'POST')   return await handleImportUrl(request, env, origin);
       if (pathname === '/identify'    && method === 'POST')   return await handleIdentify(request, env, origin);
       if (pathname === '/details'     && method === 'POST')   return await handleDetails(request, env, origin);
@@ -184,45 +185,70 @@ async function logError(env, pathname, error, ip) {
 async function handleSyncPush(request, env, origin) {
   if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
 
-  // Validate Content-Length before reading body
+  // Fast size check before reading body
   const contentLength = parseInt(request.headers.get('Content-Length') || '0', 10);
   if (contentLength > MAX_SYNC_PAYLOAD) {
-    return corsResponse({
-      error: `Payload demasiado grande (máx ${MAX_SYNC_PAYLOAD / 1024 / 1024}MB)`,
-      maxBytes: MAX_SYNC_PAYLOAD,
-    }, 413, origin);
+    return corsResponse({ error: `Colección demasiado grande (máx ${MAX_SYNC_PAYLOAD / 1024 / 1024}MB)`, maxBytes: MAX_SYNC_PAYLOAD }, 413, origin);
   }
 
   let body;
-  try {
-    body = await request.json();
-  } catch {
-    return corsResponse({ error: 'JSON inválido' }, 400, origin);
+  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
+
+  const { userId, watches, mode = 'full', deletedIds = [] } = body;
+
+  if (!isValidUUID(userId))        return corsResponse({ error: 'userId inválido (UUID v4 requerido)' }, 400, origin);
+  if (!Array.isArray(watches))     return corsResponse({ error: 'watches debe ser un array' }, 400, origin);
+  if (watches.length > 500)        return corsResponse({ error: 'Demasiados relojes (máx 500)' }, 400, origin);
+
+  const key  = userKey(userId);
+  const opts = USER_DATA_TTL ? { expirationTtl: USER_DATA_TTL } : {};
+  const now  = Date.now();
+
+  let finalWatches;
+
+  if (mode === 'diff') {
+    // ── Differential push: read existing, merge changes, delete removed ──
+    let existing = [];
+    try {
+      const raw = await env.HORLOGERIE_KV.get(key);
+      if (raw) existing = JSON.parse(raw).watches || [];
+    } catch {}
+
+    // Build map of existing watches
+    const existingMap = {};
+    existing.forEach(w => { existingMap[w.id] = w; });
+
+    // Apply incoming changes (upsert)
+    watches.forEach(w => { existingMap[w.id] = w; });
+
+    // Remove deleted
+    const deletedSet = new Set(deletedIds);
+    finalWatches = Object.values(existingMap).filter(w => !deletedSet.has(w.id));
+  } else {
+    // ── Full push: replace entire collection ──
+    finalWatches = watches;
   }
 
-  const { userId, watches } = body;
+  const payload    = JSON.stringify({ watches: finalWatches, updatedAt: now, version: 2, userId, mode });
+  const payloadLen = payload.length;
 
-  if (!isValidUUID(userId)) {
-    return corsResponse({ error: 'userId inválido (debe ser UUID v4)' }, 400, origin);
-  }
-  if (!Array.isArray(watches)) {
-    return corsResponse({ error: 'watches debe ser un array' }, 400, origin);
-  }
-  if (watches.length > 500) {
-    return corsResponse({ error: 'Demasiados relojes (máx 500)' }, 400, origin);
-  }
-
-  // Secondary size check on actual payload (Content-Length might be absent)
-  const serialized = JSON.stringify({ watches, updatedAt: Date.now(), version: 2, userId });
-  if (serialized.length > MAX_SYNC_PAYLOAD) {
+  if (payloadLen > MAX_SYNC_PAYLOAD) {
     return corsResponse({
-      error: `Colección demasiado grande (máx ${MAX_SYNC_PAYLOAD / 1024 / 1024}MB). Considera reducir el tamaño de las fotos.`,
+      error: `Colección demasiado grande (${(payloadLen / 1024 / 1024).toFixed(1)}MB, máx ${MAX_SYNC_PAYLOAD / 1024 / 1024}MB). Reduce el tamaño de las fotos.`,
+      sizeBytes: payloadLen,
     }, 413, origin);
   }
 
-  const opts = USER_DATA_TTL ? { expirationTtl: USER_DATA_TTL } : {};
-  await env.HORLOGERIE_KV.put(userKey(userId), serialized, opts);
-  return corsResponse({ ok: true, count: watches.length, updatedAt: Date.now() }, 200, origin);
+  await env.HORLOGERIE_KV.put(key, payload, opts);
+  return corsResponse({
+    ok:         true,
+    mode,
+    count:      finalWatches.length,
+    changed:    watches.length,
+    deleted:    deletedIds.length,
+    sizeBytes:  payloadLen,
+    updatedAt:  now,
+  }, 200, origin);
 }
 
 async function handleSyncPull(request, env, origin) {
@@ -261,6 +287,29 @@ async function handleSyncClear(request, env, origin) {
   if (!isValidUUID(userId)) return corsResponse({ error: 'userId inválido' }, 400, origin);
   await env.HORLOGERIE_KV.delete(userKey(userId));
   return corsResponse({ ok: true }, 200, origin);
+}
+
+/* ══════════════════════════════════════════
+   SYNC SIZE — returns payload size for the user's collection
+══════════════════════════════════════════ */
+async function handleSyncSize(request, env, origin) {
+  if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
+  const userId = new URL(request.url).searchParams.get('userId');
+  if (!isValidUUID(userId)) return corsResponse({ sizeBytes: 0, exists: false }, 200, origin);
+  try {
+    const raw = await env.HORLOGERIE_KV.get(userKey(userId));
+    if (!raw) return corsResponse({ sizeBytes: 0, exists: false }, 200, origin);
+    const data = JSON.parse(raw);
+    return corsResponse({
+      exists:    true,
+      sizeBytes: raw.length,
+      sizeMB:    parseFloat((raw.length / 1024 / 1024).toFixed(2)),
+      count:     data.watches?.length || 0,
+      updatedAt: data.updatedAt || null,
+    }, 200, origin);
+  } catch {
+    return corsResponse({ sizeBytes: 0, exists: false }, 200, origin);
+  }
 }
 
 /* ══════════════════════════════════════════

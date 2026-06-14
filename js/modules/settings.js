@@ -47,6 +47,7 @@ function renderSettings() {
 
   // Render session ID in settings
   renderSessionId();
+  loadCloudSize(); // async — updates size bar when ready
 }
 
 async function handleExportPDF() {
@@ -131,3 +132,45 @@ window.renderSettings      = renderSettings;
 
 let _wlEditingId = null;
 
+
+/* ─── Cloud storage size indicator ─── */
+async function loadCloudSize() {
+  const textEl = document.getElementById('cloud-size-text');
+  const fillEl = document.getElementById('cloud-size-fill');
+  if (!textEl || !fillEl) return;
+
+  try {
+    const userId = getSessionId();
+    const res    = await fetch(`${CONFIG.WORKER_URL}/sync/size?userId=${encodeURIComponent(userId)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    if (!data.exists || !data.sizeBytes) {
+      textEl.textContent = 'Sin datos en la nube todavía';
+      fillEl.style.width = '0%';
+      return;
+    }
+
+    const kb      = (data.sizeBytes / 1024).toFixed(0);
+    const mb      = (data.sizeBytes / 1024 / 1024).toFixed(2);
+    const maxMB   = 3;  // MAX_SYNC_PAYLOAD in worker
+    const pct     = Math.min(100, (data.sizeBytes / (maxMB * 1024 * 1024)) * 100);
+
+    textEl.textContent = `${kb}KB en la nube · ${data.count} relojes`;
+
+    // Color the bar based on usage
+    const color = pct > 80 ? '#e57373' : pct > 50 ? '#D4AF6A' : 'var(--gold)';
+    fillEl.style.width      = pct + '%';
+    fillEl.style.background = color;
+
+    if (pct > 80) {
+      textEl.style.color = '#e57373';
+      textEl.textContent += ' · ⚠️ cerca del límite';
+    }
+  } catch {
+    const textEl2 = document.getElementById('cloud-size-text');
+    if (textEl2) textEl2.textContent = 'Sin conexión';
+  }
+}
+
+window.loadCloudSize = loadCloudSize;

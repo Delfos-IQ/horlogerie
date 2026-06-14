@@ -26,7 +26,7 @@ function renderHome() {
     const isActive = !!w.wearStart;
     const locked   = !!(activeW && !isActive);
     return `
-      <div class="watch-card${locked ? ' locked' : ''}${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}">
+      <div class="watch-card${locked ? ' locked' : ''}${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}" role="button" tabindex="0" aria-label="${escHtml(w.brand)} ${escHtml(w.model)}${isActive ? ' — actualmente puesto' : ''}">
         <div class="watch-img-wrap">
           ${w.photo
             ? `<img src="${w.photo}" alt="${escHtml(w.brand)} ${escHtml(w.model)}" loading="lazy">`
@@ -44,8 +44,12 @@ function renderHome() {
   }).join('');
 
   // All cards clickable — locked ones open read-only
+  // keyboard + click support for accessibility
   grid.querySelectorAll('.watch-card').forEach(card => {
     card.addEventListener('click', () => openDetail(card.dataset.id));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(card.dataset.id); }
+    });
   });
 }
 

@@ -8,7 +8,7 @@
   --dark: #0D0D0D;
   --dark2: #1A1A1A;
   --dark3: #2A2A2A;
-  --mid: #666;
+  --mid: #888;
   --light: #E8E2D8;
   --white: #FAF8F4;
   --glass-border: rgba(184, 150, 62, 0.25);
@@ -1271,4 +1271,67 @@ textarea.form-input { resize: none; line-height: 1.5; }
 .ranking-last {
   font-size: 10px;
   font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════
+   ACCESSIBILITY — Fase 4
+═══════════════════════════════════════ */
+
+/* Skip-to-content link (visible on focus only) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link:focus {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  padding: 10px 20px;
+  background: var(--gold);
+  color: var(--dark);
+  font-weight: 600;
+  border-radius: 8px;
+  z-index: 9999;
+  clip: auto;
+  white-space: normal;
+  font-size: 14px;
+}
+
+/* Improved focus ring for keyboard users */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible,
+.nav-item:focus-visible,
+.watch-card:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 3px;
+}
+
+/* Disable pointer outlines (touch/mouse users don't need rings) */
+:focus:not(:focus-visible) { outline: none; }
+
+/* prefers-reduced-motion — disable all animations for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .loading-spinner { animation: none !important; border-top-color: var(--gold) !important; }
 }

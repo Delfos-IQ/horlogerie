@@ -19,6 +19,34 @@ let historySelectedWatch = null;
 let historySelectedYear  = null;
 let _activeTimer = null;
 
+/* ─── Keyboard: nav items respond to Enter/Space ─── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        item.click();
+      }
+    });
+  });
+});
+
+/* ─── Keyboard: Escape closes any open modal ─── */
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const modals = ['wishlist-modal', 'add-modal', 'photo-sheet', 'import-session-modal', 'qr-modal'];
+  for (const id of modals) {
+    const el = document.getElementById(id);
+    if (el && el.style.display !== 'none') {
+      el.style.display = 'none';
+      // Return focus to the element that opened it (FAB or triggering button)
+      const fab = document.querySelector('.fab');
+      if (fab) fab.focus();
+      break;
+    }
+  }
+});
+
 /* ─── Utilities ─── */
 function showToast(msg, dur = 2600) {
   const t = document.getElementById('toast');
@@ -88,10 +116,17 @@ function escHtml(s) {
 /* ─── Navigation ─── */
 function showView(v) {
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(x => {
+    x.classList.remove('active');
+    x.setAttribute('aria-selected', 'false');
+  });
+  const viewEl = document.getElementById('view-' + v);
+  if (viewEl) viewEl.classList.add('active');
   const navEl = document.getElementById('nav-' + v);
-  if (navEl) navEl.classList.add('active');
+  if (navEl) {
+    navEl.classList.add('active');
+    navEl.setAttribute('aria-selected', 'true');
+  }
   if (v !== 'detail') stopActiveTimer();
   if (v === 'home')     renderHome();
   if (v === 'history')  renderHistory();

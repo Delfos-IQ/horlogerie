@@ -47,9 +47,9 @@ function renderWishlist() {
             <div class="wl-model">${escHtml(item.model)}${item.ref ? ` <span class="wl-ref">· ${escHtml(item.ref)}</span>` : ''}</div>
           </div>
           <div class="wl-card-actions">
-            <button class="wl-btn-icon" data-action="edit" title="Editar"><i class="ti ti-edit"></i></button>
-            <button class="wl-btn-icon" data-action="promote" title="Añadir a colección"><i class="ti ti-wrist-watch"></i></button>
-            <button class="wl-btn-icon wl-btn-danger" data-action="delete" title="Eliminar"><i class="ti ti-trash"></i></button>
+            <button class="wl-btn-icon" data-action="edit" aria-label="Editar ${escHtml(item.brand)} ${escHtml(item.model)}" title="Editar"><i class="ti ti-edit" aria-hidden="true"></i></button>
+            <button class="wl-btn-icon" data-action="promote" aria-label="Añadir ${escHtml(item.brand)} ${escHtml(item.model)} a mi colección" title="Añadir a colección"><i class="ti ti-wrist-watch" aria-hidden="true"></i></button>
+            <button class="wl-btn-icon wl-btn-danger" data-action="delete" aria-label="Eliminar ${escHtml(item.brand)} ${escHtml(item.model)} de deseos" title="Eliminar"><i class="ti ti-trash" aria-hidden="true"></i></button>
           </div>
         </div>
         <div class="wl-card-body">
