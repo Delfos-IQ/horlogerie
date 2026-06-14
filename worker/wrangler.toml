@@ -1,30 +1,29 @@
 name = "horlogerie"
 main = "index.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-01"
 
-# Deploy: wrangler deploy
+# ══════════════════════════════════════════
+# Deploy: cd worker && wrangler deploy
 # Worker URL: https://horlogerie.pedicode-app.workers.dev
 #
-# Required secret:
-#   GROQ_API_KEY       → Groq API key (console.groq.com, free)
+# REQUIRED secrets (Cloudflare dashboard → Workers → horlogerie → Settings → Variables):
+#   GROQ_API_KEY   → console.groq.com (free tier, no card needed)
 #
-# Optional secrets (Cloudflare dashboard → Workers → Settings → Variables):
-#   WATCHBASE_API_KEY  → WatchBase key (watchbase.com, $0.25/query)
-#   EBAY_APP_ID        → eBay Browse API Client ID   (developer.ebay.com, free)
-#   EBAY_CERT_ID       → eBay Browse API Client Secret (developer.ebay.com, free)
-#
-# How to get free eBay API keys:
-#   1. Register at https://developer.ebay.com
-#   2. Create an application → get Production keys
-#   3. Copy "App ID (Client ID)" → EBAY_APP_ID
-#   4. Copy "Cert ID (Client Secret)" → EBAY_CERT_ID
-#   No approval needed for Browse API read-only access.
+# OPTIONAL secrets (market prices via eBay):
+#   EBAY_APP_ID    → developer.ebay.com → App ID (Client ID)
+#   EBAY_CERT_ID   → developer.ebay.com → Cert ID (Client Secret)
+#   Both free, no approval needed for Browse API read-only access.
 #
 # KV namespace binding:
-#   Storage & Databases → Workers KV → Create namespace "HORLOGERIE"
-#   Workers → horlogerie → Settings → Bindings → Add KV
-#   Variable name: HORLOGERIE_KV  →  Namespace: HORLOGERIE
+#   Cloudflare dashboard → Storage & Databases → Workers KV
+#   → Create namespace "HORLOGERIE"
+#   → Workers → horlogerie → Settings → Bindings → KV Namespaces
+#   → Variable name: HORLOGERIE_KV  →  Namespace: HORLOGERIE
+#
+# ALLOWED_ORIGINS in index.js:
+#   Update ALLOWED_ORIGINS array if you deploy the app to a custom domain.
+# ══════════════════════════════════════════
 
 [[kv_namespaces]]
 binding = "HORLOGERIE_KV"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

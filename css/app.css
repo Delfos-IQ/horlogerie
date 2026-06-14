@@ -32,39 +32,9 @@ body {
   font-family: var(--font-body);
 }
 
-#app {
-  max-width: 430px;
-  margin: 0 auto;
-  height: 100dvh;
-  position: relative;
-  overflow: hidden;
-}
-
 /* ===== VIEWS ===== */
-.view {
-  display: none;
-  flex-direction: column;
-  height: 100dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-bottom: calc(70px + var(--safe-bottom));
-  -webkit-overflow-scrolling: touch;
-}
-.view.active { display: flex; }
 
 /* ===== INTRO SPLASH ===== */
-.intro {
-  position: fixed;
-  inset: 0;
-  background: var(--dark);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-  transition: opacity 0.6s ease;
-}
-.intro.fade { opacity: 0; pointer-events: none; }
 .intro-logo {
   font-family: var(--font-display);
   font-size: 52px;
@@ -78,21 +48,6 @@ body {
 .intro-sub { font-size: 11px; letter-spacing: 3px; color: var(--mid); text-transform: uppercase; }
 
 /* ===== HEADER ===== */
-.app-header {
-  padding: calc(var(--safe-top) + 44px) 20px 16px;
-  text-align: center;
-  border-bottom: 0.5px solid var(--glass-border);
-  flex-shrink: 0;
-}
-.app-title {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 300;
-  letter-spacing: 3px;
-  color: var(--gold-light);
-  text-transform: uppercase;
-}
-.app-subtitle { font-size: 11px; letter-spacing: 2px; color: var(--mid); text-transform: uppercase; margin-top: 4px; }
 
 /* ===== STATUS BAR ===== */
 .status-bar {
@@ -111,75 +66,10 @@ body {
 .active-watch-name { color: var(--gold-light); font-size: 12px; font-weight: 500; }
 
 /* ===== WATCHES GRID ===== */
-.watches-grid {
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
 
-.watch-card {
-  background: var(--dark2);
-  border: 0.5px solid var(--glass-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-}
 .watch-card:active { transform: scale(0.97); }
-.watch-card.locked { opacity: 0.55; filter: grayscale(0.6); cursor: pointer; }
-.watch-card.active-card { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
 
-.watch-img-wrap {
-  width: 100%;
-  aspect-ratio: 1;
-  position: relative;
-  overflow: hidden;
-  background: var(--dark3);
-}
 .watch-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-.watch-img-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-}
-
-.watch-info { padding: 8px 10px 10px; }
-.watch-brand { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); }
-.watch-model { font-size: 13px; font-weight: 500; color: var(--light); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.days-badge { font-size: 10px; color: var(--mid); margin-top: 3px; }
-
-.watch-type-badge {
-  position: absolute;
-  top: 7px;
-  left: 7px;
-  background: rgba(0,0,0,0.7);
-  border: 0.5px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 2px 7px;
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gold-light);
-}
-.active-badge {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  background: rgba(76,175,80,0.15);
-  border: 0.5px solid rgba(76,175,80,0.5);
-  border-radius: 20px;
-  padding: 2px 7px;
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #4CAF50;
-}
 
 /* ===== EMPTY STATE ===== */
 .empty-state {
@@ -197,56 +87,10 @@ body {
 .empty-text { font-size: 13px; color: var(--mid); line-height: 1.6; }
 
 /* ===== FAB ===== */
-.fab {
-  position: fixed;
-  bottom: calc(80px + var(--safe-bottom));
-  right: 20px;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--gold);
-  border: none;
-  color: var(--dark);
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(184,150,62,0.4);
-  z-index: 100;
-  transition: transform 0.15s;
-}
 .fab:active { transform: scale(0.92); }
 
 /* ===== BOTTOM NAV ===== */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 430px;
-  background: var(--dark2);
-  border-top: 0.5px solid var(--glass-border);
-  display: flex;
-  padding-top: 10px;
-  padding-bottom: calc(10px + var(--safe-bottom));
-  z-index: 200;
-}
-.nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  cursor: pointer;
-  padding: 4px;
-  color: var(--mid);
-  transition: color 0.15s;
-}
-.nav-item.active { color: var(--gold-light); }
 .nav-item i { font-size: 22px; }
-.nav-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
 
 /* ===== DETAIL VIEW ===== */
 .detail-header {
@@ -415,26 +259,6 @@ body {
 .history-empty { text-align: center; padding: 40px 20px; color: var(--mid); }
 
 /* ===== MODAL ===== */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 300;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-.modal-sheet {
-  background: var(--dark2);
-  border-radius: 20px 20px 0 0;
-  width: 100%;
-  max-width: 430px;
-  padding: 20px 20px calc(20px + var(--safe-bottom));
-  max-height: 88dvh;
-  overflow-y: auto;
-  border-top: 0.5px solid var(--glass-border);
-  -webkit-overflow-scrolling: touch;
-}
 .modal-handle { width: 40px; height: 4px; background: var(--dark3); border-radius: 2px; margin: 0 auto 16px; }
 .modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 300; color: var(--light); margin-bottom: 16px; }
 
@@ -516,38 +340,12 @@ textarea.form-input { resize: none; line-height: 1.5; }
 .modal-btn-save { background: var(--gold); color: var(--dark); font-weight: 500; }
 
 /* ===== LOADING / STATUS ===== */
-.loading-spinner {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--mid);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .fetch-status-ok { font-size: 11px; color: #4CAF50; text-align: center; padding: 6px 0; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .fetch-status-err { font-size: 11px; color: rgba(220,80,80,0.8); text-align: center; padding: 6px 0; }
 
 /* ===== TOAST ===== */
-.toast {
-  position: fixed;
-  top: calc(var(--safe-top) + 50px);
-  left: 50%;
-  transform: translateX(-50%) translateY(-80px);
-  background: var(--dark2);
-  border: 0.5px solid var(--gold);
-  border-radius: var(--radius);
-  padding: 10px 18px;
-  font-size: 13px;
-  color: var(--light);
-  z-index: 500;
-  transition: transform 0.3s ease;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.toast.show { transform: translateX(-50%) translateY(0); }
 
 /* ===== CONFIG HINT ===== */
 .config-banner {
@@ -777,17 +575,6 @@ textarea.form-input { resize: none; line-height: 1.5; }
 }
 
 /* ===== LOCKED BADGE (eye icon on greyed cards) ===== */
-.locked-badge {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  background: rgba(0,0,0,0.6);
-  border: 0.5px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 3px 8px;
-  font-size: 11px;
-  color: var(--mid);
-}
 
 /* ===== READ-ONLY BANNER (detail view) ===== */
 .readonly-banner {
