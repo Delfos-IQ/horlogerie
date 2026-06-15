@@ -24,9 +24,7 @@ const ALLOWED_ORIGINS = [
 ];
 
 /* ── Models ── */
-const MODEL_VISION   = 'meta-llama/llama-4-scout-17b-16e-instruct';
-const MODEL_COMPOUND = 'compound-beta';
-const MODEL_FALLBACK = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const MODEL_COMPOUND = 'compound-beta'; // Groq model with native web search
 
 /* ── Limits ── */
 const USER_DATA_TTL     = null;           // null = permanent; set seconds to expire
@@ -64,7 +62,7 @@ export default {
 
     try {
       // Rate-limited endpoints (call external paid APIs)
-      const RATE_LIMITED = ['/identify', '/details', '/import-url'];
+      const RATE_LIMITED = ['/import-url'];
       if (RATE_LIMITED.includes(url.pathname)) {
         const limited = await checkRateLimit(env, ip, url.pathname);
         if (limited) {
@@ -83,8 +81,6 @@ export default {
       if (pathname === '/sync/clear'  && method === 'DELETE') return await handleSyncClear(request, env, origin);
       if (pathname === '/sync/size'   && method === 'GET')    return await handleSyncSize(request, env, origin);
       if (pathname === '/import-url'  && method === 'POST')   return await handleImportUrl(request, env, origin);
-      if (pathname === '/identify'    && method === 'POST')   return await handleIdentify(request, env, origin);
-      if (pathname === '/details'     && method === 'POST')   return await handleDetails(request, env, origin);
       if (pathname === '/health'      || pathname === '/')    return corsResponse({ status: 'ok', version: '10.0', kv: !!env.HORLOGERIE_KV }, 200, origin);
 
       return corsResponse({ error: 'Not found' }, 404, origin);
@@ -313,7 +309,10 @@ async function handleSyncSize(request, env, origin) {
 }
 
 /* ══════════════════════════════════════════
-   IMPORT URL — Extract specs from product URL
+   IMPORT URL — Extract specs from any product URL
+   Uses compound-beta (Groq web search model) for all sites.
+   compound-beta can access Amazon, AliExpress, eBay and any
+   other site directly — no separate scraping branch needed.
 ══════════════════════════════════════════ */
 async function handleImportUrl(request, env, origin) {
   let body;
@@ -322,162 +321,83 @@ async function handleImportUrl(request, env, origin) {
   const { url: pageUrl } = body;
   if (!pageUrl || typeof pageUrl !== 'string') return corsResponse({ error: 'url requerida' }, 400, origin);
 
-  // Validate URL format
   let parsedUrl;
   try { parsedUrl = new URL(pageUrl); } catch { return corsResponse({ error: 'URL inválida' }, 400, origin); }
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) return corsResponse({ error: 'URL inválida' }, 400, origin);
 
   const hostname = parsedUrl.hostname.replace('www.', '');
 
-  // Sites that block datacenter scraping → use compound-beta web search
-  const USE_GROQ_SEARCH = [
-    'amazon.com','amazon.es','amazon.co.uk','amazon.de','amazon.fr',
-    'aliexpress.com','aliexpress.es','aliexpress.ru','alibaba.com',
-    'ebay.com','ebay.es','ebay.co.uk',
-  ].some(b => hostname.endsWith(b));
+  // Focused prompt: watch-specific, bilingual (EN/ES), explicit about Chinese brands
+  const prompt = `You are a watch specification extractor. Visit this product page: ${pageUrl}
 
-  if (USE_GROQ_SEARCH) return await importViaGroqSearch(env, pageUrl, hostname, origin);
-  return await importViaScrape(env, pageUrl, hostname, origin);
+Read every detail carefully — title, bullet points, spec table, description.
+
+IMPORTANT: Many watches on Amazon/AliExpress are Chinese brands:
+Berny, Pagani Design, San Martin, Cadisen, OBLVLO, Seagull, CIGA Design, Carnival, Reef Tiger, Steeldive, Sugess, Benyar, Phylida.
+For these, the caliber is often: Miyota 8215, NH35A, Seagull ST2130, VK63, Seagull 1963.
+
+Return ONLY valid JSON (no markdown, no backticks, no explanation):
+{
+  "brand": "brand name from dial/listing",
+  "model": "model name",
+  "ref": "reference number if shown (e.g. AM5813L, PD-1651)",
+  "type": "automatic or quartz or manual",
+  "calibre": "movement caliber (e.g. Miyota 8215, NH35A, VK63, Seagull ST2130)",
+  "cristal": "crystal type: Sapphire / Mineral / Acrylic + shape if known",
+  "diametro": "case diameter in mm (number only, e.g. 40mm)",
+  "grosor": "case thickness in mm if listed",
+  "resistencia": "water resistance (e.g. 100m / 10ATM)",
+  "reserva": "power reserve in hours for automatic/manual only",
+  "caja": "case material (e.g. 316L Stainless Steel, Titanium, Bronze)",
+  "brazalete": "bracelet/strap type and material",
+  "esfera": "dial color and finish (e.g. Blue Sunburst, Black Matte)",
+  "precio": "price with currency as shown (e.g. 79,99 EUR)",
+  "notas": "any other useful specs in 1 sentence max"
 }
-
-async function importViaGroqSearch(env, pageUrl, hostname, origin) {
-  const prompt = `Visit this product page and extract ALL watch technical specifications: ${pageUrl}
-
-Extract: brand, model, reference, movement type (automatic/quartz/manual), caliber name (e.g. Miyota 8215, NH35A), crystal type, case diameter in mm, thickness in mm, water resistance, power reserve, case material, strap/bracelet, dial color, price with currency.
-Return ONLY valid JSON (no markdown, no explanation):
-{"brand":"","model":"","ref":"","type":"automatic or quartz or manual","calibre":"","cristal":"","diametro":"","grosor":"","resistencia":"","reserva":"","caja":"","brazalete":"","esfera":"","precio":"","notas":""}
-Use "" for any field not found. NEVER invent data.`;
+Use "" for any field not found on the page. NEVER invent or guess data.`;
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.GROQ_API_KEY}` },
-      body: JSON.stringify({ model: MODEL_COMPOUND, max_tokens: 700, temperature: 0.05, messages: [{ role: 'user', content: prompt }] }),
+      body:    JSON.stringify({
+        model:       MODEL_COMPOUND,
+        max_tokens:  800,
+        temperature: 0.05,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: AbortSignal.timeout(30000),
     });
-    if (res.ok) {
-      const data   = await res.json();
-      const result = parseJSON(data.choices?.[0]?.message?.content || '{}');
-      if (result.brand || result.model || result.calibre) {
-        result._source = hostname;
-        result._method = 'compound_web';
-        return corsResponse(result, 200, origin);
-      }
+
+    if (!res.ok) throw new Error(`Groq ${res.status}`);
+
+    const data   = await res.json();
+    const text   = data.choices?.[0]?.message?.content || '{}';
+    const result = parseJSON(text);
+
+    // Validate — if model returned nothing useful, tell the user
+    const hasData = result.brand || result.model || result.calibre || result.precio;
+    if (!hasData) {
+      return corsResponse({
+        _blocked:  false,
+        _empty:    true,
+        _domain:   hostname,
+        _message:  'No se encontraron especificaciones en esta página. Prueba con otra tienda o introduce los datos manualmente.',
+      }, 200, origin);
     }
-  } catch {}
-  return corsResponse({ _blocked: true, _domain: hostname, _message: `No se pudo leer ${hostname}. Introduce los datos manualmente.` }, 200, origin);
-}
 
-async function importViaScrape(env, pageUrl, hostname, origin) {
-  let html = '';
-  try {
-    const res = await fetch(pageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15', 'Accept': 'text/html,*/*;q=0.8', 'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8' },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(10000),
-    });
-    if (res.ok) html = await res.text();
-  } catch {}
+    result._source = hostname;
+    result._method = 'compound_web';
+    return corsResponse(result, 200, origin);
 
-  if (!html) return corsResponse({ _blocked: true, _domain: hostname, _message: 'No se pudo acceder a la página.' }, 200, origin);
-
-  const structured = extractJsonLd(html);
-  const meta       = extractMeta(html);
-  const title      = (html.match(/<title[^>]*>([^<]+)<\/title>/i) || [])[1]?.trim() || '';
-  const bodyText   = html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\s{2,}/g,' ').trim().slice(0, 3500);
-
-  const context = [title && `Título: ${title}`, meta.desc && `Descripción: ${meta.desc}`, structured.name && `Producto: ${structured.name}`, structured.brand && `Marca: ${structured.brand}`, structured.price && `Precio: ${structured.price}`, bodyText && `Texto:\n${bodyText}`].filter(Boolean).join('\n\n');
-
-  const groqRes = await groqCall(env, MODEL_VISION, [{ role: 'user', content: `Extract watch specifications from this product page. Return ONLY valid JSON. Empty string if not found. NEVER invent.\n\n${context}\n\n{"brand":"","model":"","ref":"","type":"automatic|quartz|manual","calibre":"","cristal":"","diametro":"","grosor":"","resistencia":"","reserva":"","caja":"","brazalete":"","esfera":"","precio":"","notas":""}` }], 600, 0.05);
-
-  const result = parseJSON(groqRes?.choices?.[0]?.message?.content || '{}');
-  if (structured.brand && !result.brand) result.brand = structured.brand;
-  if (structured.name  && !result.model) result.model = structured.name;
-  if (structured.price && !result.precio) result.precio = structured.price;
-  result._source = hostname;
-  return corsResponse(result, 200, origin);
-}
-
-/* ══════════════════════════════════════════
-   IDENTIFY — photo identification
-══════════════════════════════════════════ */
-async function handleIdentify(request, env, origin) {
-  let body;
-  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
-
-  const { image, mediaType } = body;
-  if (!image || typeof image !== 'string') return corsResponse({ error: 'image requerida' }, 400, origin);
-  if (!mediaType || !mediaType.startsWith('image/')) return corsResponse({ error: 'mediaType inválido' }, 400, origin);
-  // Basic size check on base64 (~750KB limit = ~1MB original)
-  if (image.length > 1_000_000) return corsResponse({ error: 'Imagen demasiado grande (máx 750KB)' }, 413, origin);
-
-  const p1 = await groqCall(env, MODEL_VISION, [{ role: 'user', content: [
-    { type: 'image_url', image_url: { url: `data:${mediaType};base64,${image}` } },
-    { type: 'text', text: `Expert watch analyst. Extract ALL visible details precisely:\n1. DIAL TEXT: Quote EXACTLY every word and brand name on the dial\n2. HANDS: shape, color, luminous?\n3. MARKERS: baton/Arabic/Roman, applied/printed\n4. BEZEL: smooth/fluted/rotating/ceramic, markings\n5. CASE: shape, crown guards, pushers\n6. BRACELET: type, color\n7. COMPLICATIONS: date position, chronograph subdials, GMT\n8. DIAL color and finish\n9. Size impression (<36mm/38-42mm/>42mm)\nBe precise. Quote all dial text literally.` }
-  ]}], 900, 0.1);
-
-  const visual = p1?.choices?.[0]?.message?.content || '';
-
-  const p2 = await groqCall(env, MODEL_VISION, [{ role: 'user', content: `Master horologist. Identify this watch from visual analysis.\n\nVISUAL:\n${visual}\n\nRules:\n- Trust dial text above all — if brand name is quoted literally, use it\n- Chinese brands: Berny, Pagani Design, San Martin, Cadisen, CIGA Design, Seagull, Steeldive\n- Output "Desconocido" only if truly unidentifiable\n\nReturn ONLY valid JSON:\n{"brand":"","model":"","ref":"","type":"automatic|quartz|manual","confidence":"high|medium|low","reasoning":"1-2 sentences"}` }], 400, 0.05);
-
-  const result = parseJSON(p2?.choices?.[0]?.message?.content || '{}');
-  result._visual = visual;
-  return corsResponse(result, 200, origin);
-}
-
-/* ══════════════════════════════════════════
-   DETAILS — specs + eBay pricing
-══════════════════════════════════════════ */
-async function handleDetails(request, env, origin) {
-  let body;
-  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
-
-  const { brand, model, ref, type } = body;
-  if (!brand || !model) return corsResponse({ error: 'brand y model son requeridos' }, 400, origin);
-  // Sanitize to prevent prompt injection
-  const watchId = [brand, model, ref].filter(Boolean).map(s => String(s).slice(0, 100)).join(' ');
-
-  const [webRes, ebayRes] = await Promise.allSettled([
-    webSearchSpecs(env, watchId, brand, model, ref, type),
-    ebaySearch(watchId, brand, env),
-  ]);
-
-  const webData  = webRes.status  === 'fulfilled' ? webRes.value  : null;
-  const ebayData = ebayRes.status === 'fulfilled' ? ebayRes.value : null;
-
-  const result = webData || { specs: emptySpecs(), price: { value: '', note: '' }, _source: 'none', _warning: 'No se encontró información.' };
-
-  if (ebayData?.price?.value && !result.price?.value) {
-    result.price   = ebayData.price;
-    result._source = (result._source || '') + '+ebay';
-    result._ebay   = ebayData._ebay;
+  } catch (e) {
+    await logError(env, '/import-url', e, 'unknown');
+    return corsResponse({
+      _blocked: true,
+      _domain:  hostname,
+      _message: 'No se pudo leer la página. Inténtalo de nuevo o introduce los datos manualmente.',
+    }, 200, origin);
   }
-  if (ebayData?.specs) {
-    for (const [k, v] of Object.entries(ebayData.specs)) {
-      if (v && !result.specs?.[k]) result.specs[k] = v;
-    }
-  }
-  return corsResponse(result, 200, origin);
-}
-
-async function webSearchSpecs(env, watchId, brand, model, ref, type) {
-  const mov = type === 'automatic' ? 'automatic' : type === 'quartz' ? 'quartz' : 'manual';
-  const systemPrompt = `Precise watch specification extractor. Only use data from real sources. If field not found, use "". NEVER invent specs.`;
-  const userPrompt = `Find specifications for: ${watchId} (${mov}).\nReturn ONLY this JSON (empty string if not found):\n{"specs":{"calibre":"","movimiento":"","cristal":"","brazalete":"","esfera":"","caja":"","resistencia":"","reserva":"","diametro":"","grosor":""},"price":{"value":"","note":""},"_sources":""}`;
-
-  try {
-    const res = await groqRaw(env, { model: MODEL_COMPOUND, max_tokens: 1000, temperature: 0.05, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] });
-    if (res.ok) {
-      const parsed = parseJSON((await res.json()).choices?.[0]?.message?.content || '');
-      if (parsed?.specs) { parsed._source = 'compound_web'; return parsed; }
-    }
-  } catch {}
-
-  try {
-    const res2   = await groqCall(env, MODEL_FALLBACK, [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], 800, 0.05);
-    const parsed = parseJSON(res2?.choices?.[0]?.message?.content || '');
-    if (parsed?.specs) { parsed._source = 'llm'; parsed._warning = 'Datos del modelo — verifica.'; return parsed; }
-  } catch {}
-  return null;
 }
 
 /* ── eBay ── */
