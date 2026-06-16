@@ -1,4 +1,4 @@
-const APP_VERSION = '1.9.0'; // Must match version.json
+const APP_VERSION = '2.1.0'; // Must match version.json
 
 async function initVersionCheck() {
   // Populate all version display elements

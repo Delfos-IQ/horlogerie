@@ -194,20 +194,40 @@ function renderDetailActions(w) {
 
 function renderSpecs(w) {
   const specs = w.specs || {};
+  const hasAnySpec = Object.values(specs).some(v => v);
   const defs = [
     {k:'calibre',l:'Calibre'},{k:'movimiento',l:'Movimiento'},{k:'cristal',l:'Cristal'},
     {k:'brazalete',l:'Brazalete'},{k:'esfera',l:'Esfera'},{k:'caja',l:'Caja'},
     {k:'resistencia',l:'Agua'},{k:'reserva',l:'Reserva'},{k:'diametro',l:'Diámetro'},{k:'grosor',l:'Grosor'},
   ];
-  document.getElementById('d-specs').innerHTML = defs.map(s => `
-    <div class="spec-card" data-key="${s.k}" title="Toca para editar">
-      <div class="spec-label">${s.l}</div>
-      <div class="spec-value" id="spec-val-${s.k}">${escHtml(specs[s.k] || '—')}</div>
-    </div>`).join('');
+
+  document.getElementById('d-specs').innerHTML = `
+    <div class="specs-edit-hint" id="specs-edit-hint">
+      <i class="ti ti-pencil" style="font-size:11px;" aria-hidden="true"></i>
+      Toca cualquier campo para editar
+    </div>
+    ${defs.map(s => {
+      const val = specs[s.k] || '';
+      const isEmpty = !val;
+      return `
+      <div class="spec-card${isEmpty ? ' spec-empty' : ''}"
+           data-key="${s.k}"
+           role="button" tabindex="0"
+           aria-label="Editar ${s.l}: ${val || 'vacío'}"
+           title="Toca para editar">
+        <div class="spec-label">${s.l}</div>
+        <div class="spec-value" id="spec-val-${s.k}">${isEmpty ? '<span class="spec-placeholder">Añadir…</span>' : escHtml(val)}</div>
+      </div>`;
+    }).join('')}`;
 
   document.getElementById('d-specs').querySelectorAll('.spec-card').forEach(card => {
-    card.addEventListener('click', () => editSpecInline(card.dataset.key, getWatch(currentWatchId)));
+    const activate = () => editSpecInline(card.dataset.key, getWatch(currentWatchId));
+    card.addEventListener('click', activate);
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }});
   });
+
+  // Also show URL import button in detail view
+  renderSpecsImportBtn(w);
 }
 
 function editSpecInline(key, w) {
@@ -239,6 +259,39 @@ function editSpecInline(key, w) {
       rv.textContent = current || '—'; input.replaceWith(rv);
     }
   });
+}
+
+function renderSpecsImportBtn(w) {
+  // Add/replace the "Import specs from URL" button below the specs grid
+  const specsEl = document.getElementById('d-specs');
+  if (!specsEl) return;
+
+  // Remove previous import section if present
+  const prev = document.getElementById('d-specs-import');
+  if (prev) prev.remove();
+
+  const div = document.createElement('div');
+  div.id = 'd-specs-import';
+  div.style.cssText = 'margin-top:12px;';
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+      <input id="d-url-input" type="url"
+        aria-label="URL para importar especificaciones"
+        class="form-input"
+        placeholder="Pega URL de Amazon, AliExpress, tienda…"
+        style="flex:1;font-size:13px;padding:9px 12px;">
+      <button id="d-url-btn"
+        aria-label="Importar especificaciones desde URL"
+        onclick="importSpecsFromUrl('${w.id}')"
+        style="width:40px;height:40px;border-radius:10px;border:0.5px solid var(--glass-border);
+          background:var(--dark3);color:var(--gold-light);cursor:pointer;font-size:18px;
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ti ti-download" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="d-url-status" style="font-size:11px;color:var(--mid);min-height:14px;"></div>`;
+
+  specsEl.insertAdjacentElement('afterend', div);
 }
 
 function renderPrice(w) {

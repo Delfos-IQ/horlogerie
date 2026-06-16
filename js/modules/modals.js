@@ -4,6 +4,7 @@ function openAddModal() {
   editingPhotoData = null;
   window._pendingDbSpecs = null;
   window._pendingDbPrice = null;
+  window._pendingSource  = null;
   document.getElementById('modal-title-text').textContent = 'Añadir Reloj';
   document.getElementById('modal-save-btn').textContent   = 'Guardar';
   document.getElementById('f-brand').value  = '';
@@ -12,6 +13,25 @@ function openAddModal() {
   document.getElementById('f-type').value   = 'automatic';
   document.getElementById('f-notes').value  = '';
   document.getElementById('photo-preview').style.display = 'none';
+
+  // URL import section
+  const urlSec = document.getElementById('url-import-section');
+  if (urlSec) urlSec.style.display = 'block';
+  const urlInput = document.getElementById('f-url-input');
+  if (urlInput) urlInput.value = '';
+  const urlStatus = document.getElementById('f-url-status');
+  if (urlStatus) urlStatus.textContent = '';
+
+  // Specs preview — hidden until URL import fills it
+  const specsSec = document.getElementById('f-specs-section');
+  if (specsSec) specsSec.style.display = 'none';
+  ['fi-calibre','fi-cristal','fi-diametro','fi-grosor','fi-resistencia',
+   'fi-reserva','fi-caja','fi-brazalete','fi-esfera','fi-precio'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+
+  // DB search
   const dbSec = document.getElementById('db-search-section');
   if (dbSec) dbSec.style.display = 'block';
   const dbInput = document.getElementById('db-search-input');
@@ -19,8 +39,9 @@ function openAddModal() {
   const dbRes = document.getElementById('db-search-results');
   if (dbRes) dbRes.style.display = 'none';
   resetDbHint();
+
   document.getElementById('add-modal').style.display = 'flex';
-  dbLoad(); // preload the database
+  dbLoad();
 }
 
 function resetDbHint() {
@@ -45,8 +66,13 @@ function openEditModal(id) {
   const prev = document.getElementById('photo-preview');
   if (w.photo) { prev.src = w.photo; prev.style.display = 'block'; }
   else { prev.style.display = 'none'; }
+  // Hide URL import and DB search when editing — specs already exist
+  const urlSec = document.getElementById('url-import-section');
+  if (urlSec) urlSec.style.display = 'none';
+  const specsSec = document.getElementById('f-specs-section');
+  if (specsSec) specsSec.style.display = 'none';
   const dbSec = document.getElementById('db-search-section');
-  if (dbSec) dbSec.style.display = 'none'; // hide DB search when editing
+  if (dbSec) dbSec.style.display = 'none';
   document.getElementById('add-modal').style.display = 'flex';
 }
 

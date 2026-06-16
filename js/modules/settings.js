@@ -47,7 +47,8 @@ function renderSettings() {
 
   // Render session ID in settings
   renderSessionId();
-  loadCloudSize(); // async — updates size bar when ready
+  renderSystemStatus();   // fills version + session + sync status panel
+  loadCloudSize();         // async — updates cloud size bar
 }
 
 async function handleExportPDF() {
@@ -174,3 +175,97 @@ async function loadCloudSize() {
 }
 
 window.loadCloudSize = loadCloudSize;
+
+/* ─── System status panel ─── */
+async function renderSystemStatus() {
+  // ── Version row ──
+  const versionVal  = document.getElementById('status-version-val');
+  const versionIcon = document.getElementById('status-version-icon');
+  const versionBtn  = document.getElementById('update-top-btn');
+
+  if (versionVal) {
+    try {
+      const res  = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
+      const data = await res.json();
+      const serverVersion = data.version || APP_VERSION;
+      const isUpToDate    = serverVersion === APP_VERSION;
+
+      versionVal.textContent = isUpToDate
+        ? `v${APP_VERSION} · Al día ✓`
+        : `v${APP_VERSION} → v${serverVersion} disponible`;
+      versionVal.style.color = isUpToDate ? '#4CAF50' : '#D4AF6A';
+
+      if (versionIcon) {
+        versionIcon.style.color     = isUpToDate ? '#4CAF50' : '#D4AF6A';
+        versionIcon.style.background = isUpToDate
+          ? 'rgba(76,175,80,0.12)' : 'rgba(212,175,106,0.12)';
+      }
+      if (!isUpToDate && versionBtn) {
+        versionBtn.style.color       = '#D4AF6A';
+        versionBtn.style.borderColor = 'rgba(212,175,106,0.4)';
+      }
+    } catch {
+      if (versionVal) {
+        versionVal.textContent = `v${APP_VERSION}`;
+        versionVal.style.color = 'var(--light)';
+      }
+    }
+  }
+
+  // ── Session row ──
+  const sessionSub  = document.getElementById('status-session-sub');
+  const sessionIcon = document.getElementById('status-session-icon');
+  const sessionId   = getSessionId();
+
+  // Check if cloud has data for this session
+  try {
+    const res  = await fetch(`${CONFIG.WORKER_URL}/sync/exists?userId=${encodeURIComponent(sessionId)}`);
+    const data = await res.json();
+
+    if (sessionIcon) {
+      sessionIcon.style.color      = data.exists ? '#4CAF50' : 'var(--mid)';
+      sessionIcon.style.background = data.exists
+        ? 'rgba(76,175,80,0.12)' : 'var(--dark3)';
+    }
+    if (sessionSub) {
+      sessionSub.textContent = data.exists
+        ? `${data.count} relojes en la nube · Misma sesión en todos tus dispositivos`
+        : 'Sin datos en la nube todavía — sincroniza para activar multi-dispositivo';
+      sessionSub.style.color = data.exists ? '#4CAF50' : 'var(--mid)';
+    }
+  } catch {
+    if (sessionSub) sessionSub.textContent = 'Sin conexión';
+  }
+
+  // ── Sync row ──
+  const syncVal  = document.getElementById('status-sync-val');
+  const syncSub  = document.getElementById('status-sync-sub');
+  const syncIcon = document.getElementById('status-sync-icon');
+  const meta     = getSyncMeta ? getSyncMeta() : {};
+  const lastPush = meta.lastPush;
+
+  if (syncVal) {
+    if (!lastPush) {
+      syncVal.textContent  = 'Nunca sincronizado';
+      syncVal.style.color  = 'var(--mid)';
+    } else {
+      const mins = Math.round((Date.now() - lastPush) / 60000);
+      const when = mins < 1 ? 'hace un momento'
+        : mins < 60 ? `hace ${mins} min`
+        : mins < 1440 ? `hace ${Math.round(mins/60)}h`
+        : `hace ${Math.round(mins/1440)} días`;
+      syncVal.textContent = `Última sync: ${when}`;
+      syncVal.style.color = mins < 60 ? '#4CAF50' : mins < 1440 ? '#D4AF6A' : 'var(--mid)';
+      if (syncIcon) {
+        syncIcon.style.color      = mins < 60 ? '#4CAF50' : '#D4AF6A';
+        syncIcon.style.background = mins < 60
+          ? 'rgba(76,175,80,0.12)' : 'rgba(212,175,106,0.12)';
+      }
+    }
+  }
+  if (syncSub) {
+    syncSub.textContent = 'Toca ↻ para sincronizar ahora';
+  }
+}
+
+window.renderSystemStatus = renderSystemStatus;

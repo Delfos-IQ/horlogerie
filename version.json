@@ -1,5 +1,5 @@
 {
-  "version": "1.9.0",
+  "version": "2.1.0",
   "date": "2026-06-06",
-  "notes": "Fase 5: eliminado c\u00f3digo muerto, import-url simplificado con prompt mejorado para marcas chinas"
+  "notes": "Importar specs por URL en colecci\u00f3n + specs editables en detalle unificadas"
 }
