@@ -137,6 +137,21 @@ function openDetail(id) {
 
   showView('detail');
   startActiveTimer(id);
+
+  // Wire static buttons AFTER showView so they're in the visible DOM
+  // Clone to remove any previous listeners, then re-attach
+  const deleteBtn = document.querySelector('.btn-delete');
+  if (deleteBtn) {
+    const fresh = deleteBtn.cloneNode(true);
+    deleteBtn.replaceWith(fresh);
+    fresh.addEventListener('click', () => handleDeleteWatch(w.id));
+  }
+  const editBtn = document.querySelector('.btn-edit');
+  if (editBtn) {
+    const fresh = editBtn.cloneNode(true);
+    editBtn.replaceWith(fresh);
+    fresh.addEventListener('click', () => openEditModal(w.id));
+  }
 }
 
 function updateDayCounter(w) {
@@ -172,15 +187,15 @@ function renderDetailActions(w) {
   const div = document.getElementById('d-actions');
   const activeW = getActiveWatch();
   if (w.wearStart) {
-    div.innerHTML = `<button class="action-btn btn-stop" id="btn-stop-wear"><i class="ti ti-player-stop"></i> Quitarme este reloj</button>`;
+    div.innerHTML = `<button class="action-btn btn-stop" id="btn-stop-wear"><i class="ti ti-player-stop" aria-hidden="true"></i> Quitarme este reloj</button>`;
     document.getElementById('btn-stop-wear').addEventListener('click', () => handleStopWearing(w.id));
   } else if (!activeW) {
-    div.innerHTML = `<button class="action-btn btn-wear" id="btn-start-wear"><i class="ti ti-wrist-watch"></i> Ponerme este reloj</button>`;
+    div.innerHTML = `<button class="action-btn btn-wear" id="btn-start-wear"><i class="ti ti-wrist-watch" aria-hidden="true"></i> Ponerme este reloj</button>`;
     document.getElementById('btn-start-wear').addEventListener('click', () => handleStartWearing(w.id));
   } else {
     div.innerHTML = `
       <div class="readonly-banner">
-        <i class="ti ti-eye" style="color:var(--gold-light);font-size:16px;"></i>
+        <i class="ti ti-eye" style="color:var(--gold-light);font-size:16px;" aria-hidden="true"></i>
         <div>
           <div style="font-size:13px;color:var(--light);font-weight:500;">Modo consulta</div>
           <div style="font-size:11px;color:var(--mid);margin-top:2px;">
@@ -190,6 +205,7 @@ function renderDetailActions(w) {
         </div>
       </div>`;
   }
+
 }
 
 function renderSpecs(w) {
@@ -329,11 +345,13 @@ function handleStopWearing(id) {
 
 /* ─── Delete (custom confirm) ─── */
 function handleDeleteWatch(id) {
-  showConfirm('¿Eliminar reloj?', 'Se borrará el reloj y todo su historial. Esta acción no se puede deshacer.', () => {
+  const w = getWatch(id);
+  const name = w ? `${w.brand} ${w.model}` : 'este reloj';
+  showConfirm('¿Eliminar reloj?', `Se borrará ${name} y todo su historial. Esta acción no se puede deshacer.`, () => {
     deleteWatch(id); showView('home'); showToast('Reloj eliminado');
   });
 }
-window.deleteWatch = handleDeleteWatch;
+window.handleDeleteWatch = handleDeleteWatch;
 
 function showConfirm(title, msg, onConfirm) {
   const overlay = document.createElement('div');

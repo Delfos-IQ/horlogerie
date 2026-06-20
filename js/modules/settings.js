@@ -123,7 +123,6 @@ window.handleExportPDF     = handleExportPDF;
 window.handleExportJSON    = handleExportJSON;
 window.handleImportJSON    = handleImportJSON;
 window.processImportJSON   = processImportJSON;
-window.syncManual          = syncManual;
 window.handleDbSearch      = handleDbSearch;
 window.renderSettings      = renderSettings;
 

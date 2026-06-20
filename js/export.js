@@ -536,12 +536,7 @@ function roundedRect(doc, x, y, w, h, r, fillColor) {
   doc.roundedRect(x, y, w, h, r, r, 'F');
 }
 
-function formatDate(ts) {
-  return new Date(ts).toLocaleDateString('es-ES', {
-    day: '2-digit', month: 'short', year: 'numeric'
-  });
-}
-
+// formatDate is defined in core.js (loaded after this file)
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }

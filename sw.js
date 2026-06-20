@@ -8,28 +8,28 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v19';
+const CACHE   = 'horlogerie-v21';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
 const SHELL = [
   `${BASE}/`,
   `${BASE}/index.html`,
-  `${BASE}/css/app.css?v=2.1.0`,
-  `${BASE}/js/db.js?v=2.1.0`,
-  `${BASE}/js/storage.js?v=2.1.0`,
-  `${BASE}/js/api.js?v=2.1.0`,
-  `${BASE}/js/sync.js?v=2.1.0`,
-  `${BASE}/js/export.js?v=2.1.0`,
-  `${BASE}/js/modules/core.js?v=2.1.0`,
-  `${BASE}/js/modules/home-detail.js?v=2.1.0`,
-  `${BASE}/js/modules/modals.js?v=2.1.0`,
-  `${BASE}/js/modules/history.js?v=2.1.0`,
-  `${BASE}/js/modules/settings.js?v=2.1.0`,
-  `${BASE}/js/modules/wishlist.js?v=2.1.0`,
-  `${BASE}/js/modules/session.js?v=2.1.0`,
-  `${BASE}/js/modules/updates.js?v=2.1.0`,
-  `${BASE}/js/modules/url-import.js?v=2.1.0`,
+  `${BASE}/css/app.css?v=2.1.2`,
+  `${BASE}/js/db.js?v=2.1.2`,
+  `${BASE}/js/storage.js?v=2.1.2`,
+  `${BASE}/js/api.js?v=2.1.2`,
+  `${BASE}/js/sync.js?v=2.1.2`,
+  `${BASE}/js/export.js?v=2.1.2`,
+  `${BASE}/js/modules/core.js?v=2.1.2`,
+  `${BASE}/js/modules/home-detail.js?v=2.1.2`,
+  `${BASE}/js/modules/modals.js?v=2.1.2`,
+  `${BASE}/js/modules/history.js?v=2.1.2`,
+  `${BASE}/js/modules/settings.js?v=2.1.2`,
+  `${BASE}/js/modules/wishlist.js?v=2.1.2`,
+  `${BASE}/js/modules/session.js?v=2.1.2`,
+  `${BASE}/js/modules/updates.js?v=2.1.2`,
+  `${BASE}/js/modules/url-import.js?v=2.1.2`,
   `${BASE}/manifest.json`,
   `${BASE}/watches_db.json`,  `${BASE}/icons/icon-192.png`,
   `${BASE}/icons/icon-512.png`,
@@ -37,12 +37,21 @@ const SHELL = [
   `${BASE}/favicon.ico`,
 ];
 
-/* ── INSTALL: pre-cache shell, skip waiting immediately ── */
+/* ── INSTALL: pre-cache shell, resilient to individual fetch failures ── */
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(SHELL))
-      .then(() => self.skipWaiting())   // activate new SW immediately
+    caches.open(CACHE).then(async cache => {
+      // addAll() fails entirely if ANY single URL fails (flaky network, etc).
+      // Use allSettled so a single failed asset doesn't block the whole install.
+      const results = await Promise.allSettled(
+        SHELL.map(url => cache.add(url))
+      );
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length) {
+        console.warn(`SW install: ${failed.length}/${SHELL.length} assets failed to pre-cache`);
+      }
+      return self.skipWaiting();
+    })
   );
 });
 

@@ -31,7 +31,13 @@ function getSyncMeta() {
   try { return JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}'); } catch { return {}; }
 }
 function setSyncMeta(d) {
-  localStorage.setItem(SYNC_META_KEY, JSON.stringify({ ...getSyncMeta(), ...d }));
+  try {
+    localStorage.setItem(SYNC_META_KEY, JSON.stringify({ ...getSyncMeta(), ...d }));
+  } catch (e) {
+    // localStorage unavailable (private mode, quota exceeded) — session won't persist
+    // across reloads, but the app keeps working in-memory for this session.
+    if (typeof showToast === 'function') showToast('⚠️ No se pudo guardar la sesión localmente');
+  }
 }
 
 /* ════════════════════════════════════════

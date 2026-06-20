@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.1.2",
   "date": "2026-06-06",
-  "notes": "Importar specs por URL en colecci\u00f3n + specs editables en detalle unificadas"
+  "notes": "Auditor\u00eda pre-PlayStore: fix QR roto, localStorage sin try/catch, SW resiliente a fallos de red, manifest background_color"
 }

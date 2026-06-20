@@ -39,11 +39,61 @@ document.addEventListener('keydown', e => {
     const el = document.getElementById(id);
     if (el && el.style.display !== 'none') {
       el.style.display = 'none';
-      // Return focus to the element that opened it (FAB or triggering button)
       const fab = document.querySelector('.fab');
       if (fab) fab.focus();
       break;
     }
+  }
+});
+
+/* ─── Android back gesture / browser back button ─── */
+// Navigation model:
+//  - 'home' is the root state, set via replaceState (never pushed again)
+//  - Any other view does pushState, building a real back-stack
+//  - On popstate, we ALWAYS handle navigation ourselves (never delegate
+//    to the browser) UNLESS we're already at the root with nothing to
+//    pop — only then does the gesture exit the app, which is correct.
+window.addEventListener('popstate', e => {
+  const targetView = e.state?.view || 'home';
+
+  // If a modal is open, close it instead of navigating away
+  const modals = ['wishlist-modal', 'add-modal', 'photo-sheet', 'import-session-modal', 'qr-modal'];
+  for (const id of modals) {
+    const el = document.getElementById(id);
+    if (el && el.style.display !== 'none') {
+      el.style.display = 'none';
+      history.pushState({ view: targetView }, '', '');
+      return;
+    }
+  }
+
+  // Always render the target view explicitly — including 'home'.
+  // This is what makes the gesture go "back into the app" instead of
+  // exiting it when there's still a view above home in the stack.
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x => {
+    x.classList.remove('active');
+    x.setAttribute('aria-selected', 'false');
+  });
+  const viewEl = document.getElementById('view-' + targetView);
+  if (viewEl) viewEl.classList.add('active');
+  const navEl = document.getElementById('nav-' + targetView);
+  if (navEl) { navEl.classList.add('active'); navEl.setAttribute('aria-selected', 'true'); }
+  stopActiveTimer();
+  if (targetView === 'home')     renderHome();
+  if (targetView === 'history')  renderHistory();
+  if (targetView === 'settings') renderSettings();
+  if (targetView === 'wishlist') renderWishlist();
+  updateFab(targetView);
+  // When targetView is 'home' and the user gestures back again, there is
+  // no further pushState entry above home, so the browser/OS takes over
+  // and correctly exits the app — exactly the behaviour requested.
+});
+
+// Set initial history state on load so there's always a 'home' entry
+window.addEventListener('load', () => {
+  if (!history.state) {
+    history.replaceState({ view: 'home' }, '', '');
   }
 });
 
@@ -134,6 +184,15 @@ function showView(v) {
   if (v === 'wishlist') renderWishlist();
   document.getElementById('view-' + v).scrollTop = 0;
   updateFab(v);
+
+  // Push a history state so Android back gesture navigates within the app
+  // When on 'home', replace state (no back from home → exits app, correct behaviour)
+  // When on any other view, push so back returns to previous view
+  if (v === 'home') {
+    history.replaceState({ view: 'home' }, '', '');
+  } else {
+    history.pushState({ view: v }, '', '');
+  }
 }
 
 /* FAB shows only on views where "add" makes sense, and calls the right handler */

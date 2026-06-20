@@ -30,15 +30,17 @@ function copySessionId() {
 }
 
 function showQR() {
-  const id   = getSessionId();
+  const id    = getSessionId();
   const modal = document.getElementById('qr-modal');
   if (!modal) return;
   document.getElementById('qr-session-id').textContent = id;
 
   // Generate QR using a free QR API (no key needed)
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(id)}&bgcolor=1A1A1A&color=D4AF6A`;
-  const img   = document.getElementById('qr-img');
-  if (img) { img.src = qrUrl; img.style.display = 'block'; }
+  const container = document.getElementById('qr-container');
+  if (container) {
+    container.innerHTML = `<img src="${qrUrl}" alt="Código QR de sesión" width="200" height="200" style="border-radius:10px;">`;
+  }
 
   modal.style.display = 'flex';
 }

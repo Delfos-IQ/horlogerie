@@ -1,7 +1,7 @@
-const APP_VERSION = '2.1.0'; // Must match version.json
+const APP_VERSION = '2.1.2'; // Must match version.json
 
 async function initVersionCheck() {
-  // Populate all version display elements
+  // Hidden legacy elements kept for backward compatibility with other modules
   const vEl  = document.getElementById('app-version-display');
   const vEl2 = document.getElementById('app-version-display2');
   if (vEl)  vEl.textContent  = APP_VERSION;
@@ -16,11 +16,6 @@ async function initVersionCheck() {
     if (dEl && data.date) dEl.textContent = `Publicada el ${data.date}`;
     if (data.version && data.version !== APP_VERSION) {
       showUpdateBanner(data.version, data.notes);
-      // Also highlight the top button in settings
-      const topBtn = document.getElementById('update-top-btn');
-      const topSub = document.getElementById('update-top-sub');
-      if (topBtn) topBtn.style.borderColor = '#4CAF50';
-      if (topSub) topSub.innerHTML = `<span style="color:#4CAF50;font-weight:500;">⬆ Nueva versión ${data.version} disponible</span>`;
     }
   } catch { /* Offline — skip */ }
 }
