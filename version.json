@@ -1,5 +1,5 @@
 {
-  "version": "2.8.0",
+  "version": "2.9.0",
   "date": "2026-10-11",
-  "notes": "Nube más simple: clave corta de recuperación, vincular dispositivos con un código de 6 caracteres, ayuda y licencias"
+  "notes": "Rellenar desde un enlace sin IA: copia solo lo que dice la página y muestra de qué línea sale cada dato"
 }

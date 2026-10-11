@@ -4,8 +4,9 @@
  * One bottom sheet used from three places (new watch, watch detail, wishlist):
  *   1. The user pastes a product link (shop or official site) — or, if the shop
  *      blocks automatic reading, the text of the spec sheet.
- *   2. The Worker (v12+) downloads the page, extracts the specs and checks every
- *      value against the page text.
+ *   2. Without AI: the Worker (v13+) downloads the page and returns its text;
+ *      js/spec-parser.js copies the specs that the page states. Pasted text is
+ *      parsed on the device and never leaves it.
  *   3. The sheet shows what was found next to what is already saved; the user
  *      ticks what to apply. Nothing is overwritten without a tick.
  */
@@ -20,23 +21,22 @@ const IMPORT_SPEC_KEYS = ['calibre','movimiento','cristal','diametro','grosor','
 const TYPE_LABELS = { automatic: 'Automático', quartz: 'Cuarzo', manual: 'Cuerda manual' };
 
 /* ── Availability ──
-   The button is shown whenever the feature switch is on. Whether the server
-   supports it (Worker v12+ with an AI key) is checked only when the user taps
-   it, so the app makes no background requests. */
+   Pasted text works always (parsed on the device). Reading a link needs the
+   Worker v13+, which downloads the page; checked only when the user taps. */
 function importEnabled() { return !!FEATURES.urlImport; }
 async function serverSupportsImport() {
   const c = await workerCaps();
-  return !!(c.importUrl && parseInt(String(c.version || '0'), 10) >= 12);
+  return !!c.importSource;
 }
 
 /* ── Network ── */
-async function requestImport({ url, text }) {
+async function requestPage(url) {
   const res = await fetch(`${CONFIG.WORKER_URL}/import-url`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(url ? { url } : { text }),
+    body: JSON.stringify({ url }),
   });
-  if (res.status === 429) return { _blocked: true, _message: 'Demasiadas importaciones seguidas. Espera una hora o rellena a mano.' };
+  if (res.status === 429) return { _blocked: true, _message: 'Demasiadas lecturas seguidas. Espera una hora o pega el texto de la ficha.' };
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
     return { _blocked: true, _message: e.error || `Error ${res.status}` };
@@ -52,14 +52,12 @@ function looksLikeUrl(v) { return /^https?:\/\/\S+\.\S+/i.test(v.trim()); }
  *   onApply(values, meta): values = only the ticked fields; meta = { sourceUrl, source }
  */
 async function openImportSheet(opts) {
-  if (!navigator.onLine) { showToast('Necesitas conexión para leer un enlace'); return; }
-  let ok = false;
-  try { ok = await serverSupportsImport(); } catch {}
-  if (!ok) { showToast('Esta función aún no está disponible en el servidor. Rellena los datos a mano.', 4000); return; }
-  buildImportSheet(opts);
+  let canRead = false;
+  if (navigator.onLine) { try { canRead = await serverSupportsImport(); } catch {} }
+  buildImportSheet({ ...opts, canRead });
 }
 
-function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, onApply }) {
+function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, onApply, canRead = true }) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = 'display:flex;z-index:450;';
@@ -82,6 +80,7 @@ function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, on
             placeholder="Copia aquí las especificaciones (calibre, diámetro, cristal…)"></textarea>
         </details>
         <div class="imp-status" id="imp-status" role="status" aria-live="polite"></div>
+        <div class="imp-how">Se copian solo los datos que la página dice, tal cual. Nada se rellena por suposición.</div>
         <div class="modal-actions">
           <button class="modal-btn modal-btn-cancel" data-act="cancel">Cancelar</button>
           <button class="modal-btn modal-btn-save" data-act="read">Leer especificaciones</button>
@@ -119,23 +118,34 @@ function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, on
     }
   });
 
+  if (!canRead) {
+    $('.imp-paste').open = true;
+    status(navigator.onLine
+      ? 'Leer enlaces necesita la nueva versión del servidor. Mientras tanto, pega el texto de la ficha: funciona igual.'
+      : 'Sin conexión no se pueden leer enlaces, pero sí el texto de la ficha que pegues.', 'info');
+  }
+
   $('[data-act="read"]').addEventListener('click', async () => {
     const url  = $('#imp-url').value.trim();
     const text = $('#imp-text').value.trim();
     if (!url && !text) { status('Pega un enlace o el texto de la ficha.', 'error'); return; }
     if (url && !looksLikeUrl(url) && !text) { status('Eso no parece un enlace. Empieza por https://', 'error'); return; }
+    if (!text && !canRead) { status('Ahora mismo solo se puede leer texto pegado. Copia la ficha de la página y pégala abajo.', 'error'); $('.imp-paste').open = true; return; }
+    if (text) {
+      if (text.length < 20) { status('El texto es demasiado corto. Copia la ficha técnica completa.', 'error'); return; }
+      return showFound(parseSpecs({ text }), '', 'el texto pegado');
+    }
     const btn = $('[data-act="read"]');
     btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Leyendo…';
-    status(text ? 'Leyendo el texto…' : 'Leyendo la página… (5-15 s)');
+    status('Leyendo la página… (2-10 s)');
     try {
-      const data = await requestImport(text ? { text } : { url });
-      if (data._blocked || data._empty) {
-        status(data._message || 'No se encontraron especificaciones.', 'error');
-        if (data._blocked) $('.imp-paste').open = true;
+      const page = await requestPage(url);
+      if (page._blocked || page._empty) {
+        status(page._message || 'No se pudo leer la página.', 'error');
+        $('.imp-paste').open = true;
         return;
       }
-      found = data; sourceUrl = text ? '' : url;
-      renderReview();
+      showFound(parseSpecs(page), url, page._source || '');
     } catch {
       status('Sin conexión. Inténtalo cuando tengas internet.', 'error');
     } finally {
@@ -143,10 +153,22 @@ function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, on
     }
   });
 
+  function showFound(parsed, url, source) {
+    const n = Object.keys(IMPORT_LABELS).filter(k => parsed[k]).length;
+    if (!n) {
+      status('No encontré especificaciones en ' + (url ? 'esa página' : 'ese texto') + '. Prueba a copiar la tabla de la ficha técnica y pegarla abajo.', 'error');
+      $('.imp-paste').open = true;
+      return;
+    }
+    found = { ...parsed, _source: source }; sourceUrl = url;
+    renderReview();
+  }
+
   function renderReview() {
     const rows = Object.keys(IMPORT_LABELS).filter(k => found[k]);
-    $('#imp-source').innerHTML = `<i class="ti ti-check" aria-hidden="true"></i> ${rows.length} datos encontrados en <strong>${escHtml(found._source || '')}</strong>` +
-      (found._dropped?.length ? `<br><small>${found._dropped.length} dato(s) descartado(s) porque no aparecían en la página</small>` : '');
+    const from = found._from || {};
+    $('#imp-source').innerHTML = `<i class="ti ti-check" aria-hidden="true"></i> ${rows.length} datos leídos en <strong>${escHtml(found._source || '')}</strong>` +
+      `<br><small>Debajo de cada dato ves la línea de la que sale.</small>`;
     $('#imp-rows').innerHTML = rows.map(k => {
       const nv = k === 'type' ? (TYPE_LABELS[found[k]] || found[k]) : found[k];
       const cvRaw = current[k];
@@ -156,7 +178,7 @@ function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, on
       return `<label class="imp-row">
         <input type="checkbox" data-key="${k}" ${checked ? 'checked' : ''}>
         <span class="imp-label">${IMPORT_LABELS[k]}</span>
-        <span class="imp-val">${escHtml(nv)}${cv && !same ? `<small>Ahora: ${escHtml(cv)}</small>` : ''}</span>
+        <span class="imp-val">${escHtml(nv)}${cv && !same ? `<small>Ahora: ${escHtml(cv)}</small>` : ''}${from[k] ? `<em class="imp-from">«${escHtml(from[k])}»</em>` : ''}</span>
       </label>`;
     }).join('');
     $('[data-step="input"]').hidden = true; $('[data-step="review"]').hidden = false;
@@ -169,7 +191,7 @@ function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, on
     onApply(values, { sourceUrl, source: found._source || '' });
   });
 
-  setTimeout(() => $('#imp-url').focus(), 50);
+  setTimeout(() => (canRead ? $('#imp-url') : $('#imp-text')).focus(), 50);
 }
 window.openImportSheet = openImportSheet;
 
@@ -228,7 +250,7 @@ function importIntoWatch(watchId) {
     title: `Especificaciones · ${w.brand} ${w.model}`,
     current: { brand: w.brand, model: w.model, ref: w.ref, type: w.type, precio: w.price?.value || '', notas: w.notes, ...(w.specs || {}) },
     onApply: async (v, meta) => {
-      const changes = { specs: { ...(w.specs || {}), ...splitImported(v) }, _source: meta.source };
+      const changes = { specs: { ...(w.specs || {}), ...splitImported(v) }, _source: meta.source, _warning: '' };
       if (v.brand) changes.brand = v.brand;
       if (v.model) changes.model = v.model;
       if (v.ref)   changes.ref = v.ref;

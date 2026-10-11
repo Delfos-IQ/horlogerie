@@ -7,6 +7,9 @@
  *   - Device linking: /pair/create stores a one-use 6-character code for
  *     10 minutes that points to the session; /pair/claim swaps it for the
  *     session id. Claims are limited to 10 per hour per IP.
+ *   - /import-url no longer uses AI (Groq removed): it downloads the page the
+ *     user links to and returns the spec-bearing text; the app parses it.
+ *     GROQ_API_KEY is no longer needed and can be deleted from Cloudflare.
  *
  * v12 (oct 2026):
  *   - /import-url rebuilt: the Worker downloads the page itself, extracts the
@@ -21,19 +24,17 @@
  *   - The session id can travel in the X-Horlogerie-User header (preferred,
  *     keeps it out of URLs and logs). ?userId= still works for older apps.
  *   - The wishlist is stored next to the collection (optional field).
- *   - GROQ_API_KEY is only required by /import-url: sync works without it.
+ *   - (v11) GROQ_API_KEY was only required by /import-url; v13 does not use it.
  *   - /health reports capabilities so the app can pick the safest protocol.
  *
  * Secrets / variables (Cloudflare dashboard → Settings → Variables):
- *   GROQ_API_KEY      — needed only for /import-url
- *   GROQ_MODEL        — optional, default openai/gpt-oss-20b
- *   IMPORT_DAILY_CAP  — optional, imports per day for everyone (default 300)
+ *   IMPORT_DAILY_CAP  — optional, page reads per day for everyone (default 300)
  *
  * KV Binding: HORLOGERIE_KV
  *
  * Security (Fase 2):
  *   - CORS restricted to GitHub Pages origin only
- *   - Rate limiting on AI endpoints (20 req/hour per IP via KV)
+ *   - Rate limiting on page reads and linking codes (per IP via KV)
  *   - Payload size validation on /sync/push (max 3MB)
  *   - UUID validation on all userId inputs
  *   - Error logging to KV (24h TTL) — no public debug endpoint
@@ -46,8 +47,6 @@ const ALLOWED_ORIGINS = [
   // Add your custom domain here if you set one up
 ];
 
-/* ── Models ── */
-const DEFAULT_IMPORT_MODEL = 'openai/gpt-oss-20b';   // ~0.0004 $ per import
 
 /* ── Limits ── */
 const USER_DATA_TTL     = null;           // null = permanent; set seconds to expire
@@ -111,8 +110,7 @@ export default {
       if (pathname === '/pair/claim'  && method === 'POST')   return await handlePairClaim(request, env, origin);
       if (pathname === '/health'      || pathname === '/')    return corsResponse({
         status: 'ok', version: '13.0', kv: !!env.HORLOGERIE_KV,
-        caps: { userHeader: true, wishlist: true, importUrl: !!env.GROQ_API_KEY, importText: !!env.GROQ_API_KEY,
-                shortKey: true, pairing: true },
+        caps: { userHeader: true, wishlist: true, importUrl: true, importSource: true, shortKey: true, pairing: true },
       }, 200, origin);
 
       return corsResponse({ error: 'Not found' }, 404, origin);
@@ -399,66 +397,53 @@ async function handleSyncSize(request, env, origin) {
 }
 
 /* ══════════════════════════════════════════
-   IMPORT — specs from a product page URL or from pasted text
-   1. Download the page (or take the pasted text)
-   2. Reduce it to the parts that carry specs (JSON-LD, tables, lists…)
-   3. Ask a small model for a fixed JSON shape
-   4. Keep only values that can be found in the source text
+   IMPORT — read a product page the user links to (v13: no AI)
+   1. Download the page (public pages only, size and time limits)
+   2. Reduce it to the parts that carry specs (JSON-LD, tables, lists, lines)
+   3. Return that text: the app reads the specs itself (js/spec-parser.js),
+      so nothing is invented and the parser can improve without redeploying.
+   Pasted text never reaches the server: the app parses it locally.
 ══════════════════════════════════════════ */
-const IMPORT_FIELDS = ['brand','model','ref','type','calibre','movimiento','cristal','diametro','grosor',
-                       'resistencia','reserva','caja','brazalete','esfera','asas','precio','notas'];
 const IMPORT_CACHE_TTL = 30 * 86400;
 const MAX_PAGE_BYTES   = 1_500_000;
-const MAX_SOURCE_CHARS = 14_000;
+const MAX_SOURCE_CHARS = 20_000;
 
 async function handleImportUrl(request, env, origin) {
-  if (!env.GROQ_API_KEY) return corsResponse({ error: 'Importación no disponible' }, 503, origin);
   let body;
   try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
+  const pageUrl = typeof body.url === 'string' ? body.url.trim() : '';
+  if (!pageUrl) return corsResponse({ error: 'Falta el enlace' }, 400, origin);
 
-  const pastedText = typeof body.text === 'string' ? body.text.trim() : '';
-  const pageUrl    = typeof body.url  === 'string' ? body.url.trim()  : '';
-  if (!pastedText && !pageUrl) return corsResponse({ error: 'Falta el enlace o el texto' }, 400, origin);
+  let u;
+  try { u = new URL(pageUrl); } catch { return corsResponse({ error: 'Enlace no válido' }, 400, origin); }
+  if (!['http:', 'https:'].includes(u.protocol) || isPrivateHost(u.hostname, env)) {
+    return corsResponse({ error: 'Enlace no válido' }, 400, origin);
+  }
+  const hostname = u.hostname.replace(/^www\./, '');
+
+  const cacheKey = `imp2:${await hashString(normalizeUrl(u))}`;
+  const cached = env.HORLOGERIE_KV ? await env.HORLOGERIE_KV.get(cacheKey).catch(() => null) : null;
+  if (cached) return corsResponse({ ...JSON.parse(cached), _cached: true }, 200, origin);
 
   if (!(await underDailyCap(env))) {
-    return corsResponse({ _blocked: true, _message: 'Se ha alcanzado el límite diario de importaciones. Inténtalo mañana o rellena los datos a mano.' }, 200, origin);
+    return corsResponse({ _blocked: true, _message: 'Se ha alcanzado el límite diario de lecturas. Pega el texto de la ficha o inténtalo mañana.' }, 200, origin);
   }
 
-  let source, hostname = '';
-  if (pastedText) {
-    if (pastedText.length < 20) return corsResponse({ _empty: true, _message: 'El texto es demasiado corto. Copia la ficha técnica completa.' }, 200, origin);
-    source = { text: pastedText.slice(0, MAX_SOURCE_CHARS), title: '', jsonld: null };
-    hostname = 'texto pegado';
-  } else {
-    let u;
-    try { u = new URL(pageUrl); } catch { return corsResponse({ error: 'Enlace no válido' }, 400, origin); }
-    if (!['http:', 'https:'].includes(u.protocol) || isPrivateHost(u.hostname, env)) {
-      return corsResponse({ error: 'Enlace no válido' }, 400, origin);
-    }
-    hostname = u.hostname.replace(/^www\./, '');
-
-    const cacheKey = `imp:${await hashString(normalizeUrl(u))}`;
-    const cached = env.HORLOGERIE_KV ? await env.HORLOGERIE_KV.get(cacheKey).catch(() => null) : null;
-    if (cached) return corsResponse({ ...JSON.parse(cached), _cached: true }, 200, origin);
-
-    const page = await downloadPage(u);
-    if (page.blocked) {
-      return corsResponse({ _blocked: true, _domain: hostname,
-        _message: `${hostname} no deja leer la página automáticamente. Abre la ficha, copia el texto de las especificaciones y pégalo en «Pegar texto».` }, 200, origin);
-    }
-    source = buildSource(page.html);
-    if (source.text.length < 40) {
-      return corsResponse({ _empty: true, _domain: hostname,
-        _message: 'La página no tiene texto legible (se carga con JavaScript). Copia las especificaciones y pégalas en «Pegar texto».' }, 200, origin);
-    }
-    const result = await extractSpecs(env, source, hostname);
-    if (result._ok && env.HORLOGERIE_KV) {
-      await env.HORLOGERIE_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: IMPORT_CACHE_TTL }).catch(() => {});
-    }
-    return corsResponse(result, 200, origin);
+  const page = await downloadPage(u);
+  if (page.blocked) {
+    return corsResponse({ _blocked: true, _domain: hostname,
+      _message: `${hostname} no deja leer la página automáticamente. Abre la ficha, copia el texto de las especificaciones y pégalo en «Pegar texto».` }, 200, origin);
   }
-
-  return corsResponse(await extractSpecs(env, source, hostname), 200, origin);
+  const source = buildSource(page.html);
+  if (source.text.length < 40 && !source.jsonld) {
+    return corsResponse({ _empty: true, _domain: hostname,
+      _message: 'La página no tiene texto legible (se carga con JavaScript). Copia las especificaciones y pégalas en «Pegar texto».' }, 200, origin);
+  }
+  const result = { _ok: true, _source: hostname, title: source.title, jsonld: source.jsonld, text: source.text };
+  if (env.HORLOGERIE_KV) {
+    await env.HORLOGERIE_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: IMPORT_CACHE_TTL }).catch(() => {});
+  }
+  return corsResponse(result, 200, origin);
 }
 
 /* ── Daily global cap (bounds the AI bill if the endpoint is abused) ── */
@@ -594,105 +579,12 @@ function buildSource(html) {
   const specLines = body.split('\n').filter(l => SPEC_HINT.test(l) && l.length < 300);
   if (specLines.length) parts.push('LÍNEAS CON DATOS:\n' + [...new Set(specLines)].slice(0, 120).join('\n'));
 
-  return { text: parts.join('\n\n').slice(0, MAX_SOURCE_CHARS), title: decodeEntities(ogTitle || title).trim(), jsonld: jsonld[0] || null };
+  const p = jsonld[0];
+  const slim = p ? { name: p.name, brand: p.brand, mpn: p.mpn, model: typeof p.model === 'string' ? p.model : undefined, sku: p.sku,
+                     offers: [].concat(p.offers || []).slice(0, 1).map(o => ({ price: o.price ?? o.lowPrice, priceCurrency: o.priceCurrency })),
+                     additionalProperty: [].concat(p.additionalProperty || []).slice(0, 60).map(x => ({ name: x.name, value: x.value })) } : null;
+  return { text: parts.join('\n\n').slice(0, MAX_SOURCE_CHARS), title: decodeEntities(ogTitle || title).trim(), jsonld: slim };
 }
 
 const SPEC_HINT = /calib|caliber|movement|movimiento|movimento|automatic|autom[aá]tic|quartz|cuarzo|quartzo|cristal|crystal|vidro|zafiro|sapphire|safira|di[aá]metro|diameter|case size|caja|case|caixa|grosor|thickness|espessura|water|agua|[áa]gua|resist|\bATM\b|\bbar\b|reserva|power reserve|bracelet|brazalete|correa|strap|pulseira|dial|esfera|mostrador|lug|asas|\bmm\b|jewels|rub[ií]es|\bbph\b|NH3\d|Miyota|Seiko|ETA|Sellita|Seagull|PT5000/i;
 
-/* ── Ask the model, then verify every value against the source ── */
-async function extractSpecs(env, source, hostname) {
-  const system = `Eres un extractor de fichas técnicas de relojes de pulsera. Devuelves SOLO un objeto JSON.
-Reglas:
-- Usa únicamente datos que aparezcan en el TEXTO. Si un dato no aparece, deja "".
-- No deduzcas calibres, medidas ni materiales por conocimiento propio.
-- Escribe en español, breve: "Zafiro", "Acero inoxidable 316L", "200 m (20 ATM)", "40 mm", "41 h".
-- type: "automatic", "quartz" o "manual" solo si el texto lo dice (incluye "mecha-quartz" como "quartz").
-- precio: tal como aparece con su moneda.
-- notas: como máximo una frase con algo útil que no encaje en otro campo (complicaciones, edición limitada...).`;
-  const user = `Fuente: ${hostname}
-Devuelve este JSON: {"brand":"","model":"","ref":"","type":"","calibre":"","movimiento":"","cristal":"","diametro":"","grosor":"","resistencia":"","reserva":"","caja":"","brazalete":"","esfera":"","asas":"","precio":"","notas":""}
-- movimiento: tipo + frecuencia (bph/Hz) + rubíes si aparecen
-- asas: ancho entre asas en mm
-
-TEXTO:
-${source.text}`;
-
-  let raw;
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: env.GROQ_MODEL || DEFAULT_IMPORT_MODEL,
-        temperature: 0,
-        max_tokens: 900,
-        response_format: { type: 'json_object' },
-        messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
-    if (!res.ok) throw new Error(`Groq ${res.status}`);
-    const data = await res.json();
-    raw = parseJSON(data.choices?.[0]?.message?.content || '{}');
-  } catch (e) {
-    await logError(env, '/import-url', e, 'groq');
-    return { _blocked: true, _domain: hostname, _message: 'El servicio de lectura no responde ahora. Inténtalo en un rato o rellena los datos a mano.' };
-  }
-
-  const { specs, dropped } = verifyAgainstSource(raw, source.text);
-  const filled = Object.keys(specs).filter(k => specs[k]).length;
-  if (!filled) {
-    return { _empty: true, _domain: hostname, _message: 'No he encontrado especificaciones en esa página. Prueba con la web oficial del reloj o pega el texto de la ficha.' };
-  }
-  return { ...specs, _ok: true, _source: hostname, _dropped: dropped, _method: 'page+llm' };
-}
-
-/**
- * Anti-invention check: a value is kept only if its key tokens appear in the
- * source text. Numbers (40, 200, 41…) must appear literally; for text fields
- * at least one significant word must appear. Returns kept specs and the names
- * of dropped fields.
- */
-function verifyAgainstSource(raw, text) {
-  const hay = ' ' + text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') + ' ';
-  const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const TRANSLATIONS = { zafiro: ['sapphire', 'safira', 'zafiro'], mineral: ['mineral', 'hardlex'], acrilico: ['acrylic', 'acrilico', 'hesalite', 'plexi'],
-    acero: ['steel', 'acero', 'aco', 'inox'], titanio: ['titanium', 'titanio'], bronce: ['bronze', 'bronce'], cuero: ['leather', 'cuero', 'couro', 'piel'],
-    caucho: ['rubber', 'caucho', 'borracha', 'silicone', 'silicona', 'fkm'], automatico: ['automatic', 'automatico', 'self-winding', 'auto'],
-    cuarzo: ['quartz', 'cuarzo', 'quartzo'], manual: ['hand-wound', 'manual', 'hand wound', 'handwound'], negro: ['black', 'negro', 'preto'],
-    azul: ['blue', 'azul'], blanco: ['white', 'blanco', 'branco'], verde: ['green', 'verde'], gris: ['grey', 'gray', 'gris', 'cinza'],
-    malla: ['mesh', 'milanese', 'malla'], nato: ['nato'], oro: ['gold', 'oro', 'ouro'], plata: ['silver', 'plata', 'prata'] };
-  const appears = word => {
-    const w = norm(word);
-    if (hay.includes(w)) return true;
-    for (const [k, alts] of Object.entries(TRANSLATIONS)) if (w.startsWith(k.slice(0, 5)) && alts.some(a => hay.includes(a))) return true;
-    return false;
-  };
-  const specs = {}; const dropped = [];
-  for (const f of IMPORT_FIELDS) {
-    let v = raw?.[f];
-    if (v === undefined || v === null) continue;
-    v = String(v).trim().slice(0, f === 'notas' ? 240 : 120);
-    if (!v || /^(n\/?a|no disponible|desconocido|unknown|-+)$/i.test(v)) continue;
-    if (f === 'type') { if (['automatic', 'quartz', 'manual'].includes(v)) specs.type = v; continue; }
-    if (f === 'notas') { specs.notas = v; continue; }            // free text, not verified
-    const numbers = v.match(/\d+(?:[.,]\d+)?/g) || [];
-    const numsOk = numbers.every(n => hay.includes(n) || hay.includes(n.replace(',', '.')) || hay.includes(n.replace('.', ',')));
-    const words = norm(v).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !/^(mm|atm|bar|horas|hours|metros|meters)$/.test(w));
-    const wordsOk = !words.length || words.some(appears);
-    const keep = ['diametro', 'grosor', 'asas', 'resistencia', 'reserva', 'precio'].includes(f) ? numbers.length > 0 && numsOk
-               : (numsOk && wordsOk);
-    if (keep) specs[f] = v; else dropped.push(f);
-  }
-  return { specs, dropped };
-}
-
-/* ── Helpers ── */
-function parseJSON(text) {
-  if (!text) return {};
-  const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-  try { return JSON.parse(clean); } catch {}
-  const m = clean.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch {} }
-  return {};
-}

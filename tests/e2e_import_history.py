@@ -7,7 +7,7 @@ páginas de tests/fixtures servidas por la app local.
 Uso (con la app en :8080 y el harness en el puerto indicado):
   python3 tests/e2e_import_history.py 8713
 """
-import asyncio, os, sys
+import asyncio, json, os, sys, urllib.request
 from playwright.async_api import async_playwright
 
 PORT   = sys.argv[1] if len(sys.argv) > 1 else "8713"
@@ -45,18 +45,26 @@ async def main():
     async with async_playwright() as p:
         b = await (p.chromium.launch(executable_path=CHROME) if CHROME else p.chromium.launch())
 
-        # ── Con un Worker antiguo (v11) la función no aparece ──
-        ctx0, p0, _ = await new_device(b, '{"status":"ok","version":"11.0","caps":{"importUrl":true}}')
+        # ── Con un Worker antiguo (sin lectura de páginas): pegar texto funciona igual, en el móvil ──
+        ctx0, p0, _ = await new_device(b, '{"status":"ok","version":"12.0","caps":{"importUrl":true}}')
         await p0.evaluate("openAddModal()")
         await p0.click("#f-import-btn")
-        await p0.wait_for_timeout(300)
-        toast = await p0.inner_text("#toast")
-        check("con el Worker v11 avisa de que no está disponible y no abre nada",
-              'no está disponible' in toast and await p0.locator("#imp-url").count() == 0, toast)
+        await p0.wait_for_selector("#imp-status")
+        st0 = await p0.inner_text("#imp-status")
+        check("con un servidor antiguo abre la hoja y propone pegar el texto",
+              'nueva versión del servidor' in st0 and await p0.evaluate("document.querySelector('.imp-paste').open"), st0)
+        reads_before = sum(1 for l in json.loads(urllib.request.urlopen(f"http://localhost:{PORT}/__kv").read())['log'] if l['url'].startswith('/import-url'))
+        await p0.fill("#imp-text", "Movement: Seagull ST2130 Mechanical, 21 jewels, 21600 bph\nCase Size: 41mm\nThickness: 12mm\nCrystal: Sapphire")
+        await p0.click("[data-act='read']")
+        await p0.wait_for_selector("#imp-rows .imp-row", timeout=5000)
+        reads_after = sum(1 for l in json.loads(urllib.request.urlopen(f"http://localhost:{PORT}/__kv").read())['log'] if l['url'].startswith('/import-url'))
+        labels0 = await p0.eval_on_selector_all("#imp-rows .imp-label", "els => els.map(e => e.textContent)")
+        check("el texto pegado se lee en el propio móvil, sin enviarlo a ningún servidor",
+              reads_after == reads_before and 'Grosor' in labels0 and 'Calibre' in labels0, f"{reads_before}->{reads_after} {labels0}")
         await ctx0.close()
 
         ctx, page, errs = await new_device(b)
-        check("con el Worker v12 la función está disponible", await page.evaluate("serverSupportsImport()"))
+        check("con el Worker v13 se pueden leer enlaces", await page.evaluate("serverSupportsImport()"))
 
         # ── Ficha de un reloj existente ──
         wid = await page.evaluate("addWatch({brand:'Steeldive', model:'Tuna', type:'automatic'}).then(w => w.id)")
@@ -68,7 +76,10 @@ async def main():
         await page.wait_for_selector("#imp-rows .imp-row", timeout=15000)
         labels = await page.eval_on_selector_all("#imp-rows .imp-row .imp-label", "els => els.map(e => e.textContent)")
         check("muestra los datos encontrados", 'Calibre' in labels and 'Diámetro' in labels, str(labels))
-        check("descarta el dato que no está en la página (grosor)", 'Grosor' not in labels)
+        check("no inventa lo que la página no dice (no hay grosor)", 'Grosor' not in labels)
+        froms = await page.eval_on_selector_all("#imp-rows .imp-from", "els => els.map(e => e.textContent)")
+        check("cada dato muestra la línea de la página de la que sale", any('Ancho entre asas' in f for f in froms), str(froms[:3]))
+        check("y nada sale del código de seguimiento de la página («Rolex 9999 mm»)", not any('Rolex' in f for f in froms))
         cristal_checked = await page.evaluate("document.querySelector('#imp-rows input[data-key=cristal]').checked")
         check("no marca para sobrescribir un dato distinto que ya tenías", cristal_checked is False)
         if SHOTS: await page.screenshot(path=f"{SHOTS}/importar.png")

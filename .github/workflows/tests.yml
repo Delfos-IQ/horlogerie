@@ -32,6 +32,9 @@ jobs:
           pip install playwright==1.48.0
           python -m playwright install --with-deps chromium
 
+      - name: Lector de fichas (sin IA)
+        run: node tests/spec-parser.test.mjs
+
       - name: Servir la app y el Worker
         run: |
           mkdir -p /tmp/srv && ln -sfn "$PWD" /tmp/srv/horlogerie

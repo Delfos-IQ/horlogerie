@@ -107,10 +107,9 @@ Secretos (Cloudflare → Workers → horlogerie → Settings → Variables and S
 
 | Variable | Uso | Obligatoria |
 |---|---|---|
-| `GROQ_API_KEY` | `/import-url` («Rellenar desde un enlace») | Solo para esa función; la sincronización funciona sin ella |
 | `EBAY_APP_ID`, `EBAY_CERT_ID` | Precios de eBay | No |
 
-Versión actual: **v13** (claves cortas de recuperación y vinculación con código de 6 caracteres: `/pair/create`, `/pair/claim`). Antes, v12: (`/import-url` reconstruido: descarga la página, extrae la ficha y Groq `openai/gpt-oss-20b` la estructura; cada valor se contrasta con el texto de la página). Variables opcionales: `GROQ_MODEL`, `IMPORT_DAILY_CAP` (300 por defecto).
+Versión actual: **v13**: claves cortas de recuperación, vinculación con código de 6 caracteres (`/pair/create`, `/pair/claim`) y `/import-url` **sin IA**: descarga la página que indica el usuario y devuelve el texto con la ficha (JSON-LD, tablas, líneas); la app la lee con `js/spec-parser.js` (pruebas: `node tests/spec-parser.test.mjs`). El texto pegado se lee en el dispositivo. `GROQ_API_KEY` ya no se usa: puedes borrarla de Cloudflare. Variable opcional: `IMPORT_DAILY_CAP` (lecturas de página al día, 300 por defecto).
 
 Desde la v11: La app detecta la versión con `/health`: con v11 envía el ID de sesión en la cabecera `X-Horlogerie-User` y sincroniza la lista de deseos; con v10 sigue funcionando (ID por query, lista de deseos solo en copias JSON).
 

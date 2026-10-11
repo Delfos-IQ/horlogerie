@@ -1,6 +1,6 @@
 # Seguridad de los datos — respuestas para Play Console
 
-Basado en el comportamiento de la v2.3.0. Si cambias qué datos salen del dispositivo (por ejemplo, al reactivar la importación desde URL con IA), revisa este formulario **antes** de publicar: Google exige declarar también los datos enviados a servicios de IA de terceros.
+Basado en el comportamiento de la v2.9.0. Si cambias qué datos salen del dispositivo, revisa este formulario **antes** de publicar.
 
 ## Recogida y uso compartido
 
@@ -30,8 +30,8 @@ Ubicación, información personal (nombre, email, dirección…), información f
 - **Anuncios:** No contiene anuncios.
 - **Acceso a la app:** Toda la funcionalidad está disponible sin restricciones.
 - **Público objetivo:** 18 años o más. La app no está diseñada para menores.
-- **Funciones con IA:** «Rellenar desde un enlace» envía el enlace (o el texto pegado) a Groq, un proveedor de IA, para extraer especificaciones. No genera contenido para otros usuarios ni conversaciones: es extracción de datos. Si Play pregunta por funciones de IA generativa, responde que la app usa IA para extraer datos de páginas que el usuario indica, a petición suya.
+- **Funciones con IA:** ninguna. Desde la v2.9, «Rellenar desde un enlace» no usa IA: el servidor descarga la página pública y la app lee la ficha con reglas fijas. Si Play pregunta por IA generativa, responde que no.
 
-## Rellenar desde un enlace (desde la v2.5)
+## Rellenar desde un enlace
 
-Lo que se envía es una URL pública o un texto que pega el usuario. Decláralo en **Actividad en la app → Otro contenido generado por el usuario** (ya marcado), añadiendo la finalidad «Funciones de la app». Es **opcional** (solo si el usuario usa la función) y **no compartido**: el Worker y Groq actúan como proveedores de servicio. Política de privacidad: sección «Rellenar desde un enlace».
+Solo se envía la URL pública que pega el usuario, a nuestro Worker de Cloudflare, que descarga la página y devuelve su texto. El texto pegado no sale del dispositivo. Ningún tercero recibe datos. Una URL de una tienda no es un dato personal; si quieres ir sobre seguro, inclúyela en **Actividad en la app → Otro contenido generado por el usuario** (ya marcado), finalidad «Funciones de la app», **opcional** y **no compartido**. Política de privacidad: sección «Rellenar desde un enlace».

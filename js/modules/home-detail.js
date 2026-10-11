@@ -378,21 +378,22 @@ function renderPrice(w) {
     box.style.display = 'block';
     document.getElementById('d-price').textContent = w.price.value;
     let note = w.price.note || '';
+    if (w._warning) note = `${note ? note + ' · ' : ''}estimado por la IA de una versión antigua`;
     document.getElementById('d-price-note').textContent = note;
   } else {
     box.style.display = 'none';
   }
-  // Source badge
+  // Where the specs come from
   const old = document.getElementById('d-source-badge');
   if (old) old.remove();
-  if (!w._source) return;
+  let html = '';
+  if (w._source === 'local_db') html = `<i class="ti ti-database" aria-hidden="true"></i> Ficha de la base de datos de Rotor`;
+  else if (w._warning) html = `<i class="ti ti-info-circle" aria-hidden="true"></i> Esta ficha la rellenó la IA de una versión antigua y puede tener errores. Compruébala, o usa «Rellenar desde un enlace» con la página del reloj.`;
+  if (!html) return;
   const badge = document.createElement('div');
   badge.id = 'd-source-badge';
-  const isReal = w._source === 'local_db' || w._source?.includes('watchbase') || w._source?.includes('ebay');
-  badge.style.cssText = `font-size:11px;color:${isReal ? 'var(--ok)' : 'var(--gold-light)'};display:flex;align-items:center;gap:5px;padding:4px 0 10px;`;
-  badge.innerHTML = isReal
-    ? `<i class="ti ti-database"></i> ${w._source === 'local_db' ? 'Base de datos local' : 'Datos verificados'}`
-    : `<i class="ti ti-alert-triangle"></i> ${w._warning || 'Revisa los datos'}`;
+  badge.className = 'source-badge' + (w._warning ? ' legacy' : '');
+  badge.innerHTML = html;
   document.getElementById('d-specs')?.insertAdjacentElement('afterend', badge);
 }
 

@@ -8,8 +8,8 @@ const CONFIG = {
 
 /**
  * Feature switches.
- * urlImport: "Importar desde URL" depends on a Groq model that was retired in
- * September 2026. Hidden until the Worker is moved to a supported model.
+ * urlImport: "Rellenar desde un enlace" (no AI: js/spec-parser.js reads the
+ * page text the Worker v13 downloads, or text pasted by the user).
  */
 const FEATURES = {
   urlImport: true,    // needs Worker v12+ (checked at runtime with /health)

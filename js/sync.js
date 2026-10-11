@@ -108,7 +108,7 @@ function workerCaps() {
         const major = parseInt(String(h.version || '0'), 10);
         return { userHeader: major >= 11, wishlist: major >= 11, version: h.version || '?',
                  importUrl: !!h.caps?.importUrl, importText: !!h.caps?.importText,
-                 shortKey: !!h.caps?.shortKey, pairing: !!h.caps?.pairing };
+                 shortKey: !!h.caps?.shortKey, pairing: !!h.caps?.pairing, importSource: !!h.caps?.importSource };
       })
       .catch(() => { _capsPromise = null; return { userHeader: false, wishlist: false, version: null }; });
   }
