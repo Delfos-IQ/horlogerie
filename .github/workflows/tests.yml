@@ -1,0 +1,46 @@
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Versión coherente en todos los archivos
+        run: node tools/bump-version.mjs --check
+
+      - name: Sintaxis de JavaScript
+        run: for f in js/*.js js/modules/*.js sw.js worker/index.js; do node --check "$f"; done
+
+      - name: Instalar Playwright
+        run: |
+          pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+
+      - name: Servir la app y el Worker
+        run: |
+          mkdir -p /tmp/srv && ln -sfn "$PWD" /tmp/srv/horlogerie
+          python -m http.server 8080 -d /tmp/srv > /tmp/srv.log 2>&1 &
+          node tests/worker-harness.mjs ../worker/index.js 8711 > /tmp/worker.log 2>&1 &
+          sleep 2
+
+      - name: Sincronización entre dispositivos
+        run: python tests/e2e_sync.py 8711 v11
+
+      - name: Registro de uso, recomendación y PDF
+        run: python tests/e2e_wear.py
