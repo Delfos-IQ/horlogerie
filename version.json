@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "date": "2026-10-11",
-  "notes": "Tus datos, más seguros: la nube combina cambios en vez de sustituirlos, es opcional, y la copia JSON incluye fotos y lista de deseos"
+  "notes": "Registro de uso por días, «Lo llevé hoy», recomendación por rotación, coste por uso, avisos de pila y revisión, y PDF arreglado"
 }

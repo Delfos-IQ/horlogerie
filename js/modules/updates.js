@@ -1,4 +1,4 @@
-const APP_VERSION = '2.2.0'; // Must match version.json
+const APP_VERSION = '2.3.0'; // Must match version.json
 
 async function initVersionCheck() {
   // Hidden legacy elements kept for backward compatibility with other modules

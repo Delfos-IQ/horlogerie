@@ -1,6 +1,6 @@
 # Horlogerie
 
-PWA para gestionar una colección de relojes: qué relojes tienes, cuándo te pusiste cada uno, cuál toca ahora y su ficha técnica. Pensada para coleccionistas de homenajes y microbrands (Berny, Pagani Design, San Martin, Steeldive…).
+PWA para gestionar una colección de relojes: qué relojes tienes, cuándo te pusiste cada uno, cuál toca ahora, su ficha técnica, el coste por uso y los avisos de pila y revisión. Pensada para coleccionistas de homenajes y microbrands (Berny, Pagani Design, San Martin, Steeldive…). Funciona sin conexión y no carga nada de terceros.
 
 - **App:** https://delfos-iq.github.io/horlogerie/
 - **API:** Cloudflare Worker `https://horlogerie.pedicode-app.workers.dev`
@@ -10,19 +10,24 @@ PWA para gestionar una colección de relojes: qué relojes tienes, cuándo te pu
 ```
 horlogerie/
 ├── index.html              Única página de la app (vistas, modales, registro del SW)
+├── privacidad.html         Política de privacidad pública (enlazada en Ajustes y en Play)
 ├── manifest.json           Manifest PWA (scope /horlogerie/)
 ├── sw.js                   Service worker: red primero para la app, caché para fuentes/iconos
 ├── version.json            ÚNICA fuente de la versión (ver "Publicar una versión")
 ├── watches_db.json         Base local de modelos que usa el autocompletado
-├── css/app.css
+├── css/
+│   ├── app.css
+│   ├── fonts.css + fonts/  Cormorant Garamond y DM Sans (OFL), solo latín
+│   └── icons.css + icons/  Subconjunto de Tabler Icons (lo genera tools/build-icons.py)
 ├── icons/                  Iconos PWA y favicons
 ├── js/
 │   ├── db.js               Carga y búsqueda en watches_db.json
-│   ├── storage.js          Datos: metadatos en localStorage, fotos en IndexedDB, lista de deseos
+│   ├── storage.js          Datos: relojes, fotos (IndexedDB), lista de deseos, registro de uso
+│   │                       por días (wearStats), avisos de mantenimiento, fusión y copias
 │   ├── api.js              URL del Worker y FEATURES (interruptores de funciones)
 │   ├── sync.js             Copia en la nube opcional: fusión por elemento, envío diferencial
 │   ├── export.js           Exportación a PDF (jsPDF)
-│   ├── vendor/             qrcode-generator 1.4.4 (MIT): QR del ID generado en el dispositivo
+│   ├── vendor/             qrcode-generator 1.4.4 y jsPDF 2.5.1 (MIT)
 │   └── modules/
 │       ├── core.js         Estado, utilidades, navegación y gesto atrás de Android
 │       ├── home-detail.js  Colección, recomendación y ficha del reloj
@@ -37,11 +42,16 @@ horlogerie/
 │   ├── index.js            Cloudflare Worker: /sync/*, /import-url, /health
 │   └── wrangler.toml
 ├── data/                   Fuente de la base de modelos (Excel y su exportación JSON)
+├── docs/play/              Todo lo necesario para publicar en Google Play (guía, ficha, capturas)
+├── .github/workflows/      Pruebas en cada push y despliegue automático del Worker
 ├── tests/
 │   ├── worker-harness.mjs  Ejecuta el Worker real en Node con KV en memoria
-│   └── e2e_sync.py         Pruebas de sincronización con varios "dispositivos" (Playwright)
+│   ├── e2e_sync.py         Sincronización con varios "dispositivos" (Playwright)
+│   └── e2e_wear.py         Registro de uso, recomendación, PDF y funcionamiento sin terceros
 └── tools/
-    └── bump-version.mjs    Propaga la versión de version.json al resto de archivos
+    ├── bump-version.mjs    Propaga la versión de version.json al resto de archivos
+    ├── build-icons.py      Regenera el subconjunto de iconos (ejecutar al usar un icono nuevo)
+    └── play-screenshots.py Capturas de la ficha de Play con una colección de ejemplo
 ```
 
 Los scripts se cargan en orden desde `index.html` (sin bundler ni build). El orden importa: `db → storage → api → sync → export → modules/*`.
@@ -58,9 +68,13 @@ python3 -m http.server 8080 -d /tmp/srv
 
 Desde `localhost` el Worker real rechaza las peticiones (CORS limitado a `delfos-iq.github.io`); la app funciona en local sin nube.
 
-### Pruebas de sincronización
+### Pruebas
 
-`tests/e2e_sync.py` abre varios navegadores (dispositivos A, B, C, D) contra el Worker real ejecutado en Node con un KV en memoria, y comprueba fusión, borrados entre dispositivos, conflictos, copias con fotos, migración, cambio de llave y borrado de la nube. Instrucciones en la cabecera del archivo. Antes de publicar un cambio en `storage.js`, `sync.js` o el Worker, deben pasar todas.
+`tests/e2e_sync.py` abre varios navegadores (dispositivos A, B, C, D) contra el Worker real ejecutado en Node con un KV en memoria, y comprueba fusión, borrados entre dispositivos, conflictos, copias con fotos, migración, cambio de llave y borrado de la nube. Instrucciones en la cabecera del archivo. `tests/e2e_wear.py` comprueba el registro de uso por días, la recomendación, los avisos, el PDF y que la app no pide nada fuera de su dominio. GitHub Actions ejecuta ambas en cada push (`.github/workflows/tests.yml`).
+
+### Iconos
+
+La app usa un subconjunto de Tabler Icons. Si añades una clase `ti-*` nueva, ejecuta `python3 tools/build-icons.py` (requiere `pip install fonttools brotli`): si no, el icono se verá en blanco.
 
 ## Publicar una versión
 
@@ -96,6 +110,8 @@ Enlace KV: variable `HORLOGERIE_KV` → namespace `HORLOGERIE`. El `id` del name
 
 - **En el dispositivo:** relojes en `localStorage` (`horlogerie_v3`), fotos en IndexedDB (`horlogerie_photos`), lista de deseos en `localStorage` (`horlogerie_wishlist_v1`).
 - **En la nube (opcional, apagada por defecto en instalaciones nuevas):** KV con clave `user:{uuid}:watches` que guarda `{ watches, wishlist, updatedAt }`. El UUID de Ajustes es la única llave: quien lo tenga puede leer y borrar la colección. Desde Ajustes se puede cambiar la llave o borrar los datos de la nube.
+- **Registro de uso:** `history` guarda intervalos `{start, end}` y `wearStart` la sesión en curso. Los «días de uso» son días de calendario distintos (`wornDayKeys`): dos horas cuentan como un día y dos usos el mismo día, como uno.
+- **Campos por reloj (v2.3):** `favorite`, `rotation` (false = fuera de rotación), `purchasePrice`, `purchaseDate`, `lastService`, `batteryChanged`.
 - **Fusión:** cada reloj y deseo lleva `updatedAt`. Al sincronizar gana la copia modificada más recientemente; los borrados viajan como lápidas (`horlogerie_tombstones_v1`).
 - **Copia de seguridad:** Ajustes → Copia de seguridad (JSON, formato v3): relojes con fotos, historial y lista de deseos. Restaurar combina con lo que ya hay; no borra nada.
 
@@ -103,4 +119,6 @@ Enlace KV: variable `HORLOGERIE_KV` → namespace `HORLOGERIE`. El `id` del name
 
 Auditoría y plan de mejoras hacia Google Play: fases F0–F5.
 - F0 (orden del repositorio): v2.1.3.
-- F1 (datos seguros): v2.2.0. Pendiente de desplegar el Worker v11.
+- F1 (datos seguros): v2.2.0. Worker v11 desplegado.
+- F2 (calidad) y F3 (producto): v2.3.0.
+- F4 (Play): materiales listos en `docs/play/`; faltan los pasos con la cuenta de Play.
