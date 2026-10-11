@@ -15,6 +15,7 @@
 
 import { setOnChange, applyWatchList, clearTombstones, enforceSingleActive, getTombstones, getWatches, getWatchesWithPhotos, getWishlist, mergeById, readJSON, sanitizeWatch, sanitizeWishlistItem, setWishlistSilently } from './storage.js';
 import { CONFIG } from './api.js';
+import { sync2, account2, delete2, forgetKey, pairCreate2, pairClaim2 } from './cloud2.js';
 import { showToast } from './modules/core.js';
 import { renderHome } from './modules/home-detail.js';
 import { renderSettings, renderSystemStatus } from './modules/settings.js';
@@ -111,7 +112,8 @@ export function workerCaps() {
         const major = parseInt(String(h.version || '0'), 10);
         return { userHeader: major >= 11, wishlist: major >= 11, version: h.version || '?',
                  importUrl: !!h.caps?.importUrl, importText: !!h.caps?.importText,
-                 shortKey: !!h.caps?.shortKey, pairing: !!h.caps?.pairing, importSource: !!h.caps?.importSource };
+                 shortKey: !!h.caps?.shortKey, pairing: !!h.caps?.pairing, importSource: !!h.caps?.importSource,
+                 v2: !!h.caps?.v2, pairingV2: !!h.caps?.pairingV2 };
       })
       .catch(() => { _capsPromise = null; return { userHeader: false, wishlist: false, version: null }; });
   }
@@ -177,7 +179,7 @@ export function hashPhoto(dataUrl) {
    PUSH
 ════════════════════════════════════════ */
 export let _pushQueue = Promise.resolve();
-export function syncPush(forceFull = false) {
+export function syncPushV1(forceFull = false) {
   // Serialize pushes: each call waits for the previous one to finish
   const p = _pushQueue.then(() => _syncPush(forceFull));
   _pushQueue = p.catch(() => {});
@@ -260,7 +262,7 @@ export async function _syncPush(forceFull) {
 /* ════════════════════════════════════════
    PULL — merge cloud into local, then push the merged result
 ════════════════════════════════════════ */
-export async function syncPull(silent = false) {
+export async function syncPullV1(silent = false) {
   if (!isCloudEnabled()) { setSyncUI('off', 'Copia en la nube desactivada'); return false; }
   if (!silent) setSyncUI('syncing', 'Descargando…');
   try {
@@ -272,7 +274,7 @@ export async function syncPull(silent = false) {
     const cloudWatches = Array.isArray(data.watches) ? data.watches : [];
     if (!data.exists && !cloudWatches.length) {
       // Nothing in the cloud yet: upload what we have
-      if (getWatches().length || getWishlist().length) await syncPush(true);
+      if (getWatches().length || getWishlist().length) await syncPushV1(true);
       else setSyncUI('idle', 'Sin datos en la nube');
       return false;
     }
@@ -300,7 +302,7 @@ export async function syncPull(silent = false) {
     // Cloud state is now known: next push must send the merged result in full
     setSyncMeta({ lastPush: cloudTs, watchHashes: {}, photoHashes: {}, wishlistHash: null,
                   syncedIds: cloud.map(w => w.id) });
-    await syncPush(true);
+    await syncPushV1(true);
 
     if (!silent) {
       const s = mw.stats;
@@ -321,7 +323,7 @@ export async function syncPull(silent = false) {
 ════════════════════════════════════════ */
 
 /** Use the collection of another device. Local watches are merged in, not lost. */
-export async function importSession(userId) {
+export async function importSessionV1(userId) {
   setSyncUI('syncing', 'Verificando sesión…');
   try {
     const res = await syncApi('/sync/exists', { userId });
@@ -330,7 +332,7 @@ export async function importSession(userId) {
     if (!data.exists) throw new Error('Sesión no encontrada. Comprueba el ID.');
     setSyncMeta({ userId, cloudEnabled: true, lastPush: 0, watchHashes: {}, photoHashes: {},
                   wishlistHash: null, syncedIds: [], syncedWishlistIds: [], keySavedAt: Date.now() });
-    await syncPull(false);
+    await syncPullV1(false);
     showToast('Sesión importada correctamente');
     return true;
   } catch (e) {
@@ -340,28 +342,122 @@ export async function importSession(userId) {
   }
 }
 
+/* ════════════════════════════════════════
+   CLOUD 2.0 (Worker v14 with D1): end-to-end encrypted, per item.
+   When the server offers it, every operation goes through cloud2.js; the
+   plain v1 copy is migrated once and deleted. Without it, v1 as before.
+════════════════════════════════════════ */
+export async function useV2() { return !!(await workerCaps()).v2; }
+
+let _queue = Promise.resolve();
+function queued(fn) { const p = _queue.then(fn); _queue = p.catch(() => {}); return p; }
+
+/** One v2 round (upload + download). Migrates a v1 copy the first time. */
+async function runV2(full = false) {
+  const key = getSessionId();
+  const meta = getSyncMeta();
+  if (meta.protocol !== 2) {
+    // Bring in what the old plain copy has, upload everything encrypted, then delete the plain copy
+    const had = await syncApi('/sync/exists').then(r => r.json()).catch(() => ({}));
+    if (had.exists) await syncPullV1(true);
+    const r = await sync2(key, { full: true });
+    if (had.exists) await syncApi('/sync/clear', { method: 'DELETE' }).catch(() => {});
+    setSyncMeta({ protocol: 2 });
+    return r;
+  }
+  return sync2(key, { full });
+}
+
+async function v2Round(full, silent) {
+  if (!silent) setSyncUI('syncing', 'Sincronizando…');
+  try {
+    const r = await queued(() => runV2(full));
+    setSyncMeta({ lastPush: Date.now() });
+    setSyncUI('ok', r.sent || r.received ? `Al día · ${r.sent} enviado(s), ${r.received} recibido(s)` : 'Al día');
+    return r;
+  } catch (e) {
+    setSyncUI('error', e.status === 403 ? 'La clave no coincide con la copia de la nube' : e.message);
+    console.warn('[sync] v2 failed:', e.message);
+    return null;
+  }
+}
+
+/** Upload changes (and receive any). Returns true when the cloud is up to date. */
+export async function syncPush(forceFull = false) {
+  if (!isCloudEnabled()) { setSyncUI('off', 'Copia en la nube desactivada'); return false; }
+  if (await useV2()) return !!(await v2Round(forceFull, false));
+  return syncPushV1(forceFull);
+}
+
+/** Receive remote changes. Returns true when something changed locally. */
+export async function syncPull(silent = false) {
+  if (!isCloudEnabled()) { setSyncUI('off', 'Copia en la nube desactivada'); return false; }
+  if (await useV2()) { const r = await v2Round(false, silent); return !!(r && r.received); }
+  return syncPullV1(silent);
+}
+
+/** Use the collection of another device (or recover after reinstalling). Local watches are merged in. */
+export async function importSession(userId) {
+  if (!(await useV2())) return importSessionV1(userId);
+  setSyncUI('syncing', 'Buscando tu colección…');
+  try {
+    const acc = await account2(userId).catch(() => ({ exists: false }));
+    if (!acc.exists) {
+      // Maybe it is still a plain v1 copy: import it the old way, then migrate
+      const v1 = await syncApi('/sync/exists', { userId }).then(r => r.json()).catch(() => ({}));
+      if (!v1.exists) throw new Error('No hay ninguna colección con esa clave.');
+      setSyncMeta({ userId, cloudEnabled: true, protocol: 1, lastPush: 0, watchHashes: {}, photoHashes: {},
+                    wishlistHash: null, syncedIds: [], syncedWishlistIds: [], keySavedAt: Date.now() });
+    } else {
+      setSyncMeta({ userId, cloudEnabled: true, protocol: 2, lastPush: 0, keySavedAt: Date.now() });
+      forgetKey(userId);
+    }
+    const r = await v2Round(false, true);
+    if (!r) throw new Error(getSyncMeta().lastStateMsg || 'No se pudo descargar la colección');
+    showToast('Colección recuperada');
+    return true;
+  } catch (e) {
+    setSyncUI('error', e.message);
+    showToast(e.message);
+    return false;
+  }
+}
+
 /** Turn the cloud copy on/off. Turning it off keeps whatever is in the cloud. */
 export async function setCloudEnabled(on) {
   setSyncMeta({ cloudEnabled: !!on });
   if (!on) { setSyncUI('off', 'Copia en la nube desactivada'); return true; }
   const m = getSyncMeta();
-  if (!m.lastPush && !isShortKey(m.userId) && (await workerCaps()).shortKey) {
+  const caps = await workerCaps();
+  if (!m.lastPush && !isShortKey(m.userId) && caps.shortKey) {
     setSyncMeta({ userId: newShortKey(), keySavedAt: null });   // never used: nothing to migrate
   }
   getSessionId();
-  const pulled = await syncPull(false);
-  if (!pulled) await syncPush(true);
+  if (caps.v2) {
+    if (!m.lastPush) setSyncMeta({ protocol: 2 });               // nothing in v1 to bring over
+    return !!(await v2Round(true, false));
+  }
+  const pulled = await syncPullV1(false);
+  if (!pulled) await syncPushV1(true);
   return true;
 }
 
 /**
- * New secret key: upload everything under a new id, then delete the old copy.
- * Other devices must import the new id afterwards.
+ * New secret key: upload everything under the new key, then delete the old copy.
+ * Other devices must be linked again afterwards.
  */
 export async function rotateSessionKey() {
   if (!isCloudEnabled()) throw new Error('Activa la copia en la nube primero');
   const oldId = getSessionId();
-  const newId = (await workerCaps()).shortKey ? newShortKey() : newUUID();
+  const caps = await workerCaps();
+  const newId = caps.shortKey ? newShortKey() : newUUID();
+  if (caps.v2) {
+    await queued(() => sync2(newId, { full: true }));
+    setSyncMeta({ userId: newId, protocol: 2, keySavedAt: null, lastPush: Date.now() });
+    await delete2(oldId).catch(() => {});
+    await syncApi('/sync/clear', { method: 'DELETE', userId: oldId }).catch(() => {});
+    return newId;
+  }
   const ws = await getWatchesWithPhotos();
   const wl = getWishlist();
   const res = await syncApi('/sync/push', { method: 'POST', userId: newId,
@@ -376,33 +472,55 @@ export async function rotateSessionKey() {
 
 /** Delete this collection from the cloud and turn the cloud copy off. Local data stays. */
 export async function deleteCloudData() {
-  const res = await syncApi('/sync/clear', { method: 'DELETE' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  setSyncMeta({ userId: newUUID(), cloudEnabled: false, lastPush: 0, watchHashes: {}, photoHashes: {},
+  const key = getSessionId();
+  if (await useV2()) await delete2(key);
+  const res = await syncApi('/sync/clear', { method: 'DELETE' }).catch(() => null);
+  if (!(await useV2()) && (!res || !res.ok)) throw new Error(`HTTP ${res?.status || 0}`);
+  setSyncMeta({ userId: newUUID(), cloudEnabled: false, protocol: undefined, lastPush: 0, watchHashes: {}, photoHashes: {},
                 wishlistHash: null, syncedIds: [], syncedWishlistIds: [], keySavedAt: null });
   setSyncUI('off', 'Copia en la nube desactivada');
   return true;
 }
 
+/** Size and count of the cloud copy, for Ajustes */
+export async function cloudInfo() {
+  if (await useV2()) {
+    const a = await account2(getSessionId()).catch(() => null);
+    return a && a.exists ? { exists: true, count: a.count, sizeBytes: a.sizeBytes, e2e: true } : { exists: false, e2e: true };
+  }
+  const res = await syncApi('/sync/size');
+  const d = res.ok ? await res.json() : {};
+  return { exists: !!d.exists, count: d.count, sizeBytes: d.sizeBytes, e2e: false, limitBytes: CLOUD_LIMIT };
+}
+
 /* ════════════════════════════════════════
-   DEVICE LINKING (Worker v13+)
+   DEVICE LINKING
+   v2: the code is made on the device and encrypts the key (cloud2.js);
+   v1 (Worker v13): the server keeps the key for 10 minutes under the code.
 ════════════════════════════════════════ */
-/** Ask the Worker for a one-use 6-character code pointing to this session (10 min) */
+/** One-use 6-character code for this key (10 min) → { code, expiresAt } */
 export async function pairCreate() {
-  if (!(await workerCaps()).pairing) throw new Error('El servidor aún no admite códigos de vinculación');
-  if (!getSyncMeta().lastPush) await syncPush(true);
+  const caps = await workerCaps();
+  if (caps.v2 && caps.pairingV2) {
+    await syncPush();                               // make sure the copy exists and is current
+    return pairCreate2(getSessionId());
+  }
+  if (!caps.pairing) throw new Error('El servidor aún no admite códigos de vinculación');
+  if (!getSyncMeta().lastPush) await syncPushV1(true);
   let res = await syncApi('/pair/create', { method: 'POST', body: {} });
   if (res.status === 404) {             // no copy under this key yet (or it was deleted): upload, then retry
-    await syncPush(true);
+    await syncPushV1(true);
     res = await syncApi('/pair/create', { method: 'POST', body: {} });
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-  return data;   // { code, expiresAt }
+  return data;
 }
 
-/** Swap a linking code for the session id and use that session here */
+/** Swap a linking code for the key and use that collection here */
 export async function pairClaim(code) {
+  const caps = await workerCaps();
+  if (caps.v2 && caps.pairingV2) return importSession(await pairClaim2(code));
   const res = await fetch(`${CONFIG.WORKER_URL}/pair/claim`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
   const data = await res.json().catch(() => ({}));
@@ -410,6 +528,7 @@ export async function pairClaim(code) {
   if (!res.ok || !data.userId) throw new Error(data.error || 'Código no válido o caducado');
   return importSession(data.userId);
 }
+
 /* ════════════════════════════════════════
    AUTO + MANUAL
 ════════════════════════════════════════ */
@@ -424,6 +543,10 @@ export async function syncAuto() {
 
   if (!isCloudEnabled()) { setSyncUI('off', 'Copia en la nube desactivada'); return; }
   const pulled = await syncPull(true);
+  if (await useV2()) {
+    if (pulled) { renderHome(); renderSettings(); renderWishlist(); }
+    return;
+  }
   if (pulled) {
     renderHome();
     if (typeof renderSettings === 'function') renderSettings();
@@ -440,6 +563,11 @@ export async function syncManual() {
   }
   setSyncUI('syncing', 'Sincronizando…');
   const pulled = await syncPull(false);
+  if (await useV2()) {
+    if (pulled) { renderHome(); renderSettings(); renderWishlist(); }
+    showToast(getSyncMeta().lastState === 'error' ? 'No se pudo sincronizar. Lo reintentaré al volver la conexión.' : 'Sincronización completada');
+    return;
+  }
   if (pulled) {
     renderHome();
     if (typeof renderSettings === 'function') renderSettings();

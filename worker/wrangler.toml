@@ -6,13 +6,14 @@ compatibility_date = "2024-09-01"
 # Deploy: cd worker && wrangler deploy
 # Worker URL: https://horlogerie.pedicode-app.workers.dev
 #
-# REQUIRED secrets (Cloudflare dashboard → Workers → horlogerie → Settings → Variables):
-#   GROQ_API_KEY   → console.groq.com (free tier, no card needed)
+# No secrets needed. Optional variable: IMPORT_DAILY_CAP (page reads per day, default 300).
 #
-# OPTIONAL secrets (market prices via eBay):
-#   EBAY_APP_ID    → developer.ebay.com → App ID (Client ID)
-#   EBAY_CERT_ID   → developer.ebay.com → Cert ID (Client Secret)
-#   Both free, no approval needed for Browse API read-only access.
+# D1 database (cloud 2.0, end-to-end encrypted, v14+):
+#   Cloudflare dashboard → Storage & Databases → D1 → Create database "rotor"
+#   → Workers → horlogerie → Settings → Bindings → D1 database
+#   → Variable name: DB  →  Database: rotor
+#   Tables are created by the Worker on first use. Without DB the Worker keeps
+#   the v1 cloud (plain copy in KV).
 #
 # KV namespace binding:
 #   Cloudflare dashboard → Storage & Databases → Workers KV
@@ -27,3 +28,8 @@ compatibility_date = "2024-09-01"
 [[kv_namespaces]]
 binding = "HORLOGERIE_KV"
 id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+[[d1_databases]]
+binding       = "DB"
+database_name = "rotor"
+database_id   = "REPLACE_WITH_YOUR_D1_DATABASE_ID"

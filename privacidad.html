@@ -36,7 +36,7 @@
 <body>
 <main>
   <h1>Privacidad</h1>
-  <div class="meta">Rotor (antes Horlogerie) · Última actualización: 11 de octubre de 2026 (v2.9)</div>
+  <div class="meta">Rotor (antes Horlogerie) · Última actualización: 12 de octubre de 2026 (v2.13)</div>
 
   <div class="box">
     <p><strong>En resumen:</strong> tu colección se guarda en tu dispositivo. Solo sale de él si activas la «Copia en la nube», y en ese caso se guarda cifrada en tránsito en Cloudflare para que puedas usarla en otros dispositivos. No hay cuentas, ni publicidad, ni analítica, ni venta de datos. Puedes borrar tus datos de la nube desde la propia app.</p>
@@ -60,10 +60,11 @@
   <p>La app no pide ni recoge tu nombre, email, ubicación, contactos ni identificadores publicitarios.</p>
 
   <h2>Copia en la nube (opcional)</h2>
-  <p>Viene desactivada en las instalaciones nuevas. Si la activas en Ajustes, tu colección, fotos, historial y lista de deseos se envían por HTTPS a un servicio propio alojado en Cloudflare Workers (Cloudflare, Inc., como encargado del tratamiento) y se guardan asociados a tu clave de recuperación.</p>
+  <p>Viene desactivada en las instalaciones nuevas. Si la activas en Ajustes, tu colección, fotos, historial y lista de deseos se guardan en un servicio propio alojado en Cloudflare (Cloudflare, Inc., como encargado del tratamiento).</p>
+  <p><strong>Cifrado de extremo a extremo:</strong> antes de salir de tu dispositivo, cada reloj, deseo y foto se cifra (AES-GCM de 256 bits) con una llave que se deriva de tu clave de recuperación y que nunca se envía. El servidor solo guarda texto cifrado, un identificador de cuenta derivado de la clave y la huella de un token de escritura: ni nosotros ni Cloudflare podemos leer tu colección. Lo que sí ve el servidor es cuántos elementos tienes, su tamaño y cuándo cambian.</p>
   <ul>
     <li><strong>Tu clave de recuperación funciona como una contraseña:</strong> quien la tenga puede ver y borrar tu copia. No la compartas. Desde Ajustes puedes cambiarla («Cambiar llave»). Como no hay cuentas ni email, si la pierdes no podemos recuperarla por ti.</li>
-    <li><strong>Vincular otro dispositivo:</strong> crea un código de un solo uso que apunta a tu copia y caduca a los 10 minutos.</li>
+    <li><strong>Vincular otro dispositivo:</strong> tu dispositivo cifra la clave con un código de 6 caracteres que se genera en él y nunca se envía; el servidor guarda ese texto cifrado 10 minutos como máximo y lo borra al usarse.</li>
     <li><strong>Borrado:</strong> en Ajustes → «Borrar de la nube» se elimina tu copia de inmediato. Si desactivas la copia sin borrarla, sigue guardada hasta que la borres.</li>
     <li><strong>Registros técnicos:</strong> para limitar abusos, el servicio guarda durante 1 hora un contador asociado a un resumen cifrado (hash) de tu dirección IP, y durante 24 horas los errores técnicos con ese mismo resumen. Nunca la IP en claro.</li>
     <li><strong>Transferencias internacionales:</strong> Cloudflare puede tratar datos fuera del Espacio Económico Europeo con las garantías de sus cláusulas contractuales tipo.</li>

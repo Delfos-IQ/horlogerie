@@ -1,6 +1,6 @@
 /* ─── SETTINGS ─── */
 import { buildBackup, getWatches, getWishlist, importBackup, isPersisted, storageRecovered } from '../storage.js';
-import { getSessionId, getSyncMeta, isCloudEnabled, isShortKey, syncApi, workerCaps } from '../sync.js';
+import { cloudInfo, getSessionId, getSyncMeta, isCloudEnabled, isShortKey, workerCaps } from '../sync.js';
 import { generateCollectionPDF } from '../export.js';
 import { showToast } from './core.js';
 import { renderHome } from './home-detail.js';
@@ -193,13 +193,18 @@ export async function renderSystemStatus() {
   }
   // Size in the cloud (async, best effort)
   try {
-    const res = await syncApi('/sync/size');
-    const d = res.ok ? await res.json() : null;
-    if (d?.exists && d.sizeBytes && meta.lastState !== 'error') {
-      const kb = Math.round(d.sizeBytes / 1024);
-      const pct = Math.round(d.sizeBytes / (3 * 1024 * 1024) * 100);
-      sub.textContent = `${d.count} ${d.count === 1 ? 'reloj' : 'relojes'} · ${kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB'} de 3 MB${pct > 80 ? ' · cerca del límite' : ''} · se guarda sola`;
-      if (pct > 80) sub.style.color = 'var(--danger)';
+    const d = await cloudInfo();
+    if (d.exists && meta.lastState !== 'error') {
+      const kb = Math.round((d.sizeBytes || 0) / 1024);
+      const size = kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB';
+      const n = `${d.count || 0} ${d.count === 1 ? 'reloj' : 'relojes'}`;
+      if (d.e2e) {
+        sub.textContent = `${n} · ${size} · cifrada de extremo a extremo`;
+      } else {
+        const pct = Math.round((d.sizeBytes || 0) / d.limitBytes * 100);
+        sub.textContent = `${n} · ${size} de 3 MB${pct > 80 ? ' · cerca del límite' : ''} · se guarda sola`;
+        if (pct > 80) sub.style.color = 'var(--danger)';
+      }
     }
   } catch { /* offline */ }
 }
@@ -210,8 +215,10 @@ export async function renderCloudControls() {
   const toggle = document.getElementById('cloud-toggle');
   const sub    = document.getElementById('cloud-toggle-sub');
   if (toggle) toggle.checked = on;
+  const e2e = (await workerCaps()).v2;
   if (sub) sub.textContent = on
-    ? 'Activada: tu colección y tu lista de deseos se guardan en Cloudflare y se sincronizan entre tus dispositivos'
+    ? (e2e ? 'Activada: tu colección y tu lista de deseos se cifran en este dispositivo antes de subir. Nadie más puede leerlas.'
+           : 'Activada: tu colección y tu lista de deseos se guardan en Cloudflare y se sincronizan entre tus dispositivos')
     : 'Desactivada: tus datos solo están en este dispositivo. Haz copias JSON de vez en cuando.';
   const show = (id, v) => { const el = document.getElementById(id); if (el) el.hidden = !v; };
   show('cloud-key-box', on);

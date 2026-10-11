@@ -7,7 +7,7 @@ Basado en el comportamiento de la v2.9.0. Si cambias qué datos salen del dispos
 | Pregunta | Respuesta | Motivo |
 |---|---|---|
 | ¿La app recoge o comparte alguno de los tipos de datos obligatorios? | **Sí** | Con la copia en la nube activada, la colección y las fotos salen del dispositivo |
-| ¿Todos los datos se cifran en tránsito? | **Sí** | Todo va por HTTPS |
+| ¿Todos los datos se cifran en tránsito? | **Sí** | Todo va por HTTPS; además, desde la v2.13 la copia en la nube se cifra de extremo a extremo en el dispositivo |
 | ¿Ofreces una forma de solicitar la eliminación de los datos? | **Sí** | Ajustes → «Borrar de la nube», y email de contacto en la política |
 
 ## Tipos de datos

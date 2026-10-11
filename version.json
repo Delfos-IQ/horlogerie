@@ -1,5 +1,5 @@
 {
-  "version": "2.12.0",
+  "version": "2.13.0",
   "date": "2026-10-11",
-  "notes": "Por dentro: capa de datos ordenada y con tipos, diálogos que se comportan igual en toda la app"
+  "notes": "Nube cifrada de extremo a extremo: tu colección se cifra en el móvil antes de subir"
 }

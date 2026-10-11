@@ -1,5 +1,17 @@
 /**
- * Cloudflare Worker — Horlogerie (Rotor) API v13
+ * Cloudflare Worker — Horlogerie (Rotor) API v14
+ *
+ * v14 (oct 2026) — cloud 2.0, needs a D1 database bound as DB:
+ *   - End-to-end encryption: the app encrypts every watch, wishlist item and
+ *     photo (AES-GCM) with a key derived from the recovery key. This Worker
+ *     only sees an opaque account id, a write token hash and ciphertext.
+ *   - One row per item (no 3 MB ceiling), photos stored apart, and
+ *     incremental sync by revision (/v2/sync), atomic per batch in D1.
+ *   - Linking codes v2: the app encrypts the key with the code before
+ *     sending it; the code never reaches the server (/v2/pair*).
+ *   - /sync/* (v1) stays for older apps and answers 409 once the account
+ *     has moved to v2, so an old device can't recreate a plain copy.
+ *   Without DB the Worker behaves like v13 and the app keeps using v1.
  *
  * v13 (oct 2026):
  *   - Short recovery keys: besides UUIDs, the session id can be 16 Crockford
@@ -90,11 +102,12 @@ export default {
       // Endpoints that only make sense from the app: refuse calls without its
       // origin (stops casual use of the page reader as an open proxy; not a
       // security boundary, a script can fake the header).
-      const APP_ONLY = ['/import-url', '/pair/create', '/pair/claim'];
+      const APP_ONLY = ['/import-url', '/pair/create', '/pair/claim', '/v2/pair', '/v2/pair/claim'];
       if (APP_ONLY.includes(url.pathname) && request.method !== 'OPTIONS' && !isAllowedOrigin(origin)) {
         return corsResponse({ error: 'Origin not allowed' }, 403, origin);
       }
-      const RATE_LIMITED = { '/import-url': [RATE_LIMIT_MAX, false], '/pair/create': [RATE_LIMIT_MAX, false], '/pair/claim': [PAIR_CLAIM_MAX, true] };
+      const RATE_LIMITED = { '/import-url': [RATE_LIMIT_MAX, false], '/pair/create': [RATE_LIMIT_MAX, false], '/pair/claim': [PAIR_CLAIM_MAX, true],
+                             '/v2/pair': [RATE_LIMIT_MAX, false], '/v2/pair/claim': [PAIR_CLAIM_MAX, true], '/v2/sync': [V2_SYNC_MAX, false] };
       if (RATE_LIMITED[url.pathname] && request.method !== 'OPTIONS') {
         const [max, durable] = RATE_LIMITED[url.pathname];
         const limited = await checkRateLimit(env, ip, url.pathname, max, durable);
@@ -116,9 +129,15 @@ export default {
       if (pathname === '/import-url'  && method === 'POST')   return await handleImportUrl(request, env, origin);
       if (pathname === '/pair/create' && method === 'POST')   return await handlePairCreate(request, env, origin);
       if (pathname === '/pair/claim'  && method === 'POST')   return await handlePairClaim(request, env, origin);
+      if (pathname === '/v2/sync'       && method === 'POST')   return await handleV2Sync(request, env, origin);
+      if (pathname === '/v2/account'    && method === 'GET')    return await handleV2Account(request, env, origin);
+      if (pathname === '/v2/account'    && method === 'DELETE') return await handleV2Delete(request, env, origin);
+      if (pathname === '/v2/pair'       && method === 'POST')   return await handleV2PairCreate(request, env, origin);
+      if (pathname === '/v2/pair/claim' && method === 'POST')   return await handleV2PairClaim(request, env, origin);
       if (pathname === '/health'      || pathname === '/')    return corsResponse({
-        status: 'ok', version: '13.0', kv: !!env.HORLOGERIE_KV,
-        caps: { userHeader: true, wishlist: true, importUrl: true, importSource: true, shortKey: true, pairing: true },
+        status: 'ok', version: '14.0', kv: !!env.HORLOGERIE_KV, db: !!env.DB,
+        caps: { userHeader: true, wishlist: true, importUrl: true, importSource: true, shortKey: true, pairing: true,
+                v2: !!env.DB, e2e: !!env.DB, pairingV2: !!env.HORLOGERIE_KV },
       }, 200, origin);
 
       return corsResponse({ error: 'Not found' }, 404, origin);
@@ -147,7 +166,7 @@ function corsResponse(data, status = 200, origin = '') {
       'Content-Type':                'application/json',
       'Access-Control-Allow-Origin': allowOrigin,
       'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Horlogerie-User',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Horlogerie-User, X-Rotor-Id, X-Rotor-Auth',
       'Access-Control-Max-Age':       '86400',
       'X-Content-Type-Options':       'nosniff',
     }
@@ -247,6 +266,9 @@ async function handleSyncPush(request, env, origin) {
   try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
 
   const userId = getUserId(request, body);
+  if (await movedToV2(env, userId)) {
+    return corsResponse({ error: 'Esta copia ya usa la nube cifrada. Actualiza la app.', migrated: true }, 409, origin);
+  }
   const { watches, mode = 'full', deletedIds = [], wishlist } = body;
 
   if (!isValidUUID(userId))        return corsResponse({ error: 'userId inválido' }, 400, origin);
@@ -389,6 +411,207 @@ async function handlePairClaim(request, env, origin) {
   if (!userId) return corsResponse({ error: 'Código no válido o caducado' }, 404, origin);
   await env.HORLOGERIE_KV.delete(`pair:${code}`);
   return corsResponse({ userId }, 200, origin);
+}
+
+/* ══════════════════════════════════════════
+   CLOUD 2.0 — end-to-end encrypted, one row per item (D1)
+
+   Schema (created on first use):
+     users(uid, auth, created, updated)        auth = SHA-256 of the write token
+     items(uid, id, kind, updated, rev, deleted, data, photo, photo_rev)
+   uid and the write token are derived by the app from the recovery key; data
+   and photo are AES-GCM ciphertext. The Worker never sees the key.
+══════════════════════════════════════════ */
+const V2_SYNC_MAX     = 240;           // sync calls per hour per IP (in memory)
+const V2_MAX_ITEMS    = 3000;          // per account
+const V2_MAX_DATA     = 64 * 1024;     // per item ciphertext (base64 chars)
+const V2_MAX_PHOTO    = 2 * 1024 * 1024;
+const V2_MAX_BODY     = 8 * 1024 * 1024;
+const V2_PAGE_ITEMS   = 120;
+const V2_PAGE_BYTES   = 4 * 1024 * 1024;
+const HEX_RE          = /^[0-9a-f]{32,64}$/;
+const ITEM_ID_RE      = /^[A-Za-z0-9_-]{1,64}$/;
+let _schemaReady = false;
+
+async function ensureSchema(env) {
+  if (_schemaReady) return;
+  await env.DB.batch([
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS users (uid TEXT PRIMARY KEY, auth TEXT NOT NULL, created INTEGER, updated INTEGER)'),
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS items (uid TEXT NOT NULL, id TEXT NOT NULL, kind TEXT NOT NULL,
+      updated INTEGER NOT NULL, rev INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0,
+      data TEXT, photo TEXT, photo_rev INTEGER, PRIMARY KEY (uid, kind, id))`),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS items_rev ON items (uid, rev)'),
+  ]);
+  _schemaReady = true;
+}
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Same derivation as the app's id for a v1 key, so v1 endpoints can tell an account moved */
+async function movedToV2(env, v1Key) {
+  if (!env.DB || !isValidUUID(v1Key)) return false;
+  try {
+    await ensureSchema(env);
+    const uid = await v2UidFromKey(v1Key);
+    return !!(await env.DB.prepare('SELECT 1 FROM users WHERE uid = ?').bind(uid).first());
+  } catch { return false; }
+}
+async function v2UidFromKey(key) {
+  const k = /^[0-9a-f-]{36}$/i.test(key) ? key.toLowerCase() : key.toUpperCase();
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(k), 'HKDF', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('rotor/v2'),
+    info: new TextEncoder().encode('id') }, base, 128);
+  return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Checks X-Rotor-Id / X-Rotor-Auth. With register=true an unknown account is
+ * created (first upload); otherwise it must exist.
+ * @returns {Promise<{uid: string} | Response>}
+ */
+async function v2Auth(request, env, origin, register = false) {
+  if (!env.DB) return corsResponse({ error: 'Nube 2.0 no configurada' }, 503, origin);
+  const uid  = (request.headers.get('X-Rotor-Id') || '').toLowerCase();
+  const auth = (request.headers.get('X-Rotor-Auth') || '').toLowerCase();
+  if (!HEX_RE.test(uid) || !HEX_RE.test(auth)) return corsResponse({ error: 'Credenciales no válidas' }, 400, origin);
+  await ensureSchema(env);
+  const authHash = await sha256Hex(auth);
+  const row = await env.DB.prepare('SELECT auth FROM users WHERE uid = ?').bind(uid).first();
+  if (!row) {
+    if (!register) return corsResponse({ exists: false }, 404, origin);
+    const now = Date.now();
+    await env.DB.prepare('INSERT OR IGNORE INTO users (uid, auth, created, updated) VALUES (?, ?, ?, ?)').bind(uid, authHash, now, now).run();
+    const again = await env.DB.prepare('SELECT auth FROM users WHERE uid = ?').bind(uid).first();
+    if (!again || again.auth !== authHash) return corsResponse({ error: 'Credenciales no válidas' }, 403, origin);
+    return { uid };
+  }
+  if (row.auth !== authHash) return corsResponse({ error: 'Credenciales no válidas' }, 403, origin);
+  return { uid };
+}
+
+async function handleV2Sync(request, env, origin) {
+  const len = parseInt(request.headers.get('Content-Length') || '0', 10);
+  if (len > V2_MAX_BODY) return corsResponse({ error: 'Envío demasiado grande' }, 413, origin);
+  let body;
+  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
+  const changes = Array.isArray(body?.changes) ? body.changes : [];
+  const auth = await v2Auth(request, env, origin, changes.length > 0);
+  if (auth instanceof Response) {
+    // Nothing uploaded yet and nothing to upload: an empty account
+    if (auth.status === 404) return corsResponse({ rev: 0, items: [], more: false, exists: false }, 200, origin);
+    return auth;
+  }
+  const { uid } = auth;
+
+  // ── 1. Apply the changes (last writer wins per item, by the app's updated time) ──
+  if (changes.length) {
+    if (changes.length > 200) return corsResponse({ error: 'Demasiados cambios en un envío' }, 400, origin);
+    const count = await env.DB.prepare('SELECT COUNT(*) AS n FROM items WHERE uid = ? AND deleted = 0').bind(uid).first();
+    if ((count?.n || 0) + changes.filter(c => !c.deleted).length > V2_MAX_ITEMS + 200) {
+      return corsResponse({ error: `Demasiados elementos (máx. ${V2_MAX_ITEMS})` }, 413, origin);
+    }
+    const base = Date.now() * 1000;
+    const stmts = [];
+    for (let i = 0; i < changes.length; i++) {
+      const c = changes[i];
+      if (!c || !ITEM_ID_RE.test(c.id || '') || !['w', 'l'].includes(c.kind) || !Number.isFinite(c.updated)) {
+        return corsResponse({ error: 'Cambio no válido' }, 400, origin);
+      }
+      const rev = base + i;
+      if (c.deleted) {
+        stmts.push(env.DB.prepare(`INSERT INTO items (uid, id, kind, updated, rev, deleted, data, photo, photo_rev)
+          VALUES (?1, ?2, ?3, ?4, ?5, 1, NULL, NULL, ?5)
+          ON CONFLICT (uid, kind, id) DO UPDATE SET updated = ?4, rev = ?5, deleted = 1, data = NULL, photo = NULL, photo_rev = ?5
+          WHERE excluded.updated >= items.updated`).bind(uid, c.id, c.kind, c.updated, rev));
+        continue;
+      }
+      if (typeof c.data !== 'string' || c.data.length > V2_MAX_DATA) return corsResponse({ error: 'Elemento demasiado grande' }, 413, origin);
+      const hasPhoto = typeof c.photo === 'string';
+      if (hasPhoto && c.photo.length > V2_MAX_PHOTO) return corsResponse({ error: 'Foto demasiado grande' }, 413, origin);
+      stmts.push(hasPhoto
+        ? env.DB.prepare(`INSERT INTO items (uid, id, kind, updated, rev, deleted, data, photo, photo_rev)
+            VALUES (?1, ?2, ?3, ?4, ?5, 0, ?6, ?7, ?5)
+            ON CONFLICT (uid, kind, id) DO UPDATE SET updated = ?4, rev = ?5, deleted = 0, data = ?6, photo = ?7, photo_rev = ?5
+            WHERE excluded.updated >= items.updated`).bind(uid, c.id, c.kind, c.updated, rev, c.data, c.photo || null)
+        : env.DB.prepare(`INSERT INTO items (uid, id, kind, updated, rev, deleted, data, photo, photo_rev)
+            VALUES (?1, ?2, ?3, ?4, ?5, 0, ?6, NULL, NULL)
+            ON CONFLICT (uid, kind, id) DO UPDATE SET updated = ?4, rev = ?5, deleted = 0, data = ?6
+            WHERE excluded.updated >= items.updated`).bind(uid, c.id, c.kind, c.updated, rev, c.data));
+    }
+    // A stale change (older than what is stored) is ignored, but the stored
+    // row gets a new revision so the device that sent it receives the newer one.
+    for (let i = 0; i < changes.length; i++) {
+      const c = changes[i];
+      stmts.push(env.DB.prepare('UPDATE items SET rev = ? WHERE uid = ? AND kind = ? AND id = ? AND updated > ?')
+        .bind(base + i, uid, c.kind, c.id, c.updated));
+    }
+    stmts.push(env.DB.prepare('UPDATE users SET updated = ? WHERE uid = ?').bind(Date.now(), uid));
+    await env.DB.batch(stmts);   // atomic
+  }
+
+  // ── 2. What changed since the app's last revision ──
+  if (body.pull === false) return corsResponse({ ok: true, applied: changes.length }, 200, origin);
+  const since = Number.isFinite(body.since) ? body.since : 0;
+  const { results } = await env.DB.prepare(`SELECT id, kind, updated, rev, deleted, data,
+      CASE WHEN photo_rev > ?2 THEN COALESCE(photo, '') ELSE NULL END AS photo
+    FROM items WHERE uid = ?1 AND rev > ?2 ORDER BY rev LIMIT ?3`).bind(uid, since, V2_PAGE_ITEMS + 1).all();
+  const items = []; let bytes = 0, more = results.length > V2_PAGE_ITEMS;
+  for (const r of results.slice(0, V2_PAGE_ITEMS)) {
+    bytes += (r.data?.length || 0) + (r.photo?.length || 0);
+    if (items.length && bytes > V2_PAGE_BYTES) { more = true; break; }
+    const it = { id: r.id, kind: r.kind, updated: r.updated, rev: r.rev };
+    if (r.deleted) it.deleted = true; else it.data = r.data;
+    if (r.photo !== null && r.photo !== undefined) it.photo = r.photo;   // '' = photo removed
+    items.push(it);
+  }
+  const rev = items.length ? items[items.length - 1].rev : since;
+  return corsResponse({ rev, items, more, exists: true }, 200, origin);
+}
+
+async function handleV2Account(request, env, origin) {
+  const auth = await v2Auth(request, env, origin, false);
+  if (auth instanceof Response) return auth.status === 404 ? corsResponse({ exists: false }, 200, origin) : auth;
+  const r = await env.DB.prepare(`SELECT COUNT(*) AS n, SUM(CASE WHEN kind = 'w' THEN 1 ELSE 0 END) AS watches,
+      COALESCE(SUM(LENGTH(data)), 0) + COALESCE(SUM(LENGTH(photo)), 0) AS bytes
+    FROM items WHERE uid = ? AND deleted = 0`).bind(auth.uid).first();
+  return corsResponse({ exists: true, count: r?.watches || 0, items: r?.n || 0, sizeBytes: r?.bytes || 0, maxItems: V2_MAX_ITEMS }, 200, origin);
+}
+
+async function handleV2Delete(request, env, origin) {
+  const auth = await v2Auth(request, env, origin, false);
+  if (auth instanceof Response) return auth.status === 404 ? corsResponse({ ok: true }, 200, origin) : auth;
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM items WHERE uid = ?').bind(auth.uid),
+    env.DB.prepare('DELETE FROM users WHERE uid = ?').bind(auth.uid),
+  ]);
+  return corsResponse({ ok: true }, 200, origin);
+}
+
+/* Linking codes v2: { lookup, blob } where lookup = PBKDF2(code) and blob =
+   AES-GCM(recovery key) under another PBKDF2(code). The code itself never
+   reaches the server; the record lives 10 minutes and is deleted on claim. */
+async function handleV2PairCreate(request, env, origin) {
+  if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
+  let body;
+  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
+  if (!/^[0-9a-f]{64}$/.test(body?.lookup || '') || typeof body.blob !== 'string' || body.blob.length > 1024) {
+    return corsResponse({ error: 'Datos no válidos' }, 400, origin);
+  }
+  await env.HORLOGERIE_KV.put(`pair2:${body.lookup}`, body.blob, { expirationTtl: PAIR_TTL });
+  return corsResponse({ ok: true, expiresAt: Date.now() + PAIR_TTL * 1000 }, 200, origin);
+}
+async function handleV2PairClaim(request, env, origin) {
+  if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
+  let body;
+  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
+  if (!/^[0-9a-f]{64}$/.test(body?.lookup || '')) return corsResponse({ error: 'Datos no válidos' }, 400, origin);
+  const blob = await env.HORLOGERIE_KV.get(`pair2:${body.lookup}`);
+  if (!blob) return corsResponse({ error: 'Código no válido o caducado' }, 404, origin);
+  await env.HORLOGERIE_KV.delete(`pair2:${body.lookup}`);
+  return corsResponse({ blob }, 200, origin);
 }
 
 /* ══════════════════════════════════════════

@@ -10,7 +10,25 @@ const KV = {
   async put(k, v) { store.set(k, String(v)); },
   async delete(k) { store.delete(k); },
 };
-const env = { HORLOGERIE_KV: KV, ALLOW_LOCAL_FETCH: '1' };
+// D1 in memory over Node's built-in SQLite (same SQL dialect as D1)
+const { DatabaseSync } = await import('node:sqlite');
+const sqlite = new DatabaseSync(':memory:');
+const bound = (sql, args) => ({
+  sql, args,
+  async first() { return sqlite.prepare(sql).get(...args) ?? null; },
+  async all()   { return { results: sqlite.prepare(sql).all(...args) }; },
+  async run()   { const r = sqlite.prepare(sql).run(...args); return { meta: { changes: r.changes } }; },
+});
+const DB = {
+  prepare(sql) { const st = bound(sql, []); st.bind = (...a) => bound(sql, a); return st; },
+  async batch(stmts) {
+    sqlite.exec('BEGIN');
+    try { const out = stmts.map(s => sqlite.prepare(s.sql).run(...s.args)); sqlite.exec('COMMIT'); return out; }
+    catch (e) { sqlite.exec('ROLLBACK'); throw e; }
+  },
+};
+// NO_DB=1 starts the Worker without D1 (behaves like v13: cloud v1 only)
+const env = { HORLOGERIE_KV: KV, ALLOW_LOCAL_FETCH: '1', ...(process.env.NO_DB ? {} : { DB }) };
 
 const log = [];
 http.createServer(async (req, res) => {
@@ -20,10 +38,18 @@ http.createServer(async (req, res) => {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
   };
+  // Test-only: run SQL on the in-memory D1 (to simulate tampering)
+  if (req.url.startsWith('/__sql') && !process.env.NO_DB) {
+    const { sql, args = [] } = JSON.parse(body.toString() || '{}');
+    let out; try { out = sqlite.prepare(sql).all(...args); } catch (e) { out = { error: e.message }; }
+    res.writeHead(200, { 'Content-Type': 'application/json', ...cors });
+    return res.end(JSON.stringify(out));
+  }
   // Test-only introspection
   if (req.url.startsWith('/__kv')) {
     res.writeHead(200, { 'Content-Type': 'application/json', ...cors });
-    return res.end(JSON.stringify({ keys: [...store.keys()], data: Object.fromEntries(store), log }));
+    return res.end(JSON.stringify({ keys: [...store.keys()], data: Object.fromEntries(store), log,
+      d1: process.env.NO_DB ? null : { users: (() => { try { return sqlite.prepare('SELECT * FROM users').all(); } catch { return []; } })(), items: (() => { try { return sqlite.prepare('SELECT uid, id, kind, updated, rev, deleted, data, LENGTH(photo) AS photoLen FROM items').all(); } catch { return []; } })() } }));
   }
   // Requests from the app (localhost in tests) arrive as if from the real app
   // origin; a test can send X-Test-Origin: none to simulate a call from outside.

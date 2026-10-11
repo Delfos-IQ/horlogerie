@@ -52,10 +52,14 @@ jobs:
           mkdir -p /tmp/srv && ln -sfn "$PWD" /tmp/srv/horlogerie
           python -m http.server 8080 -d /tmp/srv > /tmp/srv.log 2>&1 &
           node tests/worker-harness.mjs ../worker/index.js 8711 > /tmp/worker.log 2>&1 &
+          NO_DB=1 node tests/worker-harness.mjs ../worker/index.js 8712 > /tmp/worker-v1.log 2>&1 &
           sleep 2
 
-      - name: Sincronización entre dispositivos
-        run: python tests/e2e_sync.py 8711 v11
+      - name: Nube 2.0 cifrada (Worker con D1)
+        run: python tests/e2e_cloud2.py 8711
+
+      - name: Sincronización v1 entre dispositivos (Worker sin D1)
+        run: python tests/e2e_sync.py 8712 v11
 
       - name: Registro de uso, recomendación y PDF
         run: python tests/e2e_wear.py
@@ -64,4 +68,4 @@ jobs:
         run: python tests/e2e_import_history.py 8711
 
       - name: Nube, clave corta y vincular dispositivos
-        run: python tests/e2e_cloud.py 8711
+        run: python tests/e2e_cloud.py 8712
