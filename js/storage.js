@@ -159,11 +159,12 @@ function getWatch(id) { return watches.find(w => w.id === id) || null; }
 async function addWatch(data) {
   const id = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
   const photo = data.photo || null;
+  const now = Date.now();
   const w = {
     id, brand: data.brand, model: data.model,
     ref: data.ref || '', type: data.type || 'automatic',
     notes: data.notes || '', specs: {}, price: null,
-    history: [], wearStart: null, created: Date.now()
+    history: [], wearStart: null, created: now, updatedAt: now
   };
   if (photo) {
     const compressed = await compressPhoto(photo);
@@ -181,6 +182,7 @@ async function updateWatch(id, changes) {
   if (!w) return null;
   const { photo, ...rest } = changes;
   Object.assign(w, rest);
+  w.updatedAt = Date.now();
   if (photo !== undefined) {
     if (photo) {
       const compressed = await compressPhoto(photo);
@@ -197,8 +199,11 @@ async function updateWatch(id, changes) {
 window.updateWatch = updateWatch;
 
 function deleteWatch(id) {
-  watches = watches.filter(w => w.id !== id);
+  // Mutate in place: other modules hold a reference to this array
+  const idx = watches.findIndex(w => w.id === id);
+  if (idx !== -1) watches.splice(idx, 1);
   idbDeletePhoto(id);
+  addTombstone('watches', id);
   save();
 }
 
@@ -210,6 +215,7 @@ function startWearing(id) {
   const w = getWatch(id);
   if (!w || w.wearStart) return false;
   w.wearStart = Date.now();
+  w.updatedAt = w.wearStart;
   save();
   return true;
 }
@@ -218,8 +224,10 @@ function stopWearing(id) {
   const w = getWatch(id);
   if (!w || !w.wearStart) return false;
   if (!w.history) w.history = [];
-  w.history.push({ start: w.wearStart, end: Date.now() });
+  const now = Date.now();
+  w.history.push({ start: w.wearStart, end: now });
   w.wearStart = null;
+  w.updatedAt = now;
   save();
   return true;
 }
@@ -252,6 +260,222 @@ async function restoreFromCloud(cloudWatches) {
 }
 window.restoreFromCloud = restoreFromCloud;
 
+/* ═══════════════════════════════════════
+   TOMBSTONES — ids deleted locally that the cloud still has to hear about.
+   Cleared by sync.js after a successful push.
+═══════════════════════════════════════ */
+const TOMB_KEY = 'horlogerie_tombstones_v1';
+
+function getTombstones() {
+  try {
+    const t = JSON.parse(localStorage.getItem(TOMB_KEY) || '{}');
+    return { watches: t.watches || [], wishlist: t.wishlist || [] };
+  } catch { return { watches: [], wishlist: [] }; }
+}
+function setTombstones(t) {
+  try { localStorage.setItem(TOMB_KEY, JSON.stringify(t)); } catch {}
+}
+function addTombstone(kind, id) {
+  const t = getTombstones();
+  if (!t[kind].includes(id)) t[kind].push(id);
+  setTombstones(t);
+}
+function clearTombstones(kind, ids) {
+  const t = getTombstones();
+  const done = new Set(ids);
+  t[kind] = t[kind].filter(id => !done.has(id));
+  setTombstones(t);
+}
+
+/* ═══════════════════════════════════════
+   MERGE — combine local and cloud lists item by item.
+   Pure function (no side effects) so it can be tested in isolation.
+
+   local, cloud   arrays of { id, updatedAt?, created? , ... }
+   syncedIds      ids known to be in the cloud after the last successful sync
+   localDeleted   ids deleted here and not yet pushed
+
+   Rules:
+   - In both            → keep the most recently modified (tie → cloud)
+   - Only local         → was synced before? then the cloud deleted it → drop
+                          never synced? it is new here → keep
+   - Only in cloud      → deleted here and not pushed yet? → drop; else → add
+═══════════════════════════════════════ */
+function itemStamp(x) {
+  if (!x) return 0;
+  if (typeof x.updatedAt === 'number') return x.updatedAt;
+  let s = typeof x.created === 'number' ? x.created : 0;
+  if (typeof x.wearStart === 'number') s = Math.max(s, x.wearStart);
+  for (const h of (Array.isArray(x.history) ? x.history : [])) {
+    s = Math.max(s, h?.end || h?.start || 0);
+  }
+  return s;
+}
+
+function mergeById(local, cloud, syncedIds = [], localDeleted = []) {
+  const synced  = new Set(syncedIds);
+  const deleted = new Set(localDeleted);
+  const cloudMap = new Map((cloud || []).filter(x => x && x.id).map(x => [x.id, x]));
+  const out = [];
+  const stats = { keptLocal: 0, fromCloud: 0, droppedLocal: 0, droppedCloud: 0 };
+
+  for (const l of (local || [])) {
+    if (!l || !l.id) continue;
+    const c = cloudMap.get(l.id);
+    if (c) {
+      if (itemStamp(l) > itemStamp(c)) { out.push(l); stats.keptLocal++; }
+      else { out.push(c); stats.fromCloud++; }
+      cloudMap.delete(l.id);
+    } else if (synced.has(l.id)) {
+      stats.droppedLocal++;            // deleted on another device
+    } else {
+      out.push(l); stats.keptLocal++;  // new on this device
+    }
+  }
+  for (const c of cloudMap.values()) {
+    if (deleted.has(c.id)) { stats.droppedCloud++; continue; }
+    out.push(c); stats.fromCloud++;
+  }
+  return { items: out, stats };
+}
+window.mergeById = mergeById;
+
+/* Replace the in-memory collection with a merged list.
+   Photos travel inside cloud/backup items: store them in IndexedDB. */
+async function applyWatchList(list) {
+  const keepIds = new Set(list.map(w => w.id));
+  const metas = [];
+  for (const w of list) {
+    const { photo, ...meta } = w;
+    if (isSafePhoto(photo)) await idbSavePhoto(w.id, photo);
+    metas.push(meta);
+  }
+  // Remove photos of watches that no longer exist
+  for (const w of watches) if (!keepIds.has(w.id)) await idbDeletePhoto(w.id);
+  watches.length = 0;
+  metas.forEach(m => watches.push(m));
+  await loadPhotos();
+  saveMeta();
+}
+window.applyWatchList = applyWatchList;
+
+/* ═══════════════════════════════════════
+   SANITIZE — anything coming from a backup file or the cloud
+═══════════════════════════════════════ */
+const WATCH_TYPES = ['automatic', 'quartz', 'manual'];
+const SPEC_KEYS   = ['calibre','movimiento','cristal','brazalete','esfera','caja','resistencia','reserva','diametro','grosor'];
+const MAX_PHOTO_CHARS = 3 * 1024 * 1024;
+
+function isSafePhoto(p) {
+  return typeof p === 'string' && p.length < MAX_PHOTO_CHARS &&
+    /^data:image\/(webp|jpeg|jpg|png);base64,[A-Za-z0-9+/=]+$/.test(p);
+}
+window.isSafePhoto = isSafePhoto;
+
+const _str = (v, max = 500) => (typeof v === 'string' ? v : v == null ? '' : String(v)).slice(0, max);
+const _num = v => (typeof v === 'number' && isFinite(v) && v > 0 ? v : null);
+
+function sanitizeWatch(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const brand = _str(raw.brand, 80).trim(), model = _str(raw.model, 120).trim();
+  if (!brand || !model) return null;
+  const id = /^[A-Za-z0-9_-]{1,64}$/.test(raw.id || '') ? raw.id
+    : 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const specs = {};
+  for (const k of SPEC_KEYS) if (raw.specs?.[k]) specs[k] = _str(raw.specs[k], 200);
+  const history = (Array.isArray(raw.history) ? raw.history : [])
+    .map(h => ({ start: _num(h?.start), end: _num(h?.end) }))
+    .filter(h => h.start && h.end && h.end >= h.start);
+  const w = {
+    id, brand, model,
+    ref:   _str(raw.ref, 80),
+    type:  WATCH_TYPES.includes(raw.type) ? raw.type : 'automatic',
+    notes: _str(raw.notes, 2000),
+    specs,
+    price: raw.price && typeof raw.price === 'object'
+      ? { value: _str(raw.price.value, 80), note: _str(raw.price.note, 200) } : null,
+    history,
+    wearStart: _num(raw.wearStart),
+    created:   _num(raw.created) || Date.now(),
+  };
+  if (_num(raw.updatedAt)) w.updatedAt = raw.updatedAt;
+  if (raw._source)  w._source  = _str(raw._source, 80);
+  if (raw._warning) w._warning = _str(raw._warning, 200);
+  if (isSafePhoto(raw.photo)) w.photo = raw.photo;
+  return w;
+}
+window.sanitizeWatch = sanitizeWatch;
+
+function sanitizeWishlistItem(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const brand = _str(raw.brand, 80).trim(), model = _str(raw.model, 120).trim();
+  if (!brand || !model) return null;
+  const specs = {};
+  for (const k of SPEC_KEYS) if (raw.specs?.[k]) specs[k] = _str(raw.specs[k], 200);
+  const it = {
+    id: /^[A-Za-z0-9_-]{1,64}$/.test(raw.id || '') ? raw.id
+      : 'wl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    brand, model,
+    ref:      _str(raw.ref, 80),
+    type:     WATCH_TYPES.includes(raw.type) ? raw.type : 'automatic',
+    priority: ['high','medium','low'].includes(raw.priority) ? raw.priority : 'medium',
+    precio:   _str(raw.precio, 80),
+    notas:    _str(raw.notas, 2000),
+    specs,
+    created:  _num(raw.created) || Date.now(),
+  };
+  if (_num(raw.updatedAt)) it.updatedAt = raw.updatedAt;
+  return it;
+}
+window.sanitizeWishlistItem = sanitizeWishlistItem;
+
+/* Only one watch can be "on the wrist" at a time */
+function enforceSingleActive(list) {
+  const active = list.filter(w => w.wearStart).sort((a, b) => b.wearStart - a.wearStart);
+  active.slice(1).forEach(w => { w.wearStart = null; });
+  return list;
+}
+
+/* ═══════════════════════════════════════
+   BACKUP — export / import
+═══════════════════════════════════════ */
+async function buildBackup() {
+  return {
+    app: 'horlogerie',
+    version: 3,
+    exported: Date.now(),
+    watches: await getWatchesWithPhotos(),
+    wishlist: getWishlist(),
+  };
+}
+window.buildBackup = buildBackup;
+
+/**
+ * Import a backup (v2: {watches}, v3: {watches, wishlist}, or a bare array).
+ * Merges with what is already here; on the same id the most recent wins.
+ * Returns { watches: {...stats}, wishlist: {...stats}, rejected }.
+ */
+async function importBackup(data) {
+  const rawWatches  = Array.isArray(data) ? data : (Array.isArray(data?.watches) ? data.watches : null);
+  if (!rawWatches) throw new Error('Formato no reconocido');
+  const rawWishlist = Array.isArray(data?.wishlist) ? data.wishlist : [];
+
+  const incoming = rawWatches.map(sanitizeWatch).filter(Boolean);
+  const wlIn     = rawWishlist.map(sanitizeWishlistItem).filter(Boolean);
+  const rejected = (rawWatches.length - incoming.length) + (rawWishlist.length - wlIn.length);
+
+  const local = await getWatchesWithPhotos();
+  const mw = mergeById(local, incoming);            // nothing is deleted on import
+  await applyWatchList(enforceSingleActive(mw.items));
+
+  const ml = mergeById(getWishlist(), wlIn);
+  setWishlistSilently(ml.items);
+
+  save();   // marks everything for the next cloud push
+  return { watches: mw.stats, wishlist: ml.stats, rejected, total: incoming.length, totalWishlist: wlIn.length };
+}
+window.importBackup = importBackup;
+
 // Init
 loadData();
 
@@ -265,8 +489,27 @@ function getWishlist() {
   try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]'); } catch { return []; }
 }
 
+/* Write without triggering a cloud push (used when applying merges) */
+function setWishlistSilently(items) {
+  try { localStorage.setItem(WL_KEY, JSON.stringify(items)); } catch {
+    if (typeof showToast === 'function') showToast('⚠️ Error guardando la lista de deseos');
+  }
+}
+window.setWishlistSilently = setWishlistSilently;
+
+/* User-initiated change: stamp modified items and schedule a cloud push */
 function saveWishlist(items) {
-  try { localStorage.setItem(WL_KEY, JSON.stringify(items)); } catch {}
+  const prev = new Map(getWishlist().map(i => [i.id, JSON.stringify(i)]));
+  const now  = Date.now();
+  items.forEach(i => {
+    const before = prev.get(i.id);
+    const { updatedAt, ...rest } = i;
+    if (!before) { i.updatedAt = i.updatedAt || now; return; }
+    const { updatedAt: _u, ...beforeRest } = JSON.parse(before);
+    if (JSON.stringify(rest) !== JSON.stringify(beforeRest)) i.updatedAt = now;
+  });
+  setWishlistSilently(items);
+  if (typeof window._debouncedPush === 'function') window._debouncedPush();
 }
 
 function addWishlistItem(data) {
@@ -311,6 +554,7 @@ function updateWishlistItem(id, changes) {
 }
 
 function deleteWishlistItem(id) {
+  addTombstone('wishlist', id);
   saveWishlist(getWishlist().filter(i => i.id !== id));
 }
 
