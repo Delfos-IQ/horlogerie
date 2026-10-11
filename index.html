@@ -2,13 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<!-- CACHE KILLER v9: aggressively removes all stale SW caches -->
+<!-- Limpieza de service workers antiguos registrados fuera de /horlogerie/.
+     Las cachés viejas las borra sw.js al activarse (evento 'activate'). -->
 <script>
 (async function() {
-  if (!('serviceWorker' in navigator) || !('caches' in window)) return;
+  if (!('serviceWorker' in navigator)) return;
   try {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== 'horlogerie-v10').map(k => caches.delete(k)));
     const regs = await navigator.serviceWorker.getRegistrations();
     await Promise.all(regs.filter(r => !r.scope.includes('/horlogerie/')).map(r => r.unregister()));
   } catch(e) {}
@@ -755,24 +754,23 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: '/horlogerie/' })
-        .then(reg => {
-          // Check for updates every time the app is opened
-          reg.update();
+      // Recargar solo cuando un SW nuevo sustituye a otro que ya controlaba la página
+      // (no en la primera instalación) y una única vez, aunque lleguen dos avisos.
+      const hadController = !!navigator.serviceWorker.controller;
+      let reloading = false;
+      const reloadOnce = () => {
+        if (!hadController || reloading) return;
+        reloading = true;
+        window.location.reload();
+      };
 
-          // Listen for new SW taking control → reload to get latest version
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            window.location.reload();
-          });
-        })
+      navigator.serviceWorker.register('./sw.js', { scope: '/horlogerie/' })
+        .then(reg => reg.update())   // comprobar actualización en cada apertura
         .catch(() => {});
 
-      // Also listen for SW_UPDATED message from the new SW
+      navigator.serviceWorker.addEventListener('controllerchange', reloadOnce);
       navigator.serviceWorker.addEventListener('message', e => {
-        if (e.data?.type === 'SW_UPDATED') {
-          // Small delay so the SW fully activates before reload
-          setTimeout(() => window.location.reload(), 200);
-        }
+        if (e.data?.type === 'SW_UPDATED') reloadOnce();
       });
     });
   }
