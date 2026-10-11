@@ -2,7 +2,7 @@
 
 let _historyMode   = 'calendar'; // 'calendar' | 'ranking' | 'detail'
 let _calMonth      = null;       // Date set to the 1st of the month shown
-let _rankingMetric = 'days';     // 'days' | 'sessions'
+let _histYear      = 'all';      // year filter shared by ranking and "por reloj": 'all' | 2026…
 
 /* ── Category inference from brand/model name ── */
 const CATEGORY_RULES = [
@@ -30,14 +30,10 @@ function inferCategory(w) {
   return { cat: 'Otros', icon: 'ti-device-watch', color: 'var(--mid)' };
 }
 
-function watchStats(w) {
-  const st = wearStats(w);
-  return { totalDays: st.daysWorn, sessions: st.sessions, lastEnd: st.lastWorn,
-           daysSinceLast: st.daysSinceLast, active: st.active };
-}
-
 /* ── Mode toggle ── */
-function setHistoryMode(mode) {
+function setHistoryMode(mode, fromUser = false) {
+  // Tapping a mode while a watch panel is open leaves the panel
+  if (fromUser && history.state?.hw) navReplace({ view: 'history' });
   _historyMode = mode;
   document.getElementById('history-calendar-view').style.display = mode === 'calendar' ? 'block' : 'none';
   document.getElementById('history-ranking-view').style.display  = mode === 'ranking'  ? 'block' : 'none';
@@ -50,185 +46,167 @@ function setHistoryMode(mode) {
 }
 window.setHistoryMode = setHistoryMode;
 
-function setRankingMetric(metric) {
-  _rankingMetric = metric;
-  document.getElementById('btn-metric-days').classList.toggle('active', metric === 'days');
-  document.getElementById('btn-metric-sessions').classList.toggle('active', metric === 'sessions');
-  renderRanking();
-}
-window.setRankingMetric = setRankingMetric;
-
 /* ── Main renderHistory entry point ── */
 function renderHistory() {
+  // Coming back (gesture) from a watch panel: restore the mode we left
+  const hm = history.state?.hmode;
+  if (hm && !history.state?.hw) _historyMode = hm;
   setHistoryMode(_historyMode);
 }
 
+/* ── Shared year filter (ranking and "por reloj") ── */
+function histYears() {
+  const ys = new Set([new Date().getFullYear()]);
+  getWatches().forEach(w => wornDayKeys(w).forEach(k => ys.add(Number(k.slice(0, 4)))));
+  return [...ys].sort((a, b) => b - a);
+}
+/** Distinct worn days of a watch in the selected period ('all' or a year) */
+function daysIn(w, year = _histYear) {
+  const keys = [...wornDayKeys(w)];
+  return year === 'all' ? keys.length : keys.filter(k => k.startsWith(year + '-')).length;
+}
+function periodLabel(year = _histYear) { return year === 'all' ? 'desde el principio' : `en ${year}`; }
+function yearChipsHTML() {
+  const ys = histYears();
+  if (_histYear !== 'all' && !ys.includes(_histYear)) _histYear = 'all';
+  const chip = (v, txt) => `<button class="year-chip${_histYear === v ? ' active' : ''}" data-year="${v}" aria-pressed="${_histYear === v}">${txt}</button>`;
+  return `<div class="year-chips" role="group" aria-label="Filtrar por año">${chip('all', 'Todo')}${ys.map(y => chip(y, y)).join('')}</div>`;
+}
+function bindYearChips(root, rerender) {
+  root.querySelectorAll('.year-chip').forEach(b => b.addEventListener('click', () => {
+    _histYear = b.dataset.year === 'all' ? 'all' : Number(b.dataset.year);
+    rerender();
+  }));
+}
+const EMPTY_HISTORY = `<div class="history-empty"><i class="ti ti-clock" style="font-size:40px;color:var(--mid);"></i><br><br>No hay relojes</div>`;
+
 /* ══════════════════════════════════════════════
-   RANKING VIEW
+   RANKING VIEW — top 10 by days worn + the 3 least used
 ══════════════════════════════════════════════ */
 function renderRanking() {
   const body = document.getElementById('ranking-body');
   if (!body) return;
   const ws = getWatches();
+  if (!ws.length) { body.innerHTML = EMPTY_HISTORY; return; }
 
-  if (!ws.length) {
-    body.innerHTML = `<div class="history-empty"><i class="ti ti-clock" style="font-size:40px;color:var(--mid);"></i><br><br>No hay relojes</div>`;
-    return;
-  }
+  const data = ws.map(w => ({ w, days: daysIn(w) }))
+    .sort((a, b) => b.days - a.days || `${a.w.brand} ${a.w.model}`.localeCompare(`${b.w.brand} ${b.w.model}`));
+  const used = data.filter(d => d.days > 0);
+  const top  = used.slice(0, 10);
+  const max  = top[0]?.days || 1;
+  const dayset = new Set();   // distinct days with any watch (two watches the same day count once)
+  ws.forEach(w => wornDayKeys(w).forEach(k => { if (_histYear === 'all' || k.startsWith(_histYear + '-')) dayset.add(k); }));
+  const total = dayset.size;
 
-  // Build stats for each watch
-  const data = ws.map(w => ({ w, stats: watchStats(w), cat: inferCategory(w) }));
-  const metric = _rankingMetric; // 'days' | 'sessions'
-  const maxVal = Math.max(...data.map(d => metric === 'days' ? d.stats.totalDays : d.stats.sessions), 1);
-
-  // Group by category
-  const byCategory = {};
-  data.forEach(d => {
-    const key = d.cat.cat;
-    if (!byCategory[key]) byCategory[key] = { cat: d.cat, items: [] };
-    byCategory[key].items.push(d);
-  });
-
-  // Sort categories by total use desc
-  const sortedCats = Object.values(byCategory).sort((a, b) => {
-    const sumA = a.items.reduce((s, d) => s + (metric === 'days' ? d.stats.totalDays : d.stats.sessions), 0);
-    const sumB = b.items.reduce((s, d) => s + (metric === 'days' ? d.stats.totalDays : d.stats.sessions), 0);
-    return sumB - sumA;
-  });
-
-  // Sort items within each category
-  sortedCats.forEach(grp => {
-    grp.items.sort((a, b) => {
-      const va = metric === 'days' ? a.stats.totalDays : a.stats.sessions;
-      const vb = metric === 'days' ? b.stats.totalDays : b.stats.sessions;
-      return vb - va;
-    });
-  });
-
-  // Global rank position across all watches
-  const globalRanked = [...data].sort((a, b) => {
-    const va = metric === 'days' ? a.stats.totalDays : a.stats.sessions;
-    const vb = metric === 'days' ? b.stats.totalDays : b.stats.sessions;
-    return vb - va;
-  });
-  const rankMap = {};
-  globalRanked.forEach((d, i) => { rankMap[d.w.id] = i + 1; });
-
-  // Render
-  body.innerHTML = sortedCats.map(grp => {
-    const { cat, items } = grp;
-    const catTotal = items.reduce((s, d) => s + (metric === 'days' ? d.stats.totalDays : d.stats.sessions), 0);
-    const rows = items.map(d => {
-      const { w, stats } = d;
-      const val      = metric === 'days' ? stats.totalDays : stats.sessions;
-      const pct      = maxVal > 0 ? Math.round(val / maxVal * 100) : 0;
-      const rank     = rankMap[w.id];
-      const label    = metric === 'days'
-        ? (val === 0 ? 'Sin uso' : `${val} días`)
-        : (val === 0 ? 'Sin uso' : `${val} sesión${val !== 1 ? 'es' : ''}`);
-      const lastLabel = stats.daysSinceLast === null ? 'Nunca' :
-        stats.daysSinceLast === 0 ? 'Hoy' :
-        `Hace ${stats.daysSinceLast}d`;
-      const urgColor = stats.daysSinceLast === null || stats.daysSinceLast > 25 ? '#e57373'
-        : stats.daysSinceLast > 14 ? '#D4AF6A' : '#4CAF50';
-      const barColor = val === 0 ? 'var(--dark3)' : cat.color;
-
-      return `
-        <div class="ranking-row" data-wid="${escHtml(w.id)}">
-          <div class="ranking-rank">#${rank}</div>
-          <div class="ranking-info">
-            <div class="ranking-name">
-              <span class="ranking-brand">${escHtml(w.brand)}</span>
-              <span class="ranking-model">${escHtml(w.model)}</span>
-              ${stats.active ? '<span class="ranking-active-dot">●</span>' : ''}
-            </div>
-            <div class="ranking-bar-wrap">
-              <div class="ranking-bar" style="width:${pct}%;background:${barColor};"></div>
-            </div>
-            <div class="ranking-meta">
-              <span class="ranking-val">${label}</span>
-              <span class="ranking-last" style="color:${urgColor};">${lastLabel}</span>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-
-    return `
-      <div class="ranking-category">
-        <div class="ranking-cat-header">
-          <i class="ti ${cat.icon}" style="color:${cat.color};font-size:14px;"></i>
-          <span class="ranking-cat-name">${cat.cat}</span>
-          <span class="ranking-cat-total">${catTotal} ${metric === 'days' ? 'd' : 'ses.'}</span>
-        </div>
-        ${rows}
-      </div>`;
+  const rows = top.map((d, i) => {
+    const pct = Math.max(4, Math.round(d.days / max * 100));
+    return `<button class="rk-row" data-wid="${escHtml(d.w.id)}" aria-label="${i + 1}. ${escHtml(d.w.brand)} ${escHtml(d.w.model)}: ${d.days} ${d.days === 1 ? 'día' : 'días'}">
+      <span class="rk-pos${i < 3 ? ' podium' : ''}">${i + 1}</span>
+      ${watchChip(d.w, 40)}
+      <span class="rk-main">
+        <span class="rk-name"><b>${escHtml(d.w.brand)}</b> ${escHtml(d.w.model)}${d.w.wearStart ? ' <span class="cal-live">●</span>' : ''}</span>
+        <span class="rk-bar"><span style="width:${pct}%"></span></span>
+      </span>
+      <span class="rk-val"><b>${d.days}</b>${d.days === 1 ? 'día' : 'días'}</span>
+    </button>`;
   }).join('');
 
-  // Click to open detail
-  body.querySelectorAll('.ranking-row').forEach(row => {
-    row.addEventListener('click', () => openDetail(row.dataset.wid));
-  });
+  // Least used: watches in rotation outside the top 10, fewest days first
+  const topIds = new Set(top.map(d => d.w.id));
+  const least = data.filter(d => d.w.rotation !== false && !topIds.has(d.w.id))
+    .sort((a, b) => a.days - b.days).slice(0, 3);
+  const leastHTML = least.length ? `
+    <div class="rk-least">
+      <div class="rk-least-title">Menos usados ${periodLabel()}</div>
+      ${least.map(d => `<button class="rk-least-item" data-wid="${escHtml(d.w.id)}">${watchChip(d.w, 26)}
+        <span>${escHtml(d.w.brand)} ${escHtml(d.w.model)}</span><em>${d.days ? `${d.days} d` : 'sin uso'}</em></button>`).join('')}
+    </div>` : '';
+
+  body.innerHTML = yearChipsHTML() + (top.length
+    ? `<div class="rk-head">${total} ${total === 1 ? 'día' : 'días'} con reloj ${periodLabel()} · top ${top.length}</div>${rows}`
+    : `<div class="history-empty" style="padding:32px 8px;">Sin usos apuntados ${periodLabel()}.</div>`) + leastHTML;
+  bindYearChips(body, renderRanking);
+  body.querySelectorAll('[data-wid]').forEach(b => b.addEventListener('click', () => openHistWatch(b.dataset.wid)));
 }
 
 /* ══════════════════════════════════════════════
-   DETAIL VIEW (individual watch sessions)
+   POR RELOJ — grid of 4 per row → watch panel
 ══════════════════════════════════════════════ */
+function openHistWatch(id) {
+  // Remember the mode we come from, so "back" returns there
+  navReplace({ ...(history.state || {}), view: 'history', hmode: _historyMode });
+  navPush({ view: 'history', hw: id });
+  setHistoryMode('detail');
+}
+window.openHistWatch = openHistWatch;
+
 function renderHistoryDetail() {
-  const sel = document.getElementById('history-selector');
-  const ws  = getWatches();
-  if (!sel) return;
-  if (!ws.length) {
-    const body = document.getElementById('history-body');
-    if (body) body.innerHTML = `<div class="history-empty"><i class="ti ti-clock" style="font-size:40px;color:var(--mid);"></i><br><br>No hay relojes</div>`;
-    sel.innerHTML = ''; return;
-  }
-  if (!historySelectedWatch || !getWatch(historySelectedWatch)) historySelectedWatch = ws[0].id;
-  sel.innerHTML = ws.map(w => `
-    <div class="hw-chip${w.id === historySelectedWatch ? ' active' : ''}" data-wid="${escHtml(w.id)}">
-      ${escHtml(w.brand)} ${escHtml(w.model)}
-    </div>`).join('');
-  sel.querySelectorAll('.hw-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      historySelectedWatch = chip.dataset.wid;
-      historySelectedYear  = null;
-      renderHistoryBody();
-    });
-  });
-  renderHistoryBody();
+  const body = document.getElementById('history-body');
+  if (!body) return;
+  const hw = history.state?.hw;
+  if (hw && getWatch(hw)) { historySelectedWatch = hw; renderHistoryBody(); return; }
+  const ws = getWatches();
+  if (!ws.length) { body.innerHTML = EMPTY_HISTORY; return; }
+  const data = ws.map(w => ({ w, days: daysIn(w) }))
+    .sort((a, b) => b.days - a.days || `${a.w.brand} ${a.w.model}`.localeCompare(`${b.w.brand} ${b.w.model}`));
+  body.innerHTML = yearChipsHTML() + `<div class="hw-grid">${data.map(({ w, days }) => {
+    const cat = inferCategory(w);
+    const img = isSafePhoto(w.photo)
+      ? `<img src="${w.photo}" alt="" loading="lazy">`
+      : `<span class="hw-ini" style="--chip:${cat.color}">${escHtml(watchInitials(w))}</span>`;
+    return `<button class="hw-card${days ? '' : ' unused'}" data-wid="${escHtml(w.id)}" aria-label="${escHtml(w.brand)} ${escHtml(w.model)}: ${days} ${days === 1 ? 'día' : 'días'}">
+      <span class="hw-photo">${img}<span class="hw-badge">${days}</span></span>
+      <span class="hw-brand">${escHtml(w.brand)}</span>
+      <span class="hw-model">${escHtml(w.model)}</span>
+    </button>`;
+  }).join('')}</div>`;
+  bindYearChips(body, renderHistoryDetail);
+  body.querySelectorAll('.hw-card').forEach(c => c.addEventListener('click', () => openHistWatch(c.dataset.wid)));
 }
 
 function renderHistoryBody() {
   const w    = getWatch(historySelectedWatch);
   const body = document.getElementById('history-body');
-  if (!body) return;
-  if (!w) { body.innerHTML = ''; return; }
-  const all = wearIntervals(w);
-  const addBtn = `<button class="chip-btn" id="hist-add" style="margin-bottom:14px;">
-      <i class="ti ti-calendar-plus" aria-hidden="true"></i> Apuntar un uso</button>`;
-  if (!all.length) {
-    body.innerHTML = addBtn + `<div class="history-empty"><i class="ti ti-calendar-x" style="font-size:36px;color:var(--mid);"></i><br><br>Aún no has usado este reloj</div>`;
-    body.querySelector('#hist-add').addEventListener('click', () => openWearSheet(w.id));
-    return;
-  }
+  if (!body || !w) return;
+  const year = _histYear;
+  const inPeriod = k => year === 'all' || k.startsWith(year + '-');
+  const allKeys = [...wornDayKeys(w)];
+  const keys = allKeys.filter(inPeriod);
   const st = wearStats(w);
-  const years = [...new Set(all.map(i => new Date(i.start).getFullYear()))].sort((a, b) => b - a);
-  if (!historySelectedYear || !years.includes(historySelectedYear)) historySelectedYear = years[0];
-  const yearTabs = `<div class="year-tabs">${years.map(y =>
-    `<button class="year-tab${y === historySelectedYear ? ' active' : ''}" data-year="${y}">${y}</button>`
-  ).join('')}</div>`;
-  const summary = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
-    <div class="spec-card"><div class="spec-label">Días de uso</div><div class="spec-value">${st.daysWorn}</div></div>
-    <div class="spec-card"><div class="spec-label">Sesiones</div><div class="spec-value">${st.sessions}</div></div>
-    <div class="spec-card"><div class="spec-label">90 días</div><div class="spec-value">${st.daysWorn90}</div></div>
-  </div>`;
-  const filtered = all.filter(i => new Date(i.start).getFullYear() === historySelectedYear).reverse();
-  const byMonth  = new Map();
-  filtered.forEach(i => {
-    const m = new Date(i.start).toLocaleDateString('es-ES', { month: 'long' });
+
+  // Share of the days with any watch logged in the period
+  const anyDays = new Set();
+  getWatches().forEach(x => wornDayKeys(x).forEach(k => { if (inPeriod(k)) anyDays.add(k); }));
+  const share = anyDays.size ? Math.round(keys.length / anyDays.size * 100) : 0;
+  const last = st.daysSinceLast === null ? 'Nunca' : st.active ? 'Ahora' : st.daysSinceLast === 0 ? 'Hoy'
+             : st.daysSinceLast === 1 ? 'Ayer' : st.daysSinceLast < 60 ? `Hace ${st.daysSinceLast} d`
+             : st.daysSinceLast < 730 ? `Hace ${Math.round(st.daysSinceLast / 30.4)} meses` : `Hace ${Math.floor(st.daysSinceLast / 365)} años`;
+
+  // Bars: months of the year, or one bar per year for "Todo"
+  let bars;
+  if (year === 'all') {
+    const ys = [...new Set(allKeys.map(k => Number(k.slice(0, 4))))].sort();
+    bars = ys.map(y => ({ label: String(y), n: allKeys.filter(k => k.startsWith(y + '-')).length }));
+  } else {
+    bars = MONTHS_ES.map((m, i) => ({ label: m.slice(0, 1).toUpperCase(),
+      n: keys.filter(k => k.slice(5, 7) === String(i + 1).padStart(2, '0')).length, title: m }));
+  }
+  const bmax = Math.max(1, ...bars.map(b => b.n));
+  const barsHTML = bars.length ? `<div class="hw-bars" role="img" aria-label="Días de uso por ${year === 'all' ? 'año' : 'mes'}">${bars.map(b =>
+    `<div class="hw-bar" title="${escHtml(b.title || b.label)}: ${b.n}"><span class="hw-bar-n">${b.n || ''}</span>
+      <span class="hw-bar-fill" style="height:${b.n ? Math.max(6, Math.round(b.n / bmax * 100)) : 0}%"></span>
+      <span class="hw-bar-l">${b.label}</span></div>`).join('')}</div>` : '';
+
+  // Intervals in the period, grouped by month (newest first)
+  const all = wearIntervals(w).filter(i => year === 'all' || new Date(i.start).getFullYear() === year).reverse();
+  const byMonth = new Map();
+  all.forEach(i => {
+    const d = new Date(i.start);
+    const m = `${MONTHS_ES[d.getMonth()]}${year === 'all' ? ' ' + d.getFullYear() : ''}`;
     if (!byMonth.has(m)) byMonth.set(m, []);
     byMonth.get(m).push(i);
   });
-  const monthsHTML = [...byMonth.entries()].map(([month, intervals]) => `
+  const monthsHTML = all.length ? [...byMonth.entries()].map(([month, intervals]) => `
     <div class="month-group">
       <div class="month-label">${month}</div>
       ${intervals.map(i => {
@@ -241,17 +219,31 @@ function renderHistoryBody() {
           ${i.active ? '' : `<button class="interval-edit" data-idx="${i.idx}" aria-label="Editar o borrar este uso"><i class="ti ti-pencil" aria-hidden="true"></i></button>`}
         </div>`;
       }).join('')}
-    </div>`).join('');
-  body.innerHTML = addBtn + summary + yearTabs + monthsHTML;
+    </div>`).join('')
+    : `<div class="history-empty" style="padding:24px 8px;"><i class="ti ti-calendar-x" style="font-size:32px;color:var(--mid);"></i><br><br>Sin usos ${periodLabel()}</div>`;
+
+  body.innerHTML = `
+    <button class="hw-back" id="hw-back"><i class="ti ti-chevron-left" aria-hidden="true"></i> Todos los relojes</button>
+    <div class="hw-head">
+      ${watchChip(w, 56)}
+      <div><div class="hw-head-brand">${escHtml(w.brand)}</div><div class="hw-head-model">${escHtml(w.model)}</div></div>
+      <button class="hw-open" id="hw-open" aria-label="Abrir la ficha del reloj"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+    </div>
+    ${yearChipsHTML()}
+    <div class="hw-stats">
+      <div class="spec-card"><div class="spec-label">Días de uso</div><div class="spec-value">${keys.length}</div></div>
+      <div class="spec-card"><div class="spec-label">De tus días</div><div class="spec-value">${share}%</div></div>
+      <div class="spec-card"><div class="spec-label">Última vez</div><div class="spec-value">${last}</div></div>
+    </div>
+    ${barsHTML}
+    <button class="chip-btn" id="hist-add" style="margin:4px 0 14px;"><i class="ti ti-calendar-plus" aria-hidden="true"></i> Apuntar un uso</button>
+    ${monthsHTML}`;
+  bindYearChips(body, renderHistoryBody);
+  body.querySelector('#hw-back').addEventListener('click', () => history.back());
+  body.querySelector('#hw-open').addEventListener('click', () => openDetail(w.id));
   body.querySelector('#hist-add').addEventListener('click', () => openWearSheet(w.id));
   body.querySelectorAll('.interval-edit').forEach(b =>
     b.addEventListener('click', () => openWearSheet(w.id, Number(b.dataset.idx))));
-  body.querySelectorAll('.year-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      historySelectedYear = parseInt(tab.dataset.year);
-      renderHistoryBody();
-    });
-  });
 }
 
 /* ══════════════════════════════════════════════
@@ -276,8 +268,8 @@ function watchInitials(w) {
 function watchChip(w, size = 26) {
   const cat = inferCategory(w);
   return isSafePhoto(w.photo)
-    ? `<img class="cal-chip" src="${w.photo}" alt="" width="${size}" height="${size}">`
-    : `<span class="cal-chip cal-chip-txt" style="--chip:${cat.color}">${escHtml(watchInitials(w))}</span>`;
+    ? `<img class="cal-chip" src="${w.photo}" alt="" width="${size}" height="${size}" style="--s:${size}px">`
+    : `<span class="cal-chip cal-chip-txt" style="--chip:${cat.color};--s:${size}px">${escHtml(watchInitials(w))}</span>`;
 }
 
 function renderCalendar() {
@@ -378,6 +370,7 @@ function openDaySheet(key) {
   overlay.setAttribute('aria-label', title);
   document.body.appendChild(overlay);
   const close = () => { overlay.remove(); renderCalendar(); };
+  overlay._close = close;
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
   function paint() {
@@ -407,9 +400,15 @@ function openDaySheet(key) {
       else showToast('No se pueden apuntar días futuros');
     }));
     overlay.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => {
-      const r = removeWearDay(b.dataset.remove, dt.getTime());
-      if (r === 'active') showToast('Es la sesión en curso: quítate el reloj desde su ficha');
-      else { showToast('Quitado de este día'); paint(); }
+      const w = getWatch(b.dataset.remove);
+      if (w?.wearStart && startOfDay(w.wearStart) <= startOfDay(dt.getTime())) {
+        showToast('Es la sesión en curso: quítate el reloj desde su ficha'); return;
+      }
+      showConfirm('¿Quitar de este día?', `El ${w.brand} ${w.model} dejará de contar como usado el ${raw}.`, () => {
+        const r = removeWearDay(w.id, dt.getTime());
+        if (r === 'active') showToast('Es la sesión en curso: quítate el reloj desde su ficha');
+        else { showToast('Quitado de este día'); paint(); }
+      }, { okLabel: 'Quitar' });
     }));
   }
   paint();

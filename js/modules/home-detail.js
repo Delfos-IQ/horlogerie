@@ -464,10 +464,14 @@ function openWearSheet(watchId, idx = null) {
     refreshAfterWearChange(watchId);
   });
   overlay.querySelector('#ws-del')?.addEventListener('click', () => {
-    deleteHistoryEntry(watchId, idx);
-    close();
-    showToast('Uso borrado');
-    refreshAfterWearChange(watchId);
+    const days = calendarDaysBetween(entry.start, entry.end) + 1;
+    const when = days === 1 ? `del ${formatDate(entry.start)}` : `del ${formatDate(entry.start)} al ${formatDate(entry.end)} (${days} días)`;
+    showConfirm('¿Borrar este uso?', `Se quitará el uso ${when} del ${w.brand} ${w.model}.`, () => {
+      deleteHistoryEntry(watchId, idx);
+      close();
+      showToast('Uso borrado');
+      refreshAfterWearChange(watchId);
+    }, { okLabel: 'Borrar' });
   });
   overlay.querySelector('#ws-from').focus();
 }
@@ -493,7 +497,10 @@ window.handleDeleteWatch = handleDeleteWatch;
 function showConfirm(title, msg, onConfirm, { okLabel = 'Eliminar', danger = true } = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'display:flex;z-index:400;';
+  // Above the day and wear sheets (z-index 400), which can open it
+  overlay.style.cssText = 'display:flex;z-index:500;';
+  overlay.setAttribute('role', 'alertdialog');
+  overlay.setAttribute('aria-modal', 'true');
   overlay.innerHTML = `
     <div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
       <div class="modal-handle"></div>

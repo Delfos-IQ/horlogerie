@@ -87,7 +87,7 @@ async def main():
         await shot("2-ficha")
         await page.evaluate("showView('history'); setHistoryMode('calendar')"); await page.wait_for_timeout(300)
         await shot("3-historial")
-        await page.evaluate(f"showView('history'); setHistoryMode('detail'); historySelectedWatch = '{ids['a']}'; historySelectedYear = null; renderHistoryDetail()")
+        await page.evaluate("showView('history'); setHistoryMode('ranking', true)")
         await page.wait_for_timeout(300)
         await shot("4-usos")
         await page.evaluate("showView('settings')"); await page.wait_for_timeout(300)

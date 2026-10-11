@@ -45,5 +45,5 @@ jobs:
       - name: Registro de uso, recomendación y PDF
         run: python tests/e2e_wear.py
 
-      - name: Rellenar desde un enlace y calendario
+      - name: Rellenar desde un enlace, calendario, ranking y por reloj
         run: python tests/e2e_import_history.py 8711

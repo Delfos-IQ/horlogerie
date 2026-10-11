@@ -26,7 +26,7 @@ QUÉ PUEDES HACER
 • Ficha técnica de cada reloj: calibre, cristal, diámetro, grosor, resistencia al agua, reserva de marcha y más. Incluye una base de modelos de microbrands y homenajes para autocompletar.
 • Coste por uso: añade lo que pagaste y verás cuánto te sale cada día que lo llevas.
 • Avisos de mantenimiento: cambio de pila en los de cuarzo y revisión periódica en los mecánicos.
-• Historial y estadísticas: ranking por días de uso, categorías (diver, pilot, GMT, vestir…) y rotación de los últimos 30 días.
+• Historial en calendario: toca un día para ver qué llevaste o apuntarlo. Ranking de tus 10 relojes más usados, los que tienes olvidados y el detalle de cada reloj por año.
 • Lista de deseos con precio objetivo y especificaciones.
 • Exporta tu colección a PDF con fichas, fotos e historial.
 
@@ -56,7 +56,7 @@ O QUE PODES FAZER
 • Ficha técnica de cada relógio: calibre, vidro, diâmetro, espessura, resistência à água, reserva de marcha e mais. Inclui uma base de modelos de microbrands e homenagens para preencher automaticamente.
 • Custo por uso: indica quanto pagaste e vê quanto te custa cada dia em que o usas.
 • Avisos de manutenção: troca de pilha nos de quartzo e revisão periódica nos mecânicos.
-• Histórico e estatísticas: ranking por dias de uso, categorias (diver, pilot, GMT, social…) e rotação dos últimos 30 dias.
+• Histórico em calendário: toque num dia para ver o que usou ou registá-lo. Ranking dos 10 relógios mais usados, os que tem esquecidos e o detalhe de cada relógio por ano.
 • Lista de desejos com preço-alvo e especificações.
 • Exporta a coleção para PDF com fichas, fotos e histórico.
 

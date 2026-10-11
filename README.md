@@ -35,7 +35,7 @@ horlogerie/
 │       ├── core.js         Estado, utilidades, navegación y gesto atrás de Android
 │       ├── home-detail.js  Colección, recomendación y ficha del reloj
 │       ├── modals.js       Alta/edición de relojes y búsqueda en la base
-│       ├── history.js      Ranking por categorías e historial por reloj
+│       ├── history.js      Calendario, ranking top 10 y detalle por reloj (filtro por año)
 │       ├── settings.js     Estadísticas, copias JSON, tamaño en la nube, inicio de la app
 │       ├── wishlist.js     Lista de deseos
 │       ├── session.js      ID de sesión, QR e importación de sesión
@@ -50,7 +50,8 @@ horlogerie/
 ├── tests/
 │   ├── worker-harness.mjs  Ejecuta el Worker real en Node con KV en memoria
 │   ├── e2e_sync.py         Sincronización con varios "dispositivos" (Playwright)
-│   └── e2e_wear.py         Registro de uso, recomendación, PDF y funcionamiento sin terceros
+│   ├── e2e_wear.py         Registro de uso, recomendación, PDF y funcionamiento sin terceros
+│   └── e2e_import_history.py  Rellenar desde un enlace, calendario, ranking y «Por reloj»
 └── tools/
     ├── bump-version.mjs    Propaga la versión de version.json al resto de archivos
     ├── build-icons.py      Regenera el subconjunto de iconos (ejecutar al usar un icono nuevo)

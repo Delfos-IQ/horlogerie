@@ -16,7 +16,6 @@ let currentWatchId   = null;
 let editingPhotoData = null;
 let editingWatchId   = null;
 let historySelectedWatch = null;
-let historySelectedYear  = null;
 let _activeTimer = null;
 
 /* ─── Keyboard: nav items respond to Enter/Space ─── */
@@ -53,8 +52,21 @@ document.addEventListener('keydown', e => {
 //  - On popstate, we ALWAYS handle navigation ourselves (never delegate
 //    to the browser) UNLESS we're already at the root with nothing to
 //    pop — only then does the gesture exit the app, which is correct.
+let _navState = null; // state of the entry currently shown (popstate only gives the new one)
+function navPush(st)    { _navState = st; history.pushState(st, '', ''); }
+function navReplace(st) { _navState = st; history.replaceState(st, '', ''); }
+window.navPush = navPush; window.navReplace = navReplace;
+
 window.addEventListener('popstate', e => {
   const targetView = e.state?.view || 'home';
+
+  // Sheets created on the fly (confirm, day, wear…): close the top one first
+  const dyn = [...document.querySelectorAll('body > .modal-overlay:not([id])')].pop();
+  if (dyn) {
+    if (typeof dyn._close === 'function') dyn._close(); else dyn.remove();
+    navPush(_navState || { view: targetView });
+    return;
+  }
 
   // If a modal is open, close it instead of navigating away
   const modals = ['wishlist-modal', 'add-modal', 'photo-sheet', 'import-session-modal', 'qr-modal'];
@@ -62,11 +74,12 @@ window.addEventListener('popstate', e => {
     const el = document.getElementById(id);
     if (el && el.style.display !== 'none') {
       el.style.display = 'none';
-      history.pushState({ view: targetView }, '', '');
+      navPush(_navState || { view: targetView });
       return;
     }
   }
 
+  _navState = e.state || { view: 'home' };
   // Always render the target view explicitly — including 'home'.
   // This is what makes the gesture go "back into the app" instead of
   // exiting it when there's still a view above home in the stack.
@@ -93,8 +106,8 @@ window.addEventListener('popstate', e => {
 // Set initial history state on load so there's always a 'home' entry
 window.addEventListener('load', () => {
   if (!history.state) {
-    history.replaceState({ view: 'home' }, '', '');
-  }
+    navReplace({ view: 'home' });
+  } else _navState = history.state;
 });
 
 /* ─── Utilities ─── */
@@ -188,9 +201,9 @@ function showView(v) {
   // When on 'home', replace state (no back from home → exits app, correct behaviour)
   // When on any other view, push so back returns to previous view
   if (v === 'home' || sameView) {
-    history.replaceState({ view: v }, '', '');
+    navReplace({ view: v });
   } else {
-    history.pushState({ view: v }, '', '');
+    navPush({ view: v });
   }
 }
 

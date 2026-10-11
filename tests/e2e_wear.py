@@ -136,7 +136,7 @@ async def main():
 
         # ── Historial con edición ──
         await page.evaluate("showView('history')")
-        await page.evaluate(f"setHistoryMode('detail'); historySelectedWatch = '{B}'; renderHistoryDetail();")
+        await page.evaluate(f"openHistWatch('{B}')")
         await page.wait_for_timeout(100)
         edits = await page.locator("#history-body .interval-edit").count()
         check("el historial permite editar cada uso", edits >= 1)

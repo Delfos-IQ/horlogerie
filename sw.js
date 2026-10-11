@@ -8,16 +8,16 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.5.0';
+const CACHE   = 'horlogerie-v2.6.0';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
 const SHELL = [
   `${BASE}/`,
   `${BASE}/index.html`,
-  `${BASE}/css/app.css?v=2.5.0`,
-  `${BASE}/css/fonts.css?v=2.5.0`,
-  `${BASE}/css/icons.css?v=2.5.0`,
+  `${BASE}/css/app.css?v=2.6.0`,
+  `${BASE}/css/fonts.css?v=2.6.0`,
+  `${BASE}/css/icons.css?v=2.6.0`,
   `${BASE}/css/icons/tabler-icons-12131a17.woff2`,
   `${BASE}/css/fonts/cormorant-garamond-latin-300-normal.woff2`,
   `${BASE}/css/fonts/cormorant-garamond-latin-400-normal.woff2`,
@@ -28,20 +28,20 @@ const SHELL = [
   `${BASE}/css/fonts/dm-sans-latin-400-normal.woff2`,
   `${BASE}/css/fonts/dm-sans-latin-500-normal.woff2`,
   `${BASE}/js/vendor/jspdf-2.5.1.umd.min.js`,
-  `${BASE}/js/db.js?v=2.5.0`,
-  `${BASE}/js/storage.js?v=2.5.0`,
-  `${BASE}/js/api.js?v=2.5.0`,
-  `${BASE}/js/sync.js?v=2.5.0`,
-  `${BASE}/js/export.js?v=2.5.0`,
-  `${BASE}/js/modules/core.js?v=2.5.0`,
-  `${BASE}/js/modules/home-detail.js?v=2.5.0`,
-  `${BASE}/js/modules/modals.js?v=2.5.0`,
-  `${BASE}/js/modules/history.js?v=2.5.0`,
-  `${BASE}/js/modules/settings.js?v=2.5.0`,
-  `${BASE}/js/modules/wishlist.js?v=2.5.0`,
-  `${BASE}/js/modules/session.js?v=2.5.0`,
-  `${BASE}/js/modules/updates.js?v=2.5.0`,
-  `${BASE}/js/modules/url-import.js?v=2.5.0`,
+  `${BASE}/js/db.js?v=2.6.0`,
+  `${BASE}/js/storage.js?v=2.6.0`,
+  `${BASE}/js/api.js?v=2.6.0`,
+  `${BASE}/js/sync.js?v=2.6.0`,
+  `${BASE}/js/export.js?v=2.6.0`,
+  `${BASE}/js/modules/core.js?v=2.6.0`,
+  `${BASE}/js/modules/home-detail.js?v=2.6.0`,
+  `${BASE}/js/modules/modals.js?v=2.6.0`,
+  `${BASE}/js/modules/history.js?v=2.6.0`,
+  `${BASE}/js/modules/settings.js?v=2.6.0`,
+  `${BASE}/js/modules/wishlist.js?v=2.6.0`,
+  `${BASE}/js/modules/session.js?v=2.6.0`,
+  `${BASE}/js/modules/updates.js?v=2.6.0`,
+  `${BASE}/js/modules/url-import.js?v=2.6.0`,
   `${BASE}/js/vendor/qrcode-generator-1.4.4.js`,
   `${BASE}/brand/rotor-symbol.svg`,
   `${BASE}/manifest.json`,

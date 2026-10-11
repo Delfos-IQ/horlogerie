@@ -153,7 +153,15 @@ async def main():
         if SHOTS: await page.screenshot(path=f"{SHOTS}/dia.png")
         await page.click(f".day-remove[data-remove='{wid}']")
         has = await page.evaluate(f"id => wornDayKeys(getWatch(id)).has('{key}')", wid)
-        check("y se quita", not has)
+        confirm_shown = await page.locator("#co").count() == 1
+        check("quitar un reloj del día pide confirmación (aún no se ha quitado)", confirm_shown and has)
+        await page.click("#cc")
+        has = await page.evaluate(f"id => wornDayKeys(getWatch(id)).has('{key}')", wid)
+        check("cancelar no quita nada", has and await page.locator(f".day-remove[data-remove='{wid}']").count() == 1)
+        await page.click(f".day-remove[data-remove='{wid}']")
+        await page.click("#co")
+        has = await page.evaluate(f"id => wornDayKeys(getWatch(id)).has('{key}')", wid)
+        check("y al confirmar se quita", not has)
         await page.click("[data-close]")
         summary = await page.inner_text("#cal-summary")
         check("resumen del mes con días y relojes", 'días con reloj' in summary or 'Sin usos' in summary, summary)
@@ -162,6 +170,84 @@ async def main():
         if SHOTS:
             if not same_month: await page.click("#cal-next")
             await page.screenshot(path=f"{SHOTS}/calendario.png")
+
+        # ── Ranking: top 10 por días, filtro por año, menos usados ──
+        ids = await page.evaluate("""async () => {
+          const out = [];
+          for (let i = 0; i < 12; i++)
+            out.push((await addWatch({ brand: 'Marca' + String(i).padStart(2, '0'), model: 'M' + i })).id);
+          return out;
+        }""")
+        # Fechas fijas en años pasados para que la prueba no dependa del día en que corre:
+        # año Y-1: el reloj i lleva i+1 días en junio; año Y-2: el reloj 0 lleva 30 días en marzo
+        await page.evaluate("""ids => {
+          const y = new Date().getFullYear();
+          ids.forEach((id, i) => addWearDays(id, new Date(y - 1, 5, 1, 12).getTime(), new Date(y - 1, 5, 1 + i, 12).getTime()));
+          addWearDays(ids[0], new Date(y - 2, 2, 1, 12).getTime(), new Date(y - 2, 2, 30, 12).getTime());
+        }""", ids)
+        await page.click("#btn-mode-ranking")
+        rows = await page.locator("#ranking-body .rk-row").count()
+        check("el ranking muestra como mucho 10 relojes", rows == 10, str(rows))
+        check("ya no hay pestañas de días/sesiones", await page.locator(".ranking-metric-tabs, #btn-metric-sessions").count() == 0)
+        vals = await page.evaluate("[...document.querySelectorAll('#ranking-body .rk-val b')].map(b => +b.textContent)")
+        check("ordenado de más a menos usado", vals == sorted(vals, reverse=True) and len(vals) == 10, str(vals))
+        chips = await page.locator("#ranking-body .rk-row .cal-chip").count()
+        check("cada fila lleva miniatura", chips == 10)
+        first_all = await page.inner_text("#ranking-body .rk-row:nth-of-type(1) .rk-name")
+        check("en «Todo» gana el reloj con días del año pasado", 'Marca00' in first_all, first_all)
+        least = await page.locator("#ranking-body .rk-least-item").count()
+        check("debajo, los 3 menos usados", least == 3, str(least))
+        year = await page.evaluate("new Date().getFullYear() - 1")
+        await page.click(f"#ranking-body .year-chip[data-year='{year}']")
+        first_y = await page.inner_text("#ranking-body .rk-row:nth-of-type(1) .rk-name")
+        check("al filtrar por este año cambia el primero", 'Marca00' not in first_y, first_y)
+        if SHOTS: await page.screenshot(path=f"{SHOTS}/ranking.png")
+
+        # ── Por reloj: rejilla de 4 por fila → panel del reloj ──
+        await page.click("#btn-mode-detail")
+        cards = await page.locator("#history-body .hw-card").count()
+        n_watches = await page.evaluate("getWatches().length")
+        check("«Por reloj» muestra una tarjeta por reloj", cards == n_watches, f"{cards}/{n_watches}")
+        cols = await page.evaluate("getComputedStyle(document.querySelector('.hw-grid')).gridTemplateColumns.split(' ').length")
+        check("4 tarjetas por fila", cols == 4, str(cols))
+        check("el filtro de año se comparte con el ranking",
+              await page.evaluate(f"document.querySelector('#history-body .year-chip.active').dataset.year") == str(year))
+        if SHOTS: await page.screenshot(path=f"{SHOTS}/por-reloj.png")
+        await page.click(f"#history-body .hw-card[data-wid='{ids[0]}']")
+        await page.wait_for_selector("#hw-back")
+        stat = await page.evaluate("[...document.querySelectorAll('.hw-stats .spec-value')].map(e => e.textContent)")
+        bars = await page.locator(".hw-bar").count()
+        check("el panel muestra días del año y barras por mes", bars == 12 and stat[0] == '1', f"{stat} {bars}")
+        await page.click("#history-body .year-chip[data-year='all']")
+        stat = await page.evaluate("document.querySelector('.hw-stats .spec-value').textContent")
+        check("con «Todo» suma también el año pasado", stat == '31', stat)
+        if SHOTS: await page.screenshot(path=f"{SHOTS}/reloj-panel.png")
+        # borrar un uso desde el panel pide confirmación
+        n0 = await page.evaluate("id => getWatch(id).history.length", ids[0])
+        await page.click("#history-body .interval-edit >> nth=0")
+        await page.click("#ws-del")
+        check("borrar un uso pide confirmación", await page.locator("#co").count() == 1
+              and await page.evaluate("id => getWatch(id).history.length", ids[0]) == n0)
+        await page.click("#cc")
+        await page.click("#ws-cancel")
+        await page.click("#history-body .interval-edit >> nth=0")
+        await page.click("#ws-del"); await page.click("#co")
+        await page.wait_for_timeout(100)
+        n1 = await page.evaluate("id => getWatch(id).history.length", ids[0])
+        check("al confirmar se borra y el panel sigue abierto", n1 == n0 - 1 and await page.locator("#hw-back").count() == 1, f"{n0}→{n1}")
+        # gesto atrás: primero cierra la hoja abierta, luego vuelve a la rejilla
+        await page.click("#hist-add")
+        await page.go_back(); await page.wait_for_timeout(150)
+        check("atrás cierra la hoja y deja el panel", await page.locator("#ws-from").count() == 0 and await page.locator("#hw-back").count() == 1)
+        await page.go_back(); await page.wait_for_timeout(150)
+        check("atrás desde el panel vuelve a la rejilla", await page.locator("#history-body .hw-card").count() == n_watches)
+        # desde el ranking, atrás devuelve al ranking
+        await page.click("#btn-mode-ranking")
+        await page.click("#ranking-body .rk-row >> nth=0")
+        await page.wait_for_selector("#hw-back")
+        await page.click("#hw-back"); await page.wait_for_timeout(150)
+        check("«Todos los relojes» desde el ranking vuelve al ranking",
+              await page.evaluate("document.getElementById('history-ranking-view').style.display") == 'block')
         check("sin errores de JavaScript", not errs, '; '.join(errs[:3]))
         await b.close()
 
