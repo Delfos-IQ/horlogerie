@@ -274,6 +274,7 @@ function renderSpecs(w) {
     {k:'calibre',l:'Calibre'},{k:'movimiento',l:'Movimiento'},{k:'cristal',l:'Cristal'},
     {k:'brazalete',l:'Brazalete'},{k:'esfera',l:'Esfera'},{k:'caja',l:'Caja'},
     {k:'resistencia',l:'Agua'},{k:'reserva',l:'Reserva'},{k:'diametro',l:'Diámetro'},{k:'grosor',l:'Grosor'},
+    {k:'asas',l:'Entre asas'},
   ];
 
   document.getElementById('d-specs').innerHTML = `
@@ -344,37 +345,22 @@ function editSpecInline(key, w) {
 }
 
 function renderSpecsImportBtn(w) {
-  // Add/replace the "Import specs from URL" button below the specs grid
+  // "Rellenar desde un enlace" + link to where the specs came from
   const specsEl = document.getElementById('d-specs');
   if (!specsEl) return;
-
-  // Remove previous import section if present
-  const prev = document.getElementById('d-specs-import');
-  if (prev) prev.remove();
-  if (!FEATURES.urlImport) return;
-
+  document.getElementById('d-specs-import')?.remove();
+  const canImport = typeof importEnabled === 'function' && importEnabled();
+  let host = '';
+  if (w.sourceUrl) { try { host = new URL(w.sourceUrl).hostname.replace(/^www\./, ''); } catch {} }
+  if (!canImport && !host) return;
   const div = document.createElement('div');
   div.id = 'd-specs-import';
-  div.style.cssText = 'margin-top:12px;';
+  div.className = 'specs-import-row';
   div.innerHTML = `
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-      <input id="d-url-input" type="url"
-        aria-label="URL para importar especificaciones"
-        class="form-input"
-        placeholder="Pega URL de Amazon, AliExpress, tienda…"
-        style="flex:1;font-size:13px;padding:9px 12px;">
-      <button id="d-url-btn"
-        aria-label="Importar especificaciones desde URL"
-        style="width:40px;height:40px;border-radius:10px;border:0.5px solid var(--glass-border);
-          background:var(--dark3);color:var(--gold-light);cursor:pointer;font-size:18px;
-          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <i class="ti ti-download" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div id="d-url-status" style="font-size:11px;color:var(--mid);min-height:14px;"></div>`;
-
+    ${canImport ? `<button type="button" class="chip-btn" id="d-import-btn"><i class="ti ti-link" aria-hidden="true"></i> Rellenar desde un enlace</button>` : ''}
+    ${host ? `<a class="source-link" href="${escHtml(w.sourceUrl)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> Fuente: ${escHtml(host)}</a>` : ''}`;
   specsEl.insertAdjacentElement('afterend', div);
-  div.querySelector('#d-url-btn').addEventListener('click', () => importSpecsFromUrl(w.id));
+  div.querySelector('#d-import-btn')?.addEventListener('click', () => importIntoWatch(w.id));
 }
 
 function renderPrice(w) {

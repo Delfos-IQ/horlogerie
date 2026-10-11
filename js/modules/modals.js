@@ -5,6 +5,7 @@ function openAddModal() {
   window._pendingDbSpecs = null;
   window._pendingDbPrice = null;
   window._pendingSource  = null;
+  window._pendingSourceUrl = null;
   document.getElementById('modal-title-text').textContent = 'Añadir Reloj';
   document.getElementById('modal-save-btn').textContent   = 'Guardar';
   document.getElementById('f-brand').value  = '';
@@ -15,18 +16,16 @@ function openAddModal() {
   setMaintFields({});
   document.getElementById('photo-preview').style.display = 'none';
 
-  // URL import section
+  // "Rellenar desde un enlace" (visible only when the Worker supports it)
   const urlSec = document.getElementById('url-import-section');
-  if (urlSec) urlSec.style.display = FEATURES.urlImport ? 'block' : 'none';
-  const urlInput = document.getElementById('f-url-input');
-  if (urlInput) urlInput.value = '';
+  if (urlSec) urlSec.hidden = !(typeof importEnabled === 'function' && importEnabled());
   const urlStatus = document.getElementById('f-url-status');
   if (urlStatus) urlStatus.textContent = '';
 
   // Specs preview — hidden until URL import fills it
   const specsSec = document.getElementById('f-specs-section');
   if (specsSec) specsSec.style.display = 'none';
-  ['fi-calibre','fi-cristal','fi-diametro','fi-grosor','fi-resistencia',
+  ['fi-calibre','fi-cristal','fi-diametro','fi-grosor','fi-resistencia','fi-movimiento','fi-asas',
    'fi-reserva','fi-caja','fi-brazalete','fi-esfera','fi-precio'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = '—';
@@ -70,7 +69,7 @@ function openEditModal(id) {
   else { prev.style.display = 'none'; }
   // Hide URL import and DB search when editing — specs already exist
   const urlSec = document.getElementById('url-import-section');
-  if (urlSec) urlSec.style.display = 'none';
+  if (urlSec) urlSec.hidden = true;   // in the detail view: "Rellenar desde un enlace"
   const specsSec = document.getElementById('f-specs-section');
   if (specsSec) specsSec.style.display = 'none';
   const dbSec = document.getElementById('db-search-section');
@@ -150,6 +149,8 @@ function applyDbResult(w) {
   if (hint) hint.innerHTML = `<i class="ti ti-check" style="color:#4CAF50;"></i> <strong>${escHtml(w.brand)} ${escHtml(w.model)}</strong> — specs encontradas`;
   window._pendingDbSpecs = w.specs;
   window._pendingDbPrice = w.price;
+  window._pendingSource  = 'local_db';
+  if (typeof showImportedPreview === 'function') showImportedPreview();
   showToast(`${w.brand} ${w.model} seleccionado`);
 }
 
@@ -174,22 +175,29 @@ async function saveWatch() {
       const changes = { brand, model, ref, type, notes, ...maint };
       if (editingPhotoData !== (getWatch(editingWatchId)?.photo || null)) changes.photo = editingPhotoData;
       await updateWatch(editingWatchId, changes);
-      if (window._pendingDbSpecs) {
-        await updateWatch(editingWatchId, { specs: window._pendingDbSpecs, price: window._pendingDbPrice || {value:'',note:''}, _source:'local_db' });
-      }
+      if (window._pendingDbSpecs) await updateWatch(editingWatchId, pendingSpecChanges(getWatch(editingWatchId)));
       closeAddModal();
       showToast('Reloj actualizado');
       openDetail(editingWatchId);
     } else {
       const newW = await addWatch({ brand, model, ref, type, notes, photo: editingPhotoData });
       if (newW && Object.values(maint).some(v => v !== null)) await updateWatch(newW.id, maint);
-      if (window._pendingDbSpecs && newW) {
-        await updateWatch(newW.id, { specs: window._pendingDbSpecs, price: window._pendingDbPrice || {value:'',note:''}, _source:'local_db' });
+      // No specs chosen: try the local model database automatically
+      let autoFilled = false;
+      if (!window._pendingDbSpecs && typeof dbGet === 'function') {
+        const hit = dbGet(brand, model);
+        if (hit?.specs) {
+          window._pendingDbSpecs = hit.specs; window._pendingDbPrice = hit.price; window._pendingSource = 'local_db';
+          autoFilled = true;
+        }
       }
+      if (window._pendingDbSpecs && newW) await updateWatch(newW.id, pendingSpecChanges(newW));
       window._pendingDbSpecs = null;
       window._pendingDbPrice = null;
+      window._pendingSource = null;
+      window._pendingSourceUrl = null;
       closeAddModal();
-      showToast(`${brand} ${model} añadido`);
+      showToast(autoFilled ? `${brand} ${model} añadido con su ficha técnica` : `${brand} ${model} añadido`);
       renderHome();
     }
   } finally {
@@ -245,3 +253,12 @@ function readMaintFields() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f-type')?.addEventListener('change', updateMaintVisibility);
 });
+
+/** Specs, price and source chosen in the modal (database or link), as watch changes */
+function pendingSpecChanges(w) {
+  const changes = { specs: { ...(w?.specs || {}), ...(window._pendingDbSpecs || {}) },
+                    _source: window._pendingSource || 'local_db' };
+  if (window._pendingDbPrice?.value) changes.price = window._pendingDbPrice;
+  if (window._pendingSourceUrl) changes.sourceUrl = window._pendingSourceUrl;
+  return changes;
+}

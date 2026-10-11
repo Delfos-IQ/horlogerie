@@ -72,7 +72,8 @@ function workerCaps() {
       .then(r => r.ok ? r.json() : {})
       .then(h => {
         const major = parseInt(String(h.version || '0'), 10);
-        return { userHeader: major >= 11, wishlist: major >= 11, version: h.version || '?' };
+        return { userHeader: major >= 11, wishlist: major >= 11, version: h.version || '?',
+                 importUrl: !!h.caps?.importUrl, importText: !!h.caps?.importText };
       })
       .catch(() => { _capsPromise = null; return { userHeader: false, wishlist: false, version: null }; });
   }

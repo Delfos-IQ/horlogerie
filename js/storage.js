@@ -374,6 +374,37 @@ function deleteHistoryEntry(id, idx) {
   return true;
 }
 
+/**
+ * Remove one calendar day from a watch's history. Intervals that span several
+ * days are trimmed or split, so the other days stay. Returns 'active' if that
+ * day belongs to the session in progress (it must be stopped first).
+ */
+function removeWearDay(id, dayTs) {
+  const w = getWatch(id);
+  if (!w) return false;
+  const day = startOfDay(dayTs);
+  const next = d => { const x = new Date(d); x.setDate(x.getDate() + 1); return x.getTime(); };
+  const prev = d => { const x = new Date(d); x.setDate(x.getDate() - 1); return x.getTime(); };
+  if (w.wearStart && startOfDay(w.wearStart) <= day) return 'active';
+  const out = [];
+  let changed = false;
+  for (const h of (w.history || [])) {
+    const s = startOfDay(h.start), e = startOfDay(h.end || h.start);
+    if (day < s || day > e) { out.push(h); continue; }
+    changed = true;
+    if (s === e) continue;                                              // single day: drop
+    if (day === s) { out.push({ start: next(day) + 9 * 3600000, end: h.end }); continue; }
+    if (day === e) { out.push({ start: h.start, end: prev(day) + 21 * 3600000 }); continue; }
+    out.push({ start: h.start, end: prev(day) + 21 * 3600000 });          // split around the day
+    out.push({ start: next(day) + 9 * 3600000, end: h.end });
+  }
+  if (!changed) return false;
+  w.history = out.sort((a, b) => a.start - b.start);
+  w.updatedAt = Date.now();
+  save();
+  return true;
+}
+
 /** Take off whatever is on the wrist and put this one on, in one step */
 function switchToWatch(id) {
   const active = getActiveWatch();
@@ -393,7 +424,7 @@ function setWatchFlag(id, key, value) {
 }
 
 Object.assign(window, { dayKey, startOfDay, calendarDaysBetween, wearIntervals, wornDayKeys, wearStats,
-  maintenanceAlerts, addWearDays, markWornToday, updateHistoryEntry, deleteHistoryEntry, switchToWatch, setWatchFlag });
+  maintenanceAlerts, addWearDays, markWornToday, updateHistoryEntry, deleteHistoryEntry, removeWearDay, switchToWatch, setWatchFlag });
 
 /* ─── Cloud sync helpers (used by sync.js) ─── */
 
@@ -526,7 +557,7 @@ window.applyWatchList = applyWatchList;
    SANITIZE — anything coming from a backup file or the cloud
 ═══════════════════════════════════════ */
 const WATCH_TYPES = ['automatic', 'quartz', 'manual'];
-const SPEC_KEYS   = ['calibre','movimiento','cristal','brazalete','esfera','caja','resistencia','reserva','diametro','grosor'];
+const SPEC_KEYS   = ['calibre','movimiento','cristal','brazalete','esfera','caja','resistencia','reserva','diametro','grosor','asas'];
 const MAX_PHOTO_CHARS = 3 * 1024 * 1024;
 
 function isSafePhoto(p) {
@@ -534,6 +565,12 @@ function isSafePhoto(p) {
     /^data:image\/(webp|jpeg|jpg|png);base64,[A-Za-z0-9+/=]+$/.test(p);
 }
 window.isSafePhoto = isSafePhoto;
+
+function isSafeUrl(u) {
+  if (typeof u !== 'string' || u.length > 2000) return false;
+  try { return ['http:', 'https:'].includes(new URL(u).protocol); } catch { return false; }
+}
+window.isSafeUrl = isSafeUrl;
 
 const _str = (v, max = 500) => (typeof v === 'string' ? v : v == null ? '' : String(v)).slice(0, max);
 const _num = v => (typeof v === 'number' && isFinite(v) && v > 0 ? v : null);
@@ -568,6 +605,7 @@ function sanitizeWatch(raw) {
     if (_num(raw[k])) w[k] = raw[k];
   }
   if (raw._source)  w._source  = _str(raw._source, 80);
+  if (isSafeUrl(raw.sourceUrl)) w.sourceUrl = raw.sourceUrl;
   if (raw._warning) w._warning = _str(raw._warning, 200);
   if (isSafePhoto(raw.photo)) w.photo = raw.photo;
   return w;
@@ -593,6 +631,7 @@ function sanitizeWishlistItem(raw) {
     created:  _num(raw.created) || Date.now(),
   };
   if (_num(raw.updatedAt)) it.updatedAt = raw.updatedAt;
+  if (isSafeUrl(raw.sourceUrl)) it.sourceUrl = raw.sourceUrl;
   return it;
 }
 window.sanitizeWishlistItem = sanitizeWishlistItem;
@@ -701,9 +740,12 @@ function addWishlistItem(data) {
       caja:       data.caja       || '',
       brazalete:  data.brazalete  || '',
       esfera:     data.esfera     || '',
+      movimiento: data.movimiento || '',
+      asas:       data.asas       || '',
     },
     created: Date.now(),
   };
+  if (isSafeUrl(data.sourceUrl)) item.sourceUrl = data.sourceUrl;
   items.push(item);
   saveWishlist(items);
   return item;
@@ -739,6 +781,7 @@ function promoteWishlistToCollection(id) {
     photo: null,
     specs: item.specs,
     price: item.precio ? { value: item.precio, note: 'Precio objetivo' } : null,
+    sourceUrl: item.sourceUrl || '',
   };
 }
 

@@ -248,6 +248,7 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
     { k: 'reserva',     l: 'Reserva' },
     { k: 'diametro',    l: 'Diámetro' },
     { k: 'grosor',      l: 'Grosor' },
+    { k: 'asas',        l: 'Entre asas' },
   ].filter(s => specs[s.k]);
 
   if (specDefs.length) {

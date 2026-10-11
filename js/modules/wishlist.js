@@ -87,8 +87,10 @@ function openWishlistAdd() {
   document.getElementById('wl-modal-title').textContent = 'Añadir a lista de deseos';
   document.getElementById('wl-save-btn').textContent    = 'Guardar';
   clearWishlistForm();
+  window._wlSourceUrl = '';
   const urlSec = document.getElementById('wl-url-section');
-  if (urlSec) urlSec.style.display = FEATURES.urlImport ? '' : 'none';
+  if (urlSec) urlSec.hidden = !importEnabled();
+  const st = document.getElementById('wl-url-status'); if (st) st.textContent = '';
   document.getElementById('wishlist-modal').style.display = 'flex';
 }
 
@@ -106,11 +108,13 @@ function openWishlistEdit(id) {
   document.getElementById('wl-priority').value   = item.priority;
   document.getElementById('wl-precio').value     = item.precio || '';
   document.getElementById('wl-notas').value      = item.notas  || '';
+  window._wlSourceUrl = item.sourceUrl || '';
   const urlSec = document.getElementById('wl-url-section');
-  if (urlSec) urlSec.style.display = FEATURES.urlImport ? '' : 'none';
+  if (urlSec) urlSec.hidden = !importEnabled();
+  const st = document.getElementById('wl-url-status'); if (st) st.textContent = '';
   // Specs
   const s = item.specs || {};
-  ['calibre','cristal','diametro','grosor','resistencia','reserva','caja','brazalete','esfera'].forEach(k => {
+  ['calibre','cristal','diametro','grosor','resistencia','reserva','caja','brazalete','esfera','movimiento','asas'].forEach(k => {
     const el = document.getElementById('wl-' + k);
     if (el) el.value = s[k] || '';
   });
@@ -120,7 +124,7 @@ function openWishlistEdit(id) {
 function clearWishlistForm() {
   ['wl-brand','wl-model','wl-ref','wl-precio','wl-notas',
    'wl-calibre','wl-cristal','wl-diametro','wl-grosor',
-   'wl-resistencia','wl-reserva','wl-caja','wl-brazalete','wl-esfera']
+   'wl-resistencia','wl-reserva','wl-caja','wl-brazalete','wl-esfera','wl-movimiento','wl-asas']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('wl-type').value     = 'automatic';
   document.getElementById('wl-priority').value = 'medium';
@@ -156,6 +160,9 @@ function saveWishlistItem() {
     caja:     document.getElementById('wl-caja').value.trim(),
     brazalete:document.getElementById('wl-brazalete').value.trim(),
     esfera:   document.getElementById('wl-esfera').value.trim(),
+    movimiento: document.getElementById('wl-movimiento').value.trim(),
+    asas:     document.getElementById('wl-asas').value.trim(),
+    sourceUrl: window._wlSourceUrl || '',
   };
 
   if (_wlEditingId) {
@@ -168,6 +175,7 @@ function saveWishlistItem() {
           diametro: data.diametro, grosor: data.grosor,
           resistencia: data.resistencia, reserva: data.reserva,
           caja: data.caja, brazalete: data.brazalete, esfera: data.esfera,
+          movimiento: data.movimiento, asas: data.asas,
         }
       };
       saveWishlist(items);
@@ -192,7 +200,8 @@ async function handleWishlistPromote(id) {
     async () => {
       const watchData = promoteWishlistToCollection(id);
       const newWatch  = await addWatch(watchData);
-      if (watchData.specs) await updateWatch(newWatch.id, { specs: watchData.specs, _source: 'wishlist' });
+      if (watchData.specs) await updateWatch(newWatch.id, { specs: watchData.specs, _source: 'wishlist',
+        ...(watchData.sourceUrl ? { sourceUrl: watchData.sourceUrl } : {}) });
       deleteWishlistItem(id);
       showToast(`¡${item.brand} ${item.model} añadido a la colección!`);
       renderWishlist();
