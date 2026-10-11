@@ -1,0 +1,18 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales de Office
+~$*
+
+# Credenciales locales — nunca al repositorio
+.github-token
+.env
+.dev.vars
+
+# Copias de archivo locales
+_archivo*/
+
+# Cloudflare Wrangler
+worker/.wrangler/
+node_modules/
