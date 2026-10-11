@@ -1,5 +1,5 @@
 {
-  "version": "2.10.0",
+  "version": "2.11.0",
   "date": "2026-10-11",
-  "notes": "Más robusta: tus datos no se pierden si algo se corrompe, el sistema no los borra por falta de espacio y la app arranca rápido con mala cobertura"
+  "notes": "Por dentro: código en módulos y política de seguridad estricta. Más rápida de mantener y más difícil de atacar"
 }

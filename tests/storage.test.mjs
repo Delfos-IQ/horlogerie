@@ -1,23 +1,21 @@
 // Pruebas unitarias de la lógica de datos (js/storage.js) en Node, sin navegador.
 // Uso: node tests/storage.test.mjs
-import { readFileSync } from 'node:fs';
-import vm from 'node:vm';
-
-function load(initial = {}, nowTs = null) {
+const RealDate = Date;
+let instance = 0;
+/** Fresh copy of js/storage.js (ES module) with an in-memory localStorage and an optional fixed clock */
+async function load(initial = {}, nowTs = null) {
   const store = new Map(Object.entries(initial));
-  const localStorage = {
+  globalThis.localStorage = {
     getItem: k => (store.has(k) ? store.get(k) : null),
     setItem: (k, v) => store.set(k, String(v)),
     removeItem: k => store.delete(k),
   };
-  const FakeDate = nowTs === null ? Date : class extends Date {
+  globalThis.window = globalThis;
+  globalThis.Date = nowTs === null ? RealDate : class extends RealDate {
     constructor(...a) { super(...(a.length ? a : [nowTs])); }
     static now() { return nowTs; }
   };
-  const ctx = { console, localStorage, navigator: {}, Date: FakeDate, Math, JSON, Map, Set, Promise, setTimeout, clearTimeout };
-  ctx.window = ctx; ctx.globalThis = ctx;
-  vm.createContext(ctx);
-  vm.runInContext(readFileSync(new URL('../js/storage.js', import.meta.url), 'utf8'), ctx, { filename: 'storage.js' });
+  const ctx = await import(`../js/storage.js?i=${++instance}`);
   return { ctx, store };
 }
 
@@ -26,11 +24,11 @@ const t = (name, cond, detail = '') => {
   if (cond) { ok++; console.log('  ✓ ' + name); } else { ko++; console.log('  ✗ ' + name + (detail ? `  [${detail}]` : '')); }
 };
 const D = 86400000;
-const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
+const at = (y, m, d, h = 12) => new RealDate(y, m - 1, d, h).getTime();
 
 // ── Carga segura ──
 {
-  const { ctx, store } = load({ horlogerie_v3: '{esto no es json' });
+  const { ctx, store } = await load({ horlogerie_v3: '{esto no es json' });
   t('JSON local dañado: arranca vacío sin perder el original',
     ctx.getWatches().length === 0 && [...store.keys()].some(k => k.startsWith('horlogerie_v3_corrupt_')) &&
     ctx.storageRecovered.includes('horlogerie_v3'));
@@ -38,18 +36,18 @@ const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
   t('la copia apartada es idéntica al original', copy === '{esto no es json');
 }
 {
-  const { ctx } = load({ horlogerie_v3: JSON.stringify({ no: 'es una lista' }) });
+  const { ctx } = await load({ horlogerie_v3: JSON.stringify({ no: 'es una lista' }) });
   t('forma incorrecta también se aparta', ctx.storageRecovered.includes('horlogerie_v3'));
 }
 {
   const list = [{ id: 'w1', brand: 'A', model: 'B', history: [] }];
-  const { ctx } = load({ horlogerie_v3: JSON.stringify(list) });
+  const { ctx } = await load({ horlogerie_v3: JSON.stringify(list) });
   t('datos correctos se cargan', ctx.getWatches().length === 1 && !ctx.storageRecovered.length);
 }
 
 // ── Días de uso ──
 {
-  const { ctx } = load();
+  const { ctx } = await load();
   const w = { id: 'w', history: [{ start: at(2026, 10, 23, 9), end: at(2026, 10, 28, 21) }] };
   const keys = [...ctx.wornDayKeys(w)];
   t('un rango cuenta cada día una vez, también al cambiar la hora (25 oct)', keys.length === 6 && keys[0] === '2026-10-23' && keys[5] === '2026-10-28', keys.join(','));
@@ -60,7 +58,7 @@ const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
 
 // ── Añadir y quitar días ──
 {
-  const { ctx } = load();
+  const { ctx } = await load();
   ctx.getWatches().push({ id: 'a', brand: 'A', model: 'A', history: [] });
   ctx.addWearDays('a', Date.now() - 9 * D, Date.now() - 7 * D);
   const r = ctx.removeWearDay('a', Date.now() - 8 * D);
@@ -73,7 +71,7 @@ const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
 
 // ── «Lo llevé hoy» de madrugada ──
 {
-  const { ctx } = load({}, at(2026, 10, 12, 0) + 3 * 60000);   // 00:03
+  const { ctx } = await load({}, at(2026, 10, 12, 0) + 3 * 60000);   // 00:03
   ctx.getWatches().push({ id: 'n', brand: 'N', model: 'N', history: [] });
   const r = ctx.markWornToday('n');
   t('a las 00:03 «Lo llevé hoy» cuenta hoy', r === true && ctx.wornDayKeys(ctx.getWatch('n')).has('2026-10-12'),
@@ -83,7 +81,7 @@ const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
 
 // ── Fusión con la nube ──
 {
-  const { ctx } = load();
+  const { ctx } = await load();
   const local = [{ id: '1', updatedAt: 200, model: 'local' }, { id: '2', updatedAt: 100 }, { id: '3', updatedAt: 100 }];
   const cloud = [{ id: '1', updatedAt: 100, model: 'cloud' }, { id: '4', updatedAt: 100 }];
   // 2 estaba sincronizado y ya no está en la nube (borrado en otro dispositivo); 3 es nuevo aquí
@@ -97,7 +95,7 @@ const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
 
 // ── Saneado ──
 {
-  const { ctx } = load();
+  const { ctx } = await load();
   const w = ctx.sanitizeWatch({ id: 'x', brand: '<img src=x onerror=alert(1)>', model: 'M', photo: 'javascript:alert(1)', sourceUrl: 'javascript:alert(1)' });
   t('saneado: foto y enlace peligrosos se descartan', w && !w.photo && !w.sourceUrl);
   t('saneado: sin id no entra', ctx.sanitizeWatch({ brand: 'A' }) === null);

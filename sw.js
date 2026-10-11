@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.10.0';
+const CACHE   = 'horlogerie-v2.11.0';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
@@ -18,9 +18,9 @@ const SHELL = [
   `${BASE}/ayuda.html`,
   `${BASE}/licencias.html`,
   `${BASE}/privacidad.html`,
-  `${BASE}/css/app.css?v=2.10.0`,
-  `${BASE}/css/fonts.css?v=2.10.0`,
-  `${BASE}/css/icons.css?v=2.10.0`,
+  `${BASE}/css/app.css?v=2.11.0`,
+  `${BASE}/css/fonts.css?v=2.11.0`,
+  `${BASE}/css/icons.css?v=2.11.0`,
   `${BASE}/css/icons/tabler-icons-2a4af5f0.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
@@ -31,21 +31,22 @@ const SHELL = [
   `${BASE}/css/fonts/jost-latin-600-normal.woff2`,
   `${BASE}/css/fonts/jost-latin-400-italic.woff2`,
   `${BASE}/js/vendor/jspdf-2.5.1.umd.min.js`,
-  `${BASE}/js/db.js?v=2.10.0`,
-  `${BASE}/js/storage.js?v=2.10.0`,
-  `${BASE}/js/api.js?v=2.10.0`,
-  `${BASE}/js/sync.js?v=2.10.0`,
-  `${BASE}/js/export.js?v=2.10.0`,
-  `${BASE}/js/modules/core.js?v=2.10.0`,
-  `${BASE}/js/modules/home-detail.js?v=2.10.0`,
-  `${BASE}/js/modules/modals.js?v=2.10.0`,
-  `${BASE}/js/modules/history.js?v=2.10.0`,
-  `${BASE}/js/modules/settings.js?v=2.10.0`,
-  `${BASE}/js/modules/wishlist.js?v=2.10.0`,
-  `${BASE}/js/modules/session.js?v=2.10.0`,
-  `${BASE}/js/modules/updates.js?v=2.10.0`,
-  `${BASE}/js/spec-parser.js?v=2.10.0`,
-  `${BASE}/js/modules/url-import.js?v=2.10.0`,
+  `${BASE}/js/db.js`,              // módulo ES: se importa sin ?v (la caché cambia de nombre con cada versión)
+  `${BASE}/js/storage.js`,
+  `${BASE}/js/api.js`,
+  `${BASE}/js/sync.js`,
+  `${BASE}/js/export.js`,
+  `${BASE}/js/modules/core.js`,
+  `${BASE}/js/modules/home-detail.js`,
+  `${BASE}/js/modules/modals.js`,
+  `${BASE}/js/modules/history.js`,
+  `${BASE}/js/modules/settings.js`,
+  `${BASE}/js/modules/wishlist.js`,
+  `${BASE}/js/modules/session.js`,
+  `${BASE}/js/modules/updates.js`,
+  `${BASE}/js/spec-parser.js?v=2.11.0`,
+  `${BASE}/js/main.js?v=2.11.0`,
+  `${BASE}/js/modules/url-import.js`,
   `${BASE}/js/vendor/qrcode-generator-1.4.4.js`,
   `${BASE}/brand/rotor-symbol.svg`,
   `${BASE}/manifest.json`,

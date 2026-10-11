@@ -2,7 +2,7 @@
  * api.js — Cloudflare Worker communication + feature switches
  */
 
-const CONFIG = {
+export const CONFIG = {
   WORKER_URL: 'https://horlogerie.pedicode-app.workers.dev'
 };
 
@@ -11,6 +11,6 @@ const CONFIG = {
  * urlImport: "Rellenar desde un enlace" (no AI: js/spec-parser.js reads the
  * page text the Worker v13 downloads, or text pasted by the user).
  */
-const FEATURES = {
+export const FEATURES = {
   urlImport: true,    // needs Worker v12+ (checked at runtime with /health)
 };

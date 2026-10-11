@@ -8,18 +8,21 @@
  *   → triggers browser download / share sheet on mobile
  */
 
-// Paleta «esfera crema» (misma que el tema claro de la app; imprime bien)
-const PDF_DARK    = [251, 248, 241];  // fondo de página  #FBF8F1
-const PDF_DARK2   = [243, 238, 227];  // tarjetas          #F3EEE3
-const PDF_DARK3   = [232, 225, 210];  // líneas y rellenos #E8E1D2
-const PDF_GOLD    = [184, 150, 62];   // #B8963E
-const PDF_GOLD_L  = [126, 97,  24];   // dorado para texto #7E6118
-const PDF_LIGHT   = [30,  27,  22];   // texto             #1E1B16
-const PDF_MID     = [101, 93,  81];   // texto secundario  #655D51
-const PDF_GREEN   = [46,  125, 50];
-const PDF_WHITE   = [250, 248, 244];
+import { calendarDaysBetween, getWatches, isSafePhoto, wearIntervals, wearStats } from './storage.js';
+import { formatDate, showToast } from './modules/core.js';
 
-async function generateCollectionPDF() {
+// Paleta «esfera crema» (misma que el tema claro de la app; imprime bien)
+export const PDF_DARK    = [251, 248, 241];  // fondo de página  #FBF8F1
+export const PDF_DARK2   = [243, 238, 227];  // tarjetas          #F3EEE3
+export const PDF_DARK3   = [232, 225, 210];  // líneas y rellenos #E8E1D2
+export const PDF_GOLD    = [184, 150, 62];   // #B8963E
+export const PDF_GOLD_L  = [126, 97,  24];   // dorado para texto #7E6118
+export const PDF_LIGHT   = [30,  27,  22];   // texto             #1E1B16
+export const PDF_MID     = [101, 93,  81];   // texto secundario  #655D51
+export const PDF_GREEN   = [46,  125, 50];
+export const PDF_WHITE   = [250, 248, 244];
+
+export async function generateCollectionPDF() {
   // jsPDF is bundled with the app (js/vendor) and loaded only when needed
   if (typeof window.jspdf === 'undefined') {
     await loadScript('./js/vendor/jspdf-2.5.1.umd.min.js');
@@ -61,7 +64,7 @@ async function generateCollectionPDF() {
 /* ════════════════════════════════════════
    COVER PAGE
 ════════════════════════════════════════ */
-function drawCover(doc, ws, W, H) {
+export function drawCover(doc, ws, W, H) {
   // Background
   doc.setFillColor(...PDF_DARK);
   doc.rect(0, 0, W, H, 'F');
@@ -159,7 +162,7 @@ function drawCover(doc, ws, W, H) {
 /* ════════════════════════════════════════
    WATCH PAGE
 ════════════════════════════════════════ */
-async function drawWatchPage(doc, w, pageNum, total, W, H) {
+export async function drawWatchPage(doc, w, pageNum, total, W, H) {
   // Background
   doc.setFillColor(...PDF_DARK);
   doc.rect(0, 0, W, H, 'F');
@@ -419,7 +422,7 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
 /* ════════════════════════════════════════
    SUMMARY PAGE
 ════════════════════════════════════════ */
-function drawSummaryPage(doc, ws, W, H) {
+export function drawSummaryPage(doc, ws, W, H) {
   doc.setFillColor(...PDF_DARK);
   doc.rect(0, 0, W, H, 'F');
   doc.setFillColor(...PDF_GOLD);
@@ -513,7 +516,7 @@ function drawSummaryPage(doc, ws, W, H) {
    HELPERS
 ════════════════════════════════════════ */
 
-function drawNoPhoto(doc, x, y, w, h) {
+export function drawNoPhoto(doc, x, y, w, h) {
   doc.setFillColor(...PDF_DARK2);
   doc.roundedRect(x, y, w, h, 3, 3, 'F');
   doc.setDrawColor(...PDF_GOLD);
@@ -526,7 +529,7 @@ function drawNoPhoto(doc, x, y, w, h) {
   doc.text('Sin foto', x + w / 2, y + h / 2 + 12, { align: 'center' });
 }
 
-function roundedRect(doc, x, y, w, h, r, fillColor) {
+export function roundedRect(doc, x, y, w, h, r, fillColor) {
   doc.setFillColor(...fillColor);
   doc.roundedRect(x, y, w, h, r, r, 'F');
 }
@@ -535,7 +538,7 @@ function roundedRect(doc, x, y, w, h, r, fillColor) {
  * jsPDF 2.5 cannot read WebP (the format photos are stored in) and stretches
  * non-square images. Re-encode as a centre-cropped square JPEG.
  */
-function photoToSquareJpeg(dataUrl, size = 600) {
+export function photoToSquareJpeg(dataUrl, size = 600) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
@@ -554,7 +557,7 @@ function photoToSquareJpeg(dataUrl, size = 600) {
 }
 
 // formatDate is defined in core.js (loaded after this file)
-function loadScript(src) {
+export function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
     const s = document.createElement('script');
@@ -565,4 +568,3 @@ function loadScript(src) {
   });
 }
 
-window.generateCollectionPDF = generateCollectionPDF;

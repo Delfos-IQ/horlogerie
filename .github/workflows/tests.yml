@@ -24,11 +24,8 @@ jobs:
       - name: Versión coherente en todos los archivos
         run: node tools/bump-version.mjs --check
 
-      - name: Sintaxis de JavaScript
-        run: for f in js/*.js js/modules/*.js sw.js worker/index.js; do node --check "$f"; done
-
-      - name: Linter (sin avisos)
-        run: npx --yes eslint@8.57.0 js worker tests tools --max-warnings 0
+      - name: Sintaxis y linter (sin avisos; módulos ES con importaciones comprobadas)
+        run: npx --yes eslint@8.57.0 js worker tests tools sw.js --max-warnings 0
 
       - name: CSS sin clases huérfanas
         run: python tools/check-css.py

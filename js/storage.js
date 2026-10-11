@@ -17,16 +17,25 @@
  *   loadPhotos()           → async: populates .photo on all watches from IDB
  */
 
-const DB_KEY   = 'horlogerie_v3';     // localStorage key for metadata
-const IDB_NAME = 'horlogerie_photos'; // IndexedDB database name
-const IDB_STORE = 'photos';           // object store name
-const IDB_VER  = 1;
 
-let watches = [];
-let _idb    = null;  // IndexedDB connection
+/* storage.js has no UI dependencies (it also runs in the Node tests): the app
+   plugs in its toast with setNotifier(). */
+let notify = () => {};
+export function setNotifier(fn) { notify = typeof fn === 'function' ? fn : () => {}; }
+/* Called after every local change (the cloud copy plugs in its debounced upload). */
+let onChange = () => {};
+export function setOnChange(fn) { onChange = typeof fn === 'function' ? fn : () => {}; }
+
+export const DB_KEY   = 'horlogerie_v3';     // localStorage key for metadata
+export const IDB_NAME = 'horlogerie_photos'; // IndexedDB database name
+export const IDB_STORE = 'photos';           // object store name
+export const IDB_VER  = 1;
+
+export let watches = [];
+export let _idb    = null;  // IndexedDB connection
 
 /* ─── IndexedDB ─── */
-function openIDB() {
+export function openIDB() {
   if (_idb) return Promise.resolve(_idb);
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(IDB_NAME, IDB_VER);
@@ -38,7 +47,7 @@ function openIDB() {
   });
 }
 
-async function idbSavePhoto(id, dataUrl) {
+export async function idbSavePhoto(id, dataUrl) {
   if (!dataUrl) return;
   try {
     const db = await openIDB();
@@ -52,7 +61,7 @@ async function idbSavePhoto(id, dataUrl) {
 }
 
 
-async function idbDeletePhoto(id) {
+export async function idbDeletePhoto(id) {
   try {
     const db = await openIDB();
     return new Promise((res) => {
@@ -63,7 +72,7 @@ async function idbDeletePhoto(id) {
   } catch {}
 }
 
-async function idbGetAllPhotos() {
+export async function idbGetAllPhotos() {
   try {
     const db = await openIDB();
     return new Promise((res) => {
@@ -80,7 +89,7 @@ async function idbGetAllPhotos() {
  * maxDim 600px × quality 0.72 → ~40-60KB per photo (was 900px/0.82 → ~120-150KB)
  * A 30-watch collection stays under 2MB total in KV.
  */
-async function compressPhoto(dataUrl, maxDim = 600, quality = 0.72) {
+export async function compressPhoto(dataUrl, maxDim = 600, quality = 0.72) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
@@ -100,8 +109,6 @@ async function compressPhoto(dataUrl, maxDim = 600, quality = 0.72) {
     img.src = dataUrl;
   });
 }
-window.compressPhoto = compressPhoto;
-
 /* ─── Metadata (localStorage) ─── */
 /**
  * Read JSON from localStorage without ever losing data: if the stored text
@@ -109,8 +116,8 @@ window.compressPhoto = compressPhoto;
  * `<key>_corrupt_<date>` before the app starts with the fallback, so the next
  * save can't overwrite the only copy. The UI is told via `storageRecovered`.
  */
-const storageRecovered = [];
-function readJSON(key, fallback, isValid = () => true) {
+export const storageRecovered = [];
+export function readJSON(key, fallback, isValid = () => true) {
   let raw = null;
   try { raw = localStorage.getItem(key); } catch { return fallback; }
   if (raw == null || raw === '') return fallback;
@@ -122,26 +129,21 @@ function readJSON(key, fallback, isValid = () => true) {
   storageRecovered.push(key);
   return fallback;
 }
-window.storageRecovered = storageRecovered;
-
 /**
  * Ask the browser not to evict our data when the device runs low on space.
  * Installed apps usually get it without a prompt. Returns true/false/null (unsupported).
  */
-async function requestPersistence() {
+export async function requestPersistence() {
   try {
     if (!navigator.storage?.persist) return null;
     if (await navigator.storage.persisted()) return true;
     return await navigator.storage.persist();
   } catch { return null; }
 }
-async function isPersisted() {
+export async function isPersisted() {
   try { return navigator.storage?.persisted ? await navigator.storage.persisted() : null; } catch { return null; }
 }
-window.requestPersistence = requestPersistence;
-window.isPersisted = isPersisted;
-
-function loadData() {
+export function loadData() {
   const isList = v => Array.isArray(v) && v.every(w => w && typeof w === 'object' && typeof w.id === 'string');
   let list = readJSON(DB_KEY, null, isList);
   if (list === null && !storageRecovered.includes(DB_KEY)) list = readJSON('horlogerie_v2', [], isList);   // old key
@@ -150,7 +152,7 @@ function loadData() {
   watches.forEach(w => { if (w.photo && String(w.photo).startsWith('data:')) delete w.photo; });
 }
 
-function saveMeta() {
+export function saveMeta() {
   try {
     // Never store photo in localStorage
     const slim = watches.map(w => {
@@ -159,29 +161,27 @@ function saveMeta() {
     });
     localStorage.setItem(DB_KEY, JSON.stringify(slim));
   } catch (e) {
-    if (typeof showToast === 'function') showToast('⚠️ Error guardando datos locales');
+    notify('No se pudieron guardar los datos en este dispositivo. Libera espacio o haz una copia JSON.');
   }
 }
 
-function save() {
+export function save() {
   saveMeta();
-  if (typeof window._debouncedPush === 'function') window._debouncedPush();
+  onChange();
 }
 
 /* ─── Load photos from IDB into watch objects ─── */
-async function loadPhotos() {
+export async function loadPhotos() {
   const all = await idbGetAllPhotos();
   const map = {};
   all.forEach(r => { map[r.id] = r.photo; });
   watches.forEach(w => { if (map[w.id]) w.photo = map[w.id]; });
 }
-window.loadPhotos = loadPhotos;
-
 /* ─── CRUD ─── */
-function getWatches() { return watches; }
-function getWatch(id) { return watches.find(w => w.id === id) || null; }
+export function getWatches() { return watches; }
+export function getWatch(id) { return watches.find(w => w.id === id) || null; }
 
-async function addWatch(data) {
+export async function addWatch(data) {
   const id = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
   const photo = data.photo || null;
   const now = Date.now();
@@ -201,9 +201,7 @@ async function addWatch(data) {
   requestPersistence();
   return w;
 }
-window.addWatch = addWatch;
-
-async function updateWatch(id, changes) {
+export async function updateWatch(id, changes) {
   const w = getWatch(id);
   if (!w) return null;
   const { photo, ...rest } = changes;
@@ -222,9 +220,7 @@ async function updateWatch(id, changes) {
   save();
   return w;
 }
-window.updateWatch = updateWatch;
-
-function deleteWatch(id) {
+export function deleteWatch(id) {
   // Mutate in place: other modules hold a reference to this array
   const idx = watches.findIndex(w => w.id === id);
   if (idx !== -1) watches.splice(idx, 1);
@@ -233,9 +229,9 @@ function deleteWatch(id) {
   save();
 }
 
-function getActiveWatch() { return watches.find(w => w.wearStart) || null; }
+export function getActiveWatch() { return watches.find(w => w.wearStart) || null; }
 
-function startWearing(id) {
+export function startWearing(id) {
   const active = getActiveWatch();
   if (active && active.id !== id) return false;
   const w = getWatch(id);
@@ -246,7 +242,7 @@ function startWearing(id) {
   return true;
 }
 
-function stopWearing(id) {
+export function stopWearing(id) {
   const w = getWatch(id);
   if (!w || !w.wearStart) return false;
   if (!w.history) w.history = [];
@@ -263,27 +259,27 @@ function stopWearing(id) {
    A watch "was worn on a day" if any interval touches that local calendar
    day. Two hours count as one day; two sessions on the same day count once.
 ═══════════════════════════════════════ */
-const DAY_MS = 86400000;
+export const DAY_MS = 86400000;
 
-function dayKey(ts) {
+export function dayKey(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
-function startOfDay(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
+export function startOfDay(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
 /** Whole calendar days between two timestamps (0 = same day) */
-function calendarDaysBetween(a, b) {
+export function calendarDaysBetween(a, b) {
   return Math.round((startOfDay(b) - startOfDay(a)) / DAY_MS);
 }
 
 /** All intervals of a watch, including the live one */
-function wearIntervals(w, now = Date.now()) {
+export function wearIntervals(w, now = Date.now()) {
   const all = (w.history || []).map((h, i) => ({ start: h.start, end: h.end || h.start, idx: i }));
   if (w.wearStart) all.push({ start: w.wearStart, end: now, active: true, idx: -1 });
   return all.sort((a, b) => a.start - b.start);
 }
 
 /** Set of local day keys on which the watch was worn */
-function wornDayKeys(w, now = Date.now()) {
+export function wornDayKeys(w, now = Date.now()) {
   const keys = new Set();
   for (const iv of wearIntervals(w, now)) {
     let t = startOfDay(iv.start);
@@ -306,7 +302,7 @@ function wornDayKeys(w, now = Date.now()) {
  *   daysSinceLast     calendar days since lastWorn (0 = today)
  *   costPerWear       purchasePrice / daysWorn (null if unknown)
  */
-function wearStats(w, now = Date.now()) {
+export function wearStats(w, now = Date.now()) {
   const ivs  = wearIntervals(w, now);
   const keys = wornDayKeys(w, now);
   const cutoff = dayKey(now - 89 * DAY_MS);
@@ -326,9 +322,9 @@ function wearStats(w, now = Date.now()) {
 }
 
 /** Maintenance alerts: quartz battery (> 24 months) and service (> 5 years) */
-const BATTERY_MONTHS = 24;
-const SERVICE_YEARS  = 5;
-function maintenanceAlerts(w, now = Date.now()) {
+export const BATTERY_MONTHS = 24;
+export const SERVICE_YEARS  = 5;
+export function maintenanceAlerts(w, now = Date.now()) {
   const out = [];
   const months = ts => Math.floor((now - ts) / (30.44 * DAY_MS));
   if (w.type === 'quartz' && typeof w.batteryChanged === 'number') {
@@ -351,7 +347,7 @@ function maintenanceAlerts(w, now = Date.now()) {
 /* ── Wear actions ── */
 
 /** Mark a day (or a range of days) as worn, without live tracking */
-function addWearDays(id, fromTs, toTs = fromTs) {
+export function addWearDays(id, fromTs, toTs = fromTs) {
   const w = getWatch(id);
   if (!w) return false;
   const now = Date.now();
@@ -370,7 +366,7 @@ function addWearDays(id, fromTs, toTs = fromTs) {
  * is clamped to "now", so logging early in the morning (00:00–08:59) still
  * counts today. Days after today are refused.
  */
-function dayRange(fromTs, toTs, now = Date.now()) {
+export function dayRange(fromTs, toTs, now = Date.now()) {
   if (startOfDay(Math.min(fromTs, toTs)) > startOfDay(now)) return null;   // future day
   let start = startOfDay(Math.min(fromTs, toTs)) + 9 * 3600000;
   let end   = startOfDay(Math.max(fromTs, toTs)) + 21 * 3600000;
@@ -381,14 +377,14 @@ function dayRange(fromTs, toTs, now = Date.now()) {
 }
 
 /** "Lo llevé hoy" — idempotent: does nothing if it already counts for today */
-function markWornToday(id) {
+export function markWornToday(id) {
   const w = getWatch(id);
   if (!w) return false;
   if (wornDayKeys(w).has(dayKey(Date.now()))) return 'already';
   return addWearDays(id, Date.now());
 }
 
-function updateHistoryEntry(id, idx, fromTs, toTs) {
+export function updateHistoryEntry(id, idx, fromTs, toTs) {
   const w = getWatch(id);
   if (!w || !w.history?.[idx]) return false;
   const now = Date.now();
@@ -401,7 +397,7 @@ function updateHistoryEntry(id, idx, fromTs, toTs) {
   return true;
 }
 
-function deleteHistoryEntry(id, idx) {
+export function deleteHistoryEntry(id, idx) {
   const w = getWatch(id);
   if (!w || !w.history?.[idx]) return false;
   w.history.splice(idx, 1);
@@ -415,7 +411,7 @@ function deleteHistoryEntry(id, idx) {
  * days are trimmed or split, so the other days stay. Returns 'active' if that
  * day belongs to the session in progress (it must be stopped first).
  */
-function removeWearDay(id, dayTs) {
+export function removeWearDay(id, dayTs) {
   const w = getWatch(id);
   if (!w) return false;
   const day = startOfDay(dayTs);
@@ -442,14 +438,14 @@ function removeWearDay(id, dayTs) {
 }
 
 /** Take off whatever is on the wrist and put this one on, in one step */
-function switchToWatch(id) {
+export function switchToWatch(id) {
   const active = getActiveWatch();
   if (active && active.id === id) return false;
   if (active) stopWearing(active.id);
   return startWearing(id);
 }
 
-function setWatchFlag(id, key, value) {
+export function setWatchFlag(id, key, value) {
   if (!['favorite', 'rotation'].includes(key)) return false;
   const w = getWatch(id);
   if (!w) return false;
@@ -465,16 +461,14 @@ Object.assign(window, { dayKey, startOfDay, calendarDaysBetween, wearIntervals, 
 /* ─── Cloud sync helpers (used by sync.js) ─── */
 
 // Returns watches with photos embedded (for KV push)
-async function getWatchesWithPhotos() {
+export async function getWatchesWithPhotos() {
   const all = await idbGetAllPhotos();
   const photoMap = {};
   all.forEach(r => { photoMap[r.id] = r.photo; });
   return watches.map(w => ({ ...w, photo: photoMap[w.id] || null }));
 }
-window.getWatchesWithPhotos = getWatchesWithPhotos;
-
 // Restore from cloud (photos included in payload)
-async function restoreFromCloud(cloudWatches) {
+export async function restoreFromCloud(cloudWatches) {
   // Separate photos from metadata
   const metas  = [];
   for (const w of cloudWatches) {
@@ -488,27 +482,25 @@ async function restoreFromCloud(cloudWatches) {
   await loadPhotos();
   saveMeta();
 }
-window.restoreFromCloud = restoreFromCloud;
-
 /* ═══════════════════════════════════════
    TOMBSTONES — ids deleted locally that the cloud still has to hear about.
    Cleared by sync.js after a successful push.
 ═══════════════════════════════════════ */
-const TOMB_KEY = 'horlogerie_tombstones_v1';
+export const TOMB_KEY = 'horlogerie_tombstones_v1';
 
-function getTombstones() {
+export function getTombstones() {
   const t = readJSON(TOMB_KEY, {}, v => v && typeof v === 'object');
   return { watches: t.watches || [], wishlist: t.wishlist || [] };
 }
-function setTombstones(t) {
+export function setTombstones(t) {
   try { localStorage.setItem(TOMB_KEY, JSON.stringify(t)); } catch {}
 }
-function addTombstone(kind, id) {
+export function addTombstone(kind, id) {
   const t = getTombstones();
   if (!t[kind].includes(id)) t[kind].push(id);
   setTombstones(t);
 }
-function clearTombstones(kind, ids) {
+export function clearTombstones(kind, ids) {
   const t = getTombstones();
   const done = new Set(ids);
   t[kind] = t[kind].filter(id => !done.has(id));
@@ -529,7 +521,7 @@ function clearTombstones(kind, ids) {
                           never synced? it is new here → keep
    - Only in cloud      → deleted here and not pushed yet? → drop; else → add
 ═══════════════════════════════════════ */
-function itemStamp(x) {
+export function itemStamp(x) {
   if (!x) return 0;
   if (typeof x.updatedAt === 'number') return x.updatedAt;
   let s = typeof x.created === 'number' ? x.created : 0;
@@ -540,7 +532,7 @@ function itemStamp(x) {
   return s;
 }
 
-function mergeById(local, cloud, syncedIds = [], localDeleted = []) {
+export function mergeById(local, cloud, syncedIds = [], localDeleted = []) {
   const synced  = new Set(syncedIds);
   const deleted = new Set(localDeleted);
   const cloudMap = new Map((cloud || []).filter(x => x && x.id).map(x => [x.id, x]));
@@ -566,11 +558,9 @@ function mergeById(local, cloud, syncedIds = [], localDeleted = []) {
   }
   return { items: out, stats };
 }
-window.mergeById = mergeById;
-
 /* Replace the in-memory collection with a merged list.
    Photos travel inside cloud/backup items: store them in IndexedDB. */
-async function applyWatchList(list) {
+export async function applyWatchList(list) {
   const keepIds = new Set(list.map(w => w.id));
   const metas = [];
   for (const w of list) {
@@ -585,31 +575,25 @@ async function applyWatchList(list) {
   await loadPhotos();
   saveMeta();
 }
-window.applyWatchList = applyWatchList;
-
 /* ═══════════════════════════════════════
    SANITIZE — anything coming from a backup file or the cloud
 ═══════════════════════════════════════ */
-const WATCH_TYPES = ['automatic', 'quartz', 'manual'];
-const SPEC_KEYS   = ['calibre','movimiento','cristal','brazalete','esfera','caja','resistencia','reserva','diametro','grosor','asas'];
-const MAX_PHOTO_CHARS = 3 * 1024 * 1024;
+export const WATCH_TYPES = ['automatic', 'quartz', 'manual'];
+export const SPEC_KEYS   = ['calibre','movimiento','cristal','brazalete','esfera','caja','resistencia','reserva','diametro','grosor','asas'];
+export const MAX_PHOTO_CHARS = 3 * 1024 * 1024;
 
-function isSafePhoto(p) {
+export function isSafePhoto(p) {
   return typeof p === 'string' && p.length < MAX_PHOTO_CHARS &&
     /^data:image\/(webp|jpeg|jpg|png);base64,[A-Za-z0-9+/=]+$/.test(p);
 }
-window.isSafePhoto = isSafePhoto;
-
-function isSafeUrl(u) {
+export function isSafeUrl(u) {
   if (typeof u !== 'string' || u.length > 2000) return false;
   try { return ['http:', 'https:'].includes(new URL(u).protocol); } catch { return false; }
 }
-window.isSafeUrl = isSafeUrl;
+export const _str = (v, max = 500) => (typeof v === 'string' ? v : v == null ? '' : String(v)).slice(0, max);
+export const _num = v => (typeof v === 'number' && isFinite(v) && v > 0 ? v : null);
 
-const _str = (v, max = 500) => (typeof v === 'string' ? v : v == null ? '' : String(v)).slice(0, max);
-const _num = v => (typeof v === 'number' && isFinite(v) && v > 0 ? v : null);
-
-function sanitizeWatch(raw) {
+export function sanitizeWatch(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const brand = _str(raw.brand, 80).trim(), model = _str(raw.model, 120).trim();
   if (!brand || !model) return null;
@@ -644,9 +628,7 @@ function sanitizeWatch(raw) {
   if (isSafePhoto(raw.photo)) w.photo = raw.photo;
   return w;
 }
-window.sanitizeWatch = sanitizeWatch;
-
-function sanitizeWishlistItem(raw) {
+export function sanitizeWishlistItem(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const brand = _str(raw.brand, 80).trim(), model = _str(raw.model, 120).trim();
   if (!brand || !model) return null;
@@ -668,10 +650,8 @@ function sanitizeWishlistItem(raw) {
   if (isSafeUrl(raw.sourceUrl)) it.sourceUrl = raw.sourceUrl;
   return it;
 }
-window.sanitizeWishlistItem = sanitizeWishlistItem;
-
 /* Only one watch can be "on the wrist" at a time */
-function enforceSingleActive(list) {
+export function enforceSingleActive(list) {
   const active = list.filter(w => w.wearStart).sort((a, b) => b.wearStart - a.wearStart);
   active.slice(1).forEach(w => { w.wearStart = null; });
   return list;
@@ -680,7 +660,7 @@ function enforceSingleActive(list) {
 /* ═══════════════════════════════════════
    BACKUP — export / import
 ═══════════════════════════════════════ */
-async function buildBackup() {
+export async function buildBackup() {
   return {
     app: 'horlogerie',
     version: 3,
@@ -689,14 +669,12 @@ async function buildBackup() {
     wishlist: getWishlist(),
   };
 }
-window.buildBackup = buildBackup;
-
 /**
  * Import a backup (v2: {watches}, v3: {watches, wishlist}, or a bare array).
  * Merges with what is already here; on the same id the most recent wins.
  * Returns { watches: {...stats}, wishlist: {...stats}, rejected }.
  */
-async function importBackup(data) {
+export async function importBackup(data) {
   const rawWatches  = Array.isArray(data) ? data : (Array.isArray(data?.watches) ? data.watches : null);
   if (!rawWatches) throw new Error('Formato no reconocido');
   const rawWishlist = Array.isArray(data?.wishlist) ? data.wishlist : [];
@@ -715,8 +693,6 @@ async function importBackup(data) {
   save();   // marks everything for the next cloud push
   return { watches: mw.stats, wishlist: ml.stats, rejected, total: incoming.length, totalWishlist: wlIn.length };
 }
-window.importBackup = importBackup;
-
 // Init
 loadData();
 
@@ -724,22 +700,20 @@ loadData();
    WISHLIST — stored in localStorage
    Separate from watches collection.
 ═══════════════════════════════════════ */
-const WL_KEY = 'horlogerie_wishlist_v1';
+export const WL_KEY = 'horlogerie_wishlist_v1';
 
-function getWishlist() {
+export function getWishlist() {
   return readJSON(WL_KEY, [], v => Array.isArray(v));
 }
 
 /* Write without triggering a cloud push (used when applying merges) */
-function setWishlistSilently(items) {
+export function setWishlistSilently(items) {
   try { localStorage.setItem(WL_KEY, JSON.stringify(items)); } catch {
-    if (typeof showToast === 'function') showToast('⚠️ Error guardando la lista de deseos');
+    notify('No se pudo guardar la lista de deseos en este dispositivo.');
   }
 }
-window.setWishlistSilently = setWishlistSilently;
-
 /* User-initiated change: stamp modified items and schedule a cloud push */
-function saveWishlist(items) {
+export function saveWishlist(items) {
   const prev = new Map(getWishlist().map(i => [i.id, JSON.stringify(i)]));
   const now  = Date.now();
   items.forEach(i => {
@@ -750,10 +724,10 @@ function saveWishlist(items) {
     if (JSON.stringify(rest) !== JSON.stringify(beforeRest)) i.updatedAt = now;
   });
   setWishlistSilently(items);
-  if (typeof window._debouncedPush === 'function') window._debouncedPush();
+  onChange();
 }
 
-function addWishlistItem(data) {
+export function addWishlistItem(data) {
   const items = getWishlist();
   const item = {
     id:       'wl_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
@@ -785,7 +759,7 @@ function addWishlistItem(data) {
   return item;
 }
 
-function updateWishlistItem(id, changes) {
+export function updateWishlistItem(id, changes) {
   const items = getWishlist();
   const idx = items.findIndex(i => i.id === id);
   if (idx === -1) return null;
@@ -797,12 +771,12 @@ function updateWishlistItem(id, changes) {
   return items[idx];
 }
 
-function deleteWishlistItem(id) {
+export function deleteWishlistItem(id) {
   addTombstone('wishlist', id);
   saveWishlist(getWishlist().filter(i => i.id !== id));
 }
 
-function promoteWishlistToCollection(id) {
+export function promoteWishlistToCollection(id) {
   const item = getWishlist().find(i => i.id === id);
   if (!item) return null;
   // Map wishlist item to watch format
@@ -819,9 +793,3 @@ function promoteWishlistToCollection(id) {
   };
 }
 
-window.getWishlist          = getWishlist;
-window.saveWishlist         = saveWishlist;
-window.addWishlistItem      = addWishlistItem;
-window.updateWishlistItem   = updateWishlistItem;
-window.deleteWishlistItem   = deleteWishlistItem;
-window.promoteWishlistToCollection = promoteWishlistToCollection;

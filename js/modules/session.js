@@ -9,10 +9,17 @@
    - "Usar una clave o código" accepts either and merges the cloud copy here.
 ══════════════════════════════════════════════════════ */
 
-const APP_URL = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}`;
+import { getWatches } from '../storage.js';
+import { deleteCloudData, getSessionId, getSyncMeta, importSession, isCloudEnabled, normalizeKey, normalizePairCode, pairClaim, pairCreate, rotateSessionKey, setCloudEnabled, setSyncMeta } from '../sync.js';
+import { escHtml, showToast } from './core.js';
+import { renderHome, showConfirm } from './home-detail.js';
+import { renderCloudControls, renderSettings } from './settings.js';
+import { renderWishlist } from './wishlist.js';
+
+export const APP_URL = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}`;
 
 /** Bottom sheet built on the fly; the back gesture closes it via _close */
-function openSheet(html, { onClose } = {}) {
+export function openSheet(html, { onClose } = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = 'display:flex;z-index:400;';
@@ -28,9 +35,9 @@ function openSheet(html, { onClose } = {}) {
   return { overlay, close, $: sel => overlay.querySelector(sel) };
 }
 
-function fmtPairCode(c) { return `${c.slice(0, 3)}-${c.slice(3)}`; }
+export function fmtPairCode(c) { return `${c.slice(0, 3)}-${c.slice(3)}`; }
 
-function qrSvg(text, size = 180) {
+export function qrSvg(text, size = 180) {
   try {
     const qr = qrcode(0, 'M');
     qr.addData(text); qr.make();
@@ -40,7 +47,7 @@ function qrSvg(text, size = 180) {
 }
 
 /* ─── Copy / save the key ─── */
-function copySessionId() {
+export function copySessionId() {
   const id = getSessionId();
   const done = () => showToast('Clave copiada');
   navigator.clipboard?.writeText(id).then(done).catch(() => {
@@ -51,13 +58,13 @@ function copySessionId() {
   });
 }
 
-function markKeySaved() {
+export function markKeySaved() {
   setSyncMeta({ keySavedAt: Date.now() });
   if (typeof renderCloudControls === 'function') renderCloudControls();
 }
 
 /** Share sheet (password manager, notes, email to yourself…) or a small .txt file */
-async function shareSessionKey() {
+export async function shareSessionKey() {
   const key  = getSessionId();
   const text = `Clave de recuperación de Rotor: ${key}\n\nPara recuperar tu colección: Rotor → Ajustes → «Usar una clave o código».`;
   if (navigator.share) {
@@ -73,7 +80,7 @@ async function shareSessionKey() {
   showToast('Clave descargada en rotor-clave.txt');
 }
 
-function openSaveKeySheet() {
+export function openSaveKeySheet() {
   const key = getSessionId();
   const { $, close } = openSheet(`
     <div class="modal-title">Guarda tu clave de recuperación</div>
@@ -95,7 +102,7 @@ function openSaveKeySheet() {
 }
 
 /* ─── Link another device: temporary 6-character code ─── */
-async function openPairSheet() {
+export async function openPairSheet() {
   const { $ } = openSheet(`
     <div class="modal-title">Vincular otro dispositivo</div>
     <div id="pair-body" class="sheet-text">Generando código…</div>
@@ -141,7 +148,7 @@ async function openPairSheet() {
 }
 
 /* ─── Use a key or a code on this device (also: recover after reinstalling) ─── */
-function openLinkSheet(prefill = '') {
+export function openLinkSheet(prefill = '') {
   const { $, close } = openSheet(`
     <div class="modal-title">Usar una clave o código</div>
     <div class="sheet-text">Escribe el <b>código de 6 caracteres</b> que ves en tu otro dispositivo, o tu <b>clave de recuperación</b>.
@@ -183,7 +190,7 @@ function openLinkSheet(prefill = '') {
 }
 
 /* ─── Cloud on/off, new key, delete ─── */
-async function handleCloudToggle(on) {
+export async function handleCloudToggle(on) {
   const input = document.getElementById('cloud-toggle');
   if (input) input.disabled = true;
   try {
@@ -198,7 +205,7 @@ async function handleCloudToggle(on) {
   }
 }
 
-function handleRotateKey() {
+export function handleRotateKey() {
   showConfirm(
     '¿Cambiar la llave?',
     'Se creará una clave nueva y se borrará la copia guardada con la actual. En tus otros dispositivos tendrás que volver a vincularlos.',
@@ -213,7 +220,7 @@ function handleRotateKey() {
   );
 }
 
-function handleDeleteCloud() {
+export function handleDeleteCloud() {
   showConfirm(
     '¿Borrar tus datos de la nube?',
     'Se borrará la copia de tu colección y tu lista de deseos guardada en la nube, y la copia en la nube quedará desactivada. Lo que hay en este dispositivo no se toca.',
@@ -229,7 +236,7 @@ function handleDeleteCloud() {
 }
 
 /* ─── Opened from a linking QR: …/horlogerie/#vincular=K7QM4X ─── */
-function handleLinkFromUrl() {
+export function handleLinkFromUrl() {
   const m = location.hash.match(/^#vincular=([0-9A-Za-z-]{6,8})$/);
   if (!m) return;
   history.replaceState(history.state, '', location.pathname + location.search);
@@ -238,11 +245,3 @@ function handleLinkFromUrl() {
 }
 window.addEventListener('load', handleLinkFromUrl);
 
-window.copySessionId     = copySessionId;
-window.shareSessionKey   = shareSessionKey;
-window.openSaveKeySheet  = openSaveKeySheet;
-window.openPairSheet     = openPairSheet;
-window.openLinkSheet     = openLinkSheet;
-window.handleCloudToggle = handleCloudToggle;
-window.handleRotateKey   = handleRotateKey;
-window.handleDeleteCloud = handleDeleteCloud;

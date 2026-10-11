@@ -11,9 +11,15 @@
  * - Settings: stats, sync, PDF export, JSON backup
  */
 
+import { renderHome, stopActiveTimer } from './home-detail.js';
+import { openAddModal } from './modals.js';
+import { renderHistory } from './history.js';
+import { renderSettings } from './settings.js';
+import { openWishlistAdd, renderWishlist } from './wishlist.js';
+
 /* ─── State ─── */
 /** UI state shared between modules (one object, so every module sees changes) */
-const ui = {
+export const ui = {
   currentWatchId: null,        // watch open in the detail view
   editingPhotoData: null,      // photo chosen in the add/edit modal
   editingWatchId: null,        // watch being edited in the modal (null = new)
@@ -34,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ─── Keyboard: Escape closes the top sheet or modal, like the back gesture ─── */
-const STATIC_MODALS = ['photo-sheet', 'wishlist-modal', 'add-modal'];   // topmost first
-function closeTopOverlay() {
+export const STATIC_MODALS = ['photo-sheet', 'wishlist-modal', 'add-modal'];   // topmost first
+export function closeTopOverlay() {
   const dyn = [...document.querySelectorAll('body > .modal-overlay:not([id])')].pop();
   if (dyn) { if (typeof dyn._close === 'function') dyn._close(); else dyn.remove(); return true; }
   for (const id of STATIC_MODALS) {
@@ -58,11 +64,9 @@ document.addEventListener('keydown', e => {
 //  - On popstate, we ALWAYS handle navigation ourselves (never delegate
 //    to the browser) UNLESS we're already at the root with nothing to
 //    pop — only then does the gesture exit the app, which is correct.
-let _navState = null; // state of the entry currently shown (popstate only gives the new one)
-function navPush(st)    { _navState = st; history.pushState(st, '', ''); }
-function navReplace(st) { _navState = st; history.replaceState(st, '', ''); }
-window.navPush = navPush; window.navReplace = navReplace;
-
+export let _navState = null; // state of the entry currently shown (popstate only gives the new one)
+export function navPush(st)    { _navState = st; history.pushState(st, '', ''); }
+export function navReplace(st) { _navState = st; history.replaceState(st, '', ''); }
 window.addEventListener('popstate', e => {
   const targetView = e.state?.view || 'home';
 
@@ -104,7 +108,7 @@ window.addEventListener('load', () => {
 });
 
 /* ─── Utilities ─── */
-function showToast(msg, dur = 2600) {
+export function showToast(msg, dur = 2600) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
@@ -120,7 +124,7 @@ function showToast(msg, dur = 2600) {
  *   < 48h  → "1 día 3h"
  *   ≥ 48h  → "3 días 4h"
  */
-function elapsedSince(ts) {
+export function elapsedSince(ts) {
   const totalMs  = Date.now() - ts;
   const totalMin = Math.floor(totalMs / 60000);
   const hours    = Math.floor(totalMin / 60);
@@ -140,7 +144,7 @@ function elapsedSince(ts) {
 }
 
 /** Short version for the grid card badge */
-function elapsedShort(ts) {
+export function elapsedShort(ts) {
   const totalMs  = Date.now() - ts;
   const totalMin = Math.floor(totalMs / 60000);
   const hours    = Math.floor(totalMin / 60);
@@ -150,21 +154,21 @@ function elapsedShort(ts) {
   if (days === 1)     return `1 día`;
   return `${days} días`;
 }
-function formatDate(ts) {
+export function formatDate(ts) {
   return new Date(ts).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
 }
-function watchEmoji(type) {
+export function watchEmoji(type) {
   return type === 'automatic' ? '⚙️' : type === 'quartz' ? '🔋' : '🕰️';
 }
-function typeLabel(type) {
+export function typeLabel(type) {
   return type === 'automatic' ? 'Auto' : type === 'quartz' ? 'Quartz' : 'Manual';
 }
-function escHtml(s) {
+export function escHtml(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 /* ─── Navigation ─── */
-function showView(v) {
+export function showView(v) {
   // Re-rendering the view that is already open: keep scroll and back stack
   const sameView = !!document.getElementById('view-' + v)?.classList.contains('active');
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
@@ -198,7 +202,7 @@ function showView(v) {
 }
 
 /* FAB shows only on views where "add" makes sense, and calls the right handler */
-function updateFab(v) {
+export function updateFab(v) {
   const fab = document.querySelector('.fab');
   if (!fab) return;
   if (v === 'home') {

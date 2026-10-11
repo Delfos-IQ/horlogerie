@@ -26,6 +26,8 @@ horlogerie/
 │   └── icons.css + icons/  Subconjunto de Tabler Icons (lo genera tools/build-icons.py)
 ├── icons/                  Iconos PWA y favicons
 ├── js/
+│   ├── main.js             Entrada (módulo ES): importa todo, delegación de eventos y arranque
+│   ├── spec-parser.js      Lector de fichas sin IA (también se prueba en Node)
 │   ├── db.js               Carga y búsqueda en watches_db.json
 │   ├── storage.js          Datos: relojes, fotos (IndexedDB), lista de deseos, registro de uso
 │   │                       por días (wearStats), avisos de mantenimiento, fusión y copias
@@ -53,6 +55,8 @@ horlogerie/
 │   ├── worker-harness.mjs  Ejecuta el Worker real en Node con KV en memoria
 │   ├── e2e_sync.py         Sincronización con varios "dispositivos" (Playwright)
 │   ├── e2e_wear.py         Registro de uso, recomendación, PDF y funcionamiento sin terceros
+│   ├── storage.test.mjs    Unitarias de la lógica de datos (Node)
+│   ├── spec-parser.test.mjs  Unitarias del lector de fichas (Node)
 │   ├── e2e_import_history.py  Rellenar desde un enlace, calendario, ranking y «Por reloj»
 │   └── e2e_cloud.py        Clave corta, vincular dispositivos, recuperar, avisos y Ajustes
 └── tools/
@@ -62,7 +66,7 @@ horlogerie/
     └── play-screenshots.py Capturas de la ficha de Play con una colección de ejemplo
 ```
 
-Los scripts se cargan en orden desde `index.html` (sin bundler ni build). El orden importa: `db → storage → api → sync → export → modules/*`.
+Sin bundler ni build: la app son módulos ES. `index.html` carga `js/main.js` (`type="module"`), que importa el resto, conecta los avisos y la nube con `storage.js` y gestiona los clics por delegación (`data-action`, `data-arg`, `data-change`, `data-input`): el HTML no lleva código, lo que permite una CSP estricta (`script-src 'self'`). `qrcode-generator` y `spec-parser.js` son scripts clásicos (este último también lo usa Node en las pruebas). En la consola, `window.rotor` da acceso a los módulos; en `localhost` las funciones exportadas también son globales para las pruebas.
 
 ## Desarrollo local
 
@@ -94,7 +98,7 @@ La app usa un subconjunto de Tabler Icons. Si añades una clase `ti-*` nueva, ej
 2. Comprobar que todo coincide: `node tools/bump-version.mjs --check`
 3. Commit con mensaje descriptivo y `git push`. GitHub Pages publica la rama `main`.
 
-Si añades un archivo JS o CSS nuevo, inclúyelo también en la lista `SHELL` de `sw.js` para que funcione sin conexión.
+Si añades un archivo JS o CSS nuevo, inclúyelo también en la lista `SHELL` de `sw.js` para que funcione sin conexión (los módulos importados van sin `?v=`: la caché cambia de nombre con cada versión).
 
 ## Worker (Cloudflare)
 

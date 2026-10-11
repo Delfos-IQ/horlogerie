@@ -26,7 +26,8 @@ def kv():
     return json.loads(urllib.request.urlopen(f"http://localhost:{PORT}/__kv").read())
 
 async def device(browser, health=None, url=APP):
-    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block')
+    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block',
+                                    bypass_csp=True)   # wait_for_function evaluates strings; CSP is checked in e2e_wear
     async def route(r):
         u = r.request.url.replace(WORKER, f"http://localhost:{PORT}")
         if health and u.endswith('/health'):
@@ -68,7 +69,7 @@ async def main():
         check("fuera el panel «Colección» y el «Análisis de uso» de Ajustes",
               await a.locator("#settings-stats, #settings-advanced-stats").count() == 0)
         check("un solo botón de actualizar (en Estado del sistema)",
-              await a.locator("#view-settings [onclick='checkForUpdate()']").count() == 1)
+              await a.locator("#view-settings [data-action='checkForUpdate']").count() == 1)
         links = await a.eval_on_selector_all(".about-links a", "as => as.map(a => a.getAttribute('href'))")
         check("Acerca de: ayuda, privacidad, licencias y contacto",
               links == ['./ayuda.html', './privacidad.html', './licencias.html', 'mailto:pedicode.app@gmail.com?subject=Rotor'], str(links))

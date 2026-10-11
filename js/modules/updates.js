@@ -1,6 +1,9 @@
-const APP_VERSION = '2.10.0'; // Must match version.json
+import { escHtml, showToast } from './core.js';
+import { renderSystemStatus } from './settings.js';
 
-async function initVersionCheck() {
+export const APP_VERSION = '2.11.0'; // Must match version.json
+
+export async function initVersionCheck() {
   // Silent check on every launch — fetch version.json bypassing cache
   try {
     const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
@@ -10,7 +13,7 @@ async function initVersionCheck() {
   } catch { /* Offline — skip */ }
 }
 
-function showUpdateBanner(newVersion, notes) {
+export function showUpdateBanner(newVersion, notes) {
   // Show a persistent banner at top of screen
   const existing = document.getElementById('update-banner');
   if (existing) return;
@@ -32,13 +35,13 @@ function showUpdateBanner(newVersion, notes) {
     </div>
     <button style="background:var(--dark);color:var(--gold-light);border:none;border-radius:8px;
       padding:7px 14px;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;
-      white-space:nowrap;" onclick="applyUpdate()">Actualizar</button>
+      white-space:nowrap;" data-action="applyUpdate">Actualizar</button>
   `;
   document.body.appendChild(banner);
 }
 
 /** Ajustes → Estado del sistema → Versión instalada → ↻ */
-async function checkForUpdate() {
+export async function checkForUpdate() {
   const icon = document.getElementById('update-top-icon');
   const val  = document.getElementById('status-version-val');
   const sub  = document.getElementById('status-version-sub');
@@ -65,7 +68,7 @@ async function checkForUpdate() {
   if (icon) icon.style.animation = '';
 }
 
-async function applyUpdate() {
+export async function applyUpdate() {
   showToast('Reinstalando… la app se reiniciará');
   try {
     if ('serviceWorker' in navigator) {
@@ -79,9 +82,6 @@ async function applyUpdate() {
   } catch(e) {}
   setTimeout(() => window.location.reload(true), 300);
 }
-window.applyUpdate    = applyUpdate;
-window.checkForUpdate = checkForUpdate;
-
 /* ══════════════════════════════════════════════════════
    URL IMPORT — wishlist
    Sends URL to Cloudflare Worker → compound-beta reads

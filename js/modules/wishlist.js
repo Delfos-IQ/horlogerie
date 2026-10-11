@@ -1,13 +1,18 @@
-const PRIORITY_CFG = {
+import { addWatch, addWishlistItem, deleteWishlistItem, getWishlist, promoteWishlistToCollection, saveWishlist, updateWatch } from '../storage.js';
+import { escHtml, showToast } from './core.js';
+import { renderHome, showConfirm } from './home-detail.js';
+import { importEnabled } from './url-import.js';
+
+export const PRIORITY_CFG = {
   high:   { label: '🔥 Alta',  color: 'var(--danger)' },
   medium: { label: '⭐ Media', color: 'var(--gold-light)' },
   low:    { label: '💭 Baja',  color: 'var(--mid)' },
 };
 
-let _wlEditingId = null;   // item being edited in the wishlist modal (null = new)
+export let _wlEditingId = null;   // item being edited in the wishlist modal (null = new)
 
 /* ── Render wishlist view ── */
-function renderWishlist() {
+export function renderWishlist() {
   const items  = getWishlist();
   const list   = document.getElementById('wishlist-list');
   const empty  = document.getElementById('wishlist-empty');
@@ -72,7 +77,7 @@ function renderWishlist() {
 }
 
 /* ── Modal: add new ── */
-function openWishlistAdd() {
+export function openWishlistAdd() {
   _wlEditingId = null;
   document.getElementById('wl-modal-title').textContent = 'Añadir a lista de deseos';
   document.getElementById('wl-save-btn').textContent    = 'Guardar';
@@ -85,7 +90,7 @@ function openWishlistAdd() {
 }
 
 /* ── Modal: edit existing ── */
-function openWishlistEdit(id) {
+export function openWishlistEdit(id) {
   const item = getWishlist().find(i => i.id === id);
   if (!item) return;
   _wlEditingId = id;
@@ -111,7 +116,7 @@ function openWishlistEdit(id) {
   document.getElementById('wishlist-modal').style.display = 'flex';
 }
 
-function clearWishlistForm() {
+export function clearWishlistForm() {
   ['wl-brand','wl-model','wl-ref','wl-precio','wl-notas',
    'wl-calibre','wl-cristal','wl-diametro','wl-grosor',
    'wl-resistencia','wl-reserva','wl-caja','wl-brazalete','wl-esfera','wl-movimiento','wl-asas']
@@ -120,15 +125,15 @@ function clearWishlistForm() {
   document.getElementById('wl-priority').value = 'medium';
 }
 
-function closeWishlistModal() {
+export function closeWishlistModal() {
   document.getElementById('wishlist-modal').style.display = 'none';
 }
-function closeWishlistModalIfOutside(e) {
+export function closeWishlistModalIfOutside(e) {
   if (e.target.id === 'wishlist-modal') closeWishlistModal();
 }
 
 /* ── Save ── */
-function saveWishlistItem() {
+export function saveWishlistItem() {
   const brand = document.getElementById('wl-brand').value.trim();
   const model = document.getElementById('wl-model').value.trim();
   if (!brand) { showToast('Introduce la marca'); return; }
@@ -181,7 +186,7 @@ function saveWishlistItem() {
 }
 
 /* ── Promote to collection ── */
-async function handleWishlistPromote(id) {
+export async function handleWishlistPromote(id) {
   const item = getWishlist().find(i => i.id === id);
   if (!item) return;
   showConfirm(
@@ -201,7 +206,7 @@ async function handleWishlistPromote(id) {
 }
 
 /* ── Delete ── */
-function handleWishlistDelete(id) {
+export function handleWishlistDelete(id) {
   const item = getWishlist().find(i => i.id === id);
   if (!item) return;
   showConfirm('¿Eliminar de deseos?', `Se eliminará ${item.brand} ${item.model} de la lista.`, () => {
@@ -210,11 +215,4 @@ function handleWishlistDelete(id) {
     renderWishlist();
   });
 }
-
-window.openWishlistAdd             = openWishlistAdd;
-window.openWishlistEdit            = openWishlistEdit;
-window.closeWishlistModal          = closeWishlistModal;
-window.closeWishlistModalIfOutside = closeWishlistModalIfOutside;
-window.saveWishlistItem            = saveWishlistItem;
-window.renderWishlist              = renderWishlist;
 

@@ -114,7 +114,7 @@ async def main():
         # ── 5. Deletion on B + new unsynced watch on A ──
         await pb.evaluate("deleteWatch(getWatches().find(w=>w.brand==='Berny').id)")
         await pb.evaluate("syncPush()")
-        await pa.evaluate("window._debouncedPush = () => {}")        # A is "offline"
+        await pa.evaluate("setOnChange(() => {})")        # A is "offline"
         await add(pa, 'Pagani', 'GMT')
         await pa.evaluate("syncPull(true)")
         na = await names(pa)

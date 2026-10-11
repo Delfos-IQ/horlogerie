@@ -36,6 +36,8 @@ async def main():
         page = await ctx.new_page()
         errs = []
         page.on("pageerror", lambda e: errs.append(str(e)))
+        csp = []   # this suite runs with the real Content-Security-Policy
+        page.on("console", lambda m: csp.append(m.text) if 'Content Security Policy' in m.text else None)
         await page.goto(APP)
         await page.wait_for_function("typeof wearStats === 'function'")
         await page.wait_for_timeout(2200)   # intro splash
@@ -166,6 +168,7 @@ async def main():
         check("iconos y fuentes cargan desde la propia app", fonts_ok)
         check("ninguna petición a servicios externos", not external, ', '.join(external[:3]))
         check("sin errores de JavaScript", not errs, '; '.join(errs[:3]))
+        check("la política de seguridad (CSP) no bloquea nada de la app, PDF incluido", not csp, '; '.join(csp[:2]))
         if SHOTS:
             await page.screenshot(path=f"{SHOTS}/coleccion.png")
         await b.close()

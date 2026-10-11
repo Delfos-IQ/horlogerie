@@ -4,10 +4,10 @@
  * Used during "Add watch" to autocomplete specs from known models.
  */
 
-let _db = [];
-let _loaded = false;
+export let _db = [];
+export let _loaded = false;
 
-async function dbLoad() {
+export async function dbLoad() {
   if (_loaded) return;
   try {
     const res = await fetch('./watches_db.json');
@@ -19,7 +19,7 @@ async function dbLoad() {
  * Search the local DB by brand + model text.
  * Returns up to `limit` matches sorted by relevance.
  */
-function dbSearch(query, limit = 5) {
+export function dbSearch(query, limit = 5) {
   if (!query || !_db.length) return [];
   const q = query.toLowerCase().trim();
   const terms = q.split(/\s+/);
@@ -40,7 +40,7 @@ function dbSearch(query, limit = 5) {
 }
 
 /** Get exact match by brand + model (for auto-filling specs after selection) */
-function dbGet(brand, model) {
+export function dbGet(brand, model) {
   const b = (brand || '').toLowerCase();
   const m = (model || '').toLowerCase();
   return _db.find(w =>
@@ -49,6 +49,3 @@ function dbGet(brand, model) {
   ) || null;
 }
 
-window.dbLoad   = dbLoad;
-window.dbSearch = dbSearch;
-window.dbGet    = dbGet;

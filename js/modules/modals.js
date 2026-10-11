@@ -1,5 +1,11 @@
 /* ─── ADD / EDIT MODAL ─── */
-function openAddModal() {
+import { dbGet, dbLoad, dbSearch } from '../db.js';
+import { addWatch, compressPhoto, getWatch, updateWatch } from '../storage.js';
+import { escHtml, showToast, ui } from './core.js';
+import { openDetail, renderHome } from './home-detail.js';
+import { importEnabled, showImportedPreview } from './url-import.js';
+
+export function openAddModal() {
   ui.editingWatchId = null;
   ui.editingPhotoData = null;
   window._pendingDbSpecs = null;
@@ -44,12 +50,12 @@ function openAddModal() {
   dbLoad();
 }
 
-function resetDbHint() {
+export function resetDbHint() {
   const hint = document.getElementById('db-hint');
   if (hint) hint.innerHTML = '<i class="ti ti-database" style="color:var(--gold-light);"></i> Berny · Pagani Design · San Martin · Cadisen · OBLVLO · Seagull · CIGA Design · Carnival · Reef Tiger · Steeldive';
 }
 
-function openEditModal(id) {
+export function openEditModal(id) {
   const w = getWatch(id);
   if (!w) return;
   ui.editingWatchId   = id;
@@ -77,29 +83,29 @@ function openEditModal(id) {
   document.getElementById('add-modal').style.display = 'flex';
 }
 
-function closeAddModal() {
+export function closeAddModal() {
   document.getElementById('add-modal').style.display = 'none';
 }
-function closeModalIfOutside(e) {
+export function closeModalIfOutside(e) {
   if (e.target.id === 'add-modal') closeAddModal();
 }
 
 /* ─── Photo upload ─── */
-function openPhotoSheet() {
+export function openPhotoSheet() {
   document.getElementById('photo-sheet').style.display = 'flex';
 }
-function closePhotoSheet() {
+export function closePhotoSheet() {
   document.getElementById('photo-sheet').style.display = 'none';
 }
-function closePhotoSheetIfOutside(e) {
+export function closePhotoSheetIfOutside(e) {
   if (e.target.id === 'photo-sheet') closePhotoSheet();
 }
-function choosePhotoSource(source) {
+export function choosePhotoSource(source) {
   closePhotoSheet();
   document.getElementById(source === 'camera' ? 'photo-input-camera' : 'photo-input-library').click();
 }
 
-function handlePhotoUpload(e) {
+export function handlePhotoUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
   // Reset input so same file can be re-selected
@@ -116,7 +122,7 @@ function handlePhotoUpload(e) {
 }
 
 /* ─── DB Search ─── */
-function handleDbSearch(query) {
+export function handleDbSearch(query) {
   const resultsEl = document.getElementById('db-search-results');
   if (!query || query.length < 2) { resultsEl.style.display = 'none'; return; }
   const results = dbSearch(query, 6);
@@ -137,7 +143,7 @@ function handleDbSearch(query) {
   });
 }
 
-function applyDbResult(w) {
+export function applyDbResult(w) {
   document.getElementById('f-brand').value = w.brand;
   document.getElementById('f-model').value = w.model;
   document.getElementById('f-ref').value   = w.ref || '';
@@ -155,7 +161,7 @@ function applyDbResult(w) {
 }
 
 /* ─── Save watch ─── */
-async function saveWatch() {
+export async function saveWatch() {
   const brand = document.getElementById('f-brand').value.trim();
   const model = document.getElementById('f-model').value.trim();
   const ref   = document.getElementById('f-ref').value.trim();
@@ -208,16 +214,16 @@ async function saveWatch() {
 
 
 /* ─── Compra y mantenimiento ─── */
-function tsToDateInput(ts) {
+export function tsToDateInput(ts) {
   if (typeof ts !== 'number') return '';
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
-function dateInputToTs(v) {
+export function dateInputToTs(v) {
   const [y, m, d] = (v || '').split('-').map(Number);
   return y ? new Date(y, m - 1, d, 12, 0, 0).getTime() : null;
 }
-function setMaintFields(w) {
+export function setMaintFields(w) {
   document.getElementById('f-purchase-price').value = typeof w.purchasePrice === 'number' ? w.purchasePrice : '';
   document.getElementById('f-purchase-date').value  = tsToDateInput(w.purchaseDate);
   document.getElementById('f-last-service').value   = tsToDateInput(w.lastService);
@@ -229,13 +235,13 @@ function setMaintFields(w) {
   updateMaintVisibility();
 }
 /** Battery only matters for quartz; service only for mechanical */
-function updateMaintVisibility() {
+export function updateMaintVisibility() {
   const quartz = document.getElementById('f-type').value === 'quartz';
   document.getElementById('f-battery-field').hidden = !quartz;
   document.getElementById('f-service-field').hidden = quartz;
 }
 /** Returns the fields to save, or null (and a toast) if something is wrong */
-function readMaintFields() {
+export function readMaintFields() {
   const raw = document.getElementById('f-purchase-price').value.trim().replace(',', '.');
   const price = raw === '' ? null : Number(raw);
   if (price !== null && (!isFinite(price) || price < 0)) { showToast('El precio debe ser un número'); return null; }
@@ -255,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /** Specs, price and source chosen in the modal (database or link), as watch changes */
-function pendingSpecChanges(w) {
+export function pendingSpecChanges(w) {
   const changes = { specs: { ...(w?.specs || {}), ...(window._pendingDbSpecs || {}) },
                     _source: window._pendingSource || 'local_db' };
   if (window._pendingDbPrice?.value) changes.price = window._pendingDbPrice;

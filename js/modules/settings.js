@@ -1,18 +1,27 @@
 /* ─── SETTINGS ─── */
-function renderSettings() {
+import { buildBackup, getWatches, getWishlist, importBackup, isPersisted, storageRecovered } from '../storage.js';
+import { getSessionId, getSyncMeta, isCloudEnabled, isShortKey, syncApi, workerCaps } from '../sync.js';
+import { generateCollectionPDF } from '../export.js';
+import { showToast } from './core.js';
+import { renderHome, showConfirm } from './home-detail.js';
+import { renderWishlist } from './wishlist.js';
+
+import { APP_VERSION } from './updates.js';
+
+export function renderSettings() {
   renderCloudControls();
   renderSystemStatus();
   renderBackupInfo();
 }
 
 /* ─── JSON backup: when was the last one ─── */
-const BACKUP_KEY = 'horlogerie_last_backup';
-function lastBackupAt() { try { return Number(localStorage.getItem(BACKUP_KEY)) || 0; } catch { return 0; } }
-function daysAgoLabel(ts) {
+export const BACKUP_KEY = 'horlogerie_last_backup';
+export function lastBackupAt() { try { return Number(localStorage.getItem(BACKUP_KEY)) || 0; } catch { return 0; } }
+export function daysAgoLabel(ts) {
   const d = Math.floor((Date.now() - ts) / 86400000);
   return d <= 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`;
 }
-function renderBackupInfo() {
+export function renderBackupInfo() {
   const el = document.getElementById('backup-card-sub');
   if (!el) return;
   const t = lastBackupAt();
@@ -24,10 +33,10 @@ function renderBackupInfo() {
  * Discreet reminder on Colección when the cloud is off and there is no recent
  * JSON copy (30 days). Not shown during the first week or if dismissed.
  */
-function renderBackupReminder() {
+export function renderBackupReminder() {
   const el = document.getElementById('backup-reminder');
   if (!el) return;
-  if (window.storageRecovered?.length && !window._recoveryDismissed) {
+  if (storageRecovered?.length && !window._recoveryDismissed) {
     el.innerHTML = `<div class="backup-reminder" role="alert">
         <i class="ti ti-shield-exclamation" aria-hidden="true"></i>
         <span>Parte de los datos guardados en este móvil no se podía leer. Se ha apartado una copia sin tocarla. Recupera tu colección con tu clave (Ajustes → Usar una clave o código) o con una copia JSON.</span>
@@ -55,14 +64,12 @@ function renderBackupReminder() {
     el.innerHTML = '';
   });
 }
-window.renderBackupReminder = renderBackupReminder;
-
-async function handleExportPDF() {
+export async function handleExportPDF() {
   if (!getWatches().length) { showToast('No hay relojes'); return; }
   try { await generateCollectionPDF(); } catch(e) { showToast('Error PDF: '+e.message); }
 }
 
-async function handleExportJSON() {
+export async function handleExportJSON() {
   if (!getWatches().length && !getWishlist().length) { showToast('No hay datos'); return; }
   const backup = await buildBackup();
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -76,9 +83,9 @@ async function handleExportJSON() {
   renderBackupInfo(); renderBackupReminder();
 }
 
-function handleImportJSON() { document.getElementById('import-json-input').click(); }
+export function handleImportJSON() { document.getElementById('import-json-input').click(); }
 
-function processImportJSON(e) {
+export function processImportJSON(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -108,60 +115,24 @@ function processImportJSON(e) {
   reader.readAsText(file);
 }
 
-/* ─── Init ─── */
-setTimeout(() => {
-  document.getElementById('intro').classList.add('fade');
-  setTimeout(() => document.getElementById('intro').style.display = 'none', 600);
-}, 1600);
-
-loadPhotos().then(() => {
-  renderHome(); updateFab('home');
-  if (getWatches().length) requestPersistence();
-});
-// Check for updates silently on every launch
-window.addEventListener('load', () => setTimeout(initVersionCheck, 2000));
-
-/* ─── Expose globals ─── */
-window.showView            = showView;
-window.updateFab           = updateFab;
-window.openAddModal        = openAddModal;
-window.closeAddModal       = closeAddModal;
-window.closeModalIfOutside = closeModalIfOutside;
-window.openDetail          = openDetail;
-window.handlePhotoUpload   = handlePhotoUpload;
-window.openPhotoSheet      = openPhotoSheet;
-window.closePhotoSheet     = closePhotoSheet;
-window.closePhotoSheetIfOutside = closePhotoSheetIfOutside;
-window.choosePhotoSource   = choosePhotoSource;
-window.saveWatch           = saveWatch;
-window.openEditModal       = openEditModal;
-window.handleExportPDF     = handleExportPDF;
-window.handleExportJSON    = handleExportJSON;
-window.handleImportJSON    = handleImportJSON;
-window.processImportJSON   = processImportJSON;
-window.handleDbSearch      = handleDbSearch;
-window.renderSettings      = renderSettings;
-
-
-
 /* ─── System status panel ─── */
-function agoLabel(ts) {
+export function agoLabel(ts) {
   const mins = Math.round((Date.now() - ts) / 60000);
   return mins < 1 ? 'hace un momento' : mins < 60 ? `hace ${mins} min`
     : mins < 1440 ? `hace ${Math.round(mins / 60)} h` : `hace ${Math.round(mins / 1440)} días`;
 }
-function fmtDateEs(iso) {
+export function fmtDateEs(iso) {
   const d = new Date(iso + 'T12:00');
   return isNaN(d) ? iso : d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 }
-function paintStatusIcon(el, tone) {
+export function paintStatusIcon(el, tone) {
   if (!el) return;
   const c = { ok: 'var(--ok)', gold: 'var(--gold-light)', warn: 'var(--danger)', off: 'var(--mid)' }[tone];
   el.style.color = c;
   el.style.background = tone === 'off' ? 'var(--dark3)' : `color-mix(in srgb, ${c} 12%, transparent)`;
 }
 
-async function renderSystemStatus() {
+export async function renderSystemStatus() {
   // ── Version ──
   const vVal = document.getElementById('status-version-val');
   const vSub = document.getElementById('status-version-sub');
@@ -231,10 +202,8 @@ async function renderSystemStatus() {
     }
   } catch { /* offline */ }
 }
-window.renderSystemStatus = renderSystemStatus;
-
 /* ─── Cloud controls ─── */
-async function renderCloudControls() {
+export async function renderCloudControls() {
   const on     = isCloudEnabled();
   const meta   = getSyncMeta();
   const toggle = document.getElementById('cloud-toggle');
@@ -253,10 +222,9 @@ async function renderCloudControls() {
   const warn = document.getElementById('cloud-key-warn');
   if (!warn) return;
   const msgs = [];
-  if (on && !meta.keySavedAt) msgs.push(`<div><i class="ti ti-alert-triangle" aria-hidden="true"></i> Aún no has confirmado que la guardaste. Sin ella no podrás recuperar la copia si reinstalas. <button class="link-btn" onclick="openSaveKeySheet()">Guardarla ahora</button></div>`);
+  if (on && !meta.keySavedAt) msgs.push(`<div><i class="ti ti-alert-triangle" aria-hidden="true"></i> Aún no has confirmado que la guardaste. Sin ella no podrás recuperar la copia si reinstalas. <button class="link-btn" data-action="openSaveKeySheet">Guardarla ahora</button></div>`);
   if (on && !isShortKey(getSessionId()) && (await workerCaps()).shortKey)
     msgs.push(`<div><i class="ti ti-info-circle" aria-hidden="true"></i> Tu clave es del formato antiguo. «Cambiar llave» te da una de 16 caracteres, más fácil de teclear.</div>`);
   warn.innerHTML = msgs.join('');
   warn.hidden = !msgs.length;
 }
-window.renderCloudControls = renderCloudControls;

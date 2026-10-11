@@ -1,11 +1,15 @@
 /* ─────────────────── HISTORY ─────────────────── */
 
-let _historyMode   = 'calendar'; // 'calendar' | 'ranking' | 'detail'
-let _calMonth      = null;       // Date set to the 1st of the month shown
-let _histYear      = 'all';      // year filter shared by ranking and "por reloj": 'all' | 2026…
+import { addWearDays, calendarDaysBetween, dayKey, getWatch, getWatches, isSafePhoto, removeWearDay, startOfDay, wearIntervals, wearStats, wornDayKeys } from '../storage.js';
+import { elapsedSince, escHtml, formatDate, navPush, navReplace, showToast, ui } from './core.js';
+import { openDetail, openWearSheet, showConfirm } from './home-detail.js';
+
+export let _historyMode   = 'calendar'; // 'calendar' | 'ranking' | 'detail'
+export let _calMonth      = null;       // Date set to the 1st of the month shown
+export let _histYear      = 'all';      // year filter shared by ranking and "por reloj": 'all' | 2026…
 
 /* ── Category inference from brand/model name ── */
-const CATEGORY_RULES = [
+export const CATEGORY_RULES = [
   { cat: 'Diver',     icon: 'ti-ripple', color: '#4FC3F7',
     kw: ['sub','dive','diver','submariner','tuna','sea','aqua','ocean','batiscafo','fathom','tudor','steeldive','prospex','marinemaster','seamaster'] },
   { cat: 'Pilot',     icon: 'ti-plane',  color: '#FFB74D',
@@ -22,7 +26,7 @@ const CATEGORY_RULES = [
     kw: ['sport','speedmaster','navitimer','carrera','daytona','racing','quartz','solar','eco'] },
 ];
 
-function inferCategory(w) {
+export function inferCategory(w) {
   const text = `${w.brand} ${w.model} ${w.specs?.calibre || ''}`.toLowerCase();
   for (const rule of CATEGORY_RULES) {
     if (rule.kw.some(k => text.includes(k))) return rule;
@@ -31,7 +35,7 @@ function inferCategory(w) {
 }
 
 /* ── Mode toggle ── */
-function setHistoryMode(mode, fromUser = false) {
+export function setHistoryMode(mode, fromUser = false) {
   // Tapping a mode while a watch panel is open leaves the panel
   if (fromUser && history.state?.hw) navReplace({ view: 'history' });
   _historyMode = mode;
@@ -44,10 +48,8 @@ function setHistoryMode(mode, fromUser = false) {
   if (mode === 'ranking')  renderRanking();
   if (mode === 'detail')   renderHistoryDetail();
 }
-window.setHistoryMode = setHistoryMode;
-
 /* ── Main renderHistory entry point ── */
-function renderHistory() {
+export function renderHistory() {
   // Coming back (gesture) from a watch panel: restore the mode we left
   const hm = history.state?.hmode;
   if (hm && !history.state?.hw) _historyMode = hm;
@@ -55,33 +57,33 @@ function renderHistory() {
 }
 
 /* ── Shared year filter (ranking and "por reloj") ── */
-function histYears() {
+export function histYears() {
   const ys = new Set([new Date().getFullYear()]);
   getWatches().forEach(w => wornDayKeys(w).forEach(k => ys.add(Number(k.slice(0, 4)))));
   return [...ys].sort((a, b) => b - a);
 }
 /** Distinct worn days of a watch in the selected period ('all' or a year) */
-function daysIn(w, year = _histYear) {
+export function daysIn(w, year = _histYear) {
   const keys = [...wornDayKeys(w)];
   return year === 'all' ? keys.length : keys.filter(k => k.startsWith(year + '-')).length;
 }
-function periodLabel(year = _histYear) { return year === 'all' ? 'desde el principio' : `en ${year}`; }
-function yearChipsHTML() {
+export function periodLabel(year = _histYear) { return year === 'all' ? 'desde el principio' : `en ${year}`; }
+export function yearChipsHTML() {
   const ys = histYears();
   if (_histYear !== 'all' && !ys.includes(_histYear)) _histYear = 'all';
   const chip = (v, txt) => `<button class="year-chip${_histYear === v ? ' active' : ''}" data-year="${v}" aria-pressed="${_histYear === v}">${txt}</button>`;
   return `<div class="year-chips" role="group" aria-label="Filtrar por año">${chip('all', 'Todo')}${ys.map(y => chip(y, y)).join('')}</div>`;
 }
-function bindYearChips(root, rerender) {
+export function bindYearChips(root, rerender) {
   root.querySelectorAll('.year-chip').forEach(b => b.addEventListener('click', () => {
     _histYear = b.dataset.year === 'all' ? 'all' : Number(b.dataset.year);
     rerender();
   }));
 }
-const EMPTY_HISTORY = `<div class="history-empty"><i class="ti ti-clock" style="font-size:40px;color:var(--mid);"></i><br><br>No hay relojes</div>`;
+export const EMPTY_HISTORY = `<div class="history-empty"><i class="ti ti-clock" style="font-size:40px;color:var(--mid);"></i><br><br>No hay relojes</div>`;
 
 /* ── Two habits worth knowing, on top of the ranking (not year-filtered) ── */
-function usageInsightsHTML(ws) {
+export function usageInsightsHTML(ws) {
   const now = Date.now(), cut30 = dayKey(now - 29 * 86400000);
   let used30 = 0; const gaps = [];
   ws.forEach(w => {
@@ -103,7 +105,7 @@ function usageInsightsHTML(ws) {
 /* ══════════════════════════════════════════════
    RANKING VIEW — top 10 by days worn + the 3 least used
 ══════════════════════════════════════════════ */
-function renderRanking() {
+export function renderRanking() {
   const body = document.getElementById('ranking-body');
   if (!body) return;
   const ws = getWatches();
@@ -152,15 +154,13 @@ function renderRanking() {
 /* ══════════════════════════════════════════════
    POR RELOJ — grid of 4 per row → watch panel
 ══════════════════════════════════════════════ */
-function openHistWatch(id) {
+export function openHistWatch(id) {
   // Remember the mode we come from, so "back" returns there
   navReplace({ ...(history.state || {}), view: 'history', hmode: _historyMode });
   navPush({ view: 'history', hw: id });
   setHistoryMode('detail');
 }
-window.openHistWatch = openHistWatch;
-
-function renderHistoryDetail() {
+export function renderHistoryDetail() {
   const body = document.getElementById('history-body');
   if (!body) return;
   const hw = history.state?.hw;
@@ -184,7 +184,7 @@ function renderHistoryDetail() {
   body.querySelectorAll('.hw-card').forEach(c => c.addEventListener('click', () => openHistWatch(c.dataset.wid)));
 }
 
-function renderHistoryBody() {
+export function renderHistoryBody() {
   const w    = getWatch(ui.historySelectedWatch);
   const body = document.getElementById('history-body');
   if (!body || !w) return;
@@ -269,10 +269,10 @@ function renderHistoryBody() {
 /* ══════════════════════════════════════════════
    CALENDAR VIEW — one month, what was worn each day
 ══════════════════════════════════════════════ */
-const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+export const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
 /** Map dayKey → [watch, …] for every worn day */
-function wornByDay(ws = getWatches()) {
+export function wornByDay(ws = getWatches()) {
   const map = new Map();
   ws.forEach(w => wornDayKeys(w).forEach(k => {
     if (!map.has(k)) map.set(k, []);
@@ -280,19 +280,17 @@ function wornByDay(ws = getWatches()) {
   }));
   return map;
 }
-window.wornByDay = wornByDay;
-
-function watchInitials(w) {
+export function watchInitials(w) {
   return (w.brand || '?').trim().slice(0, 1).toUpperCase() + (w.model || '').trim().slice(0, 1).toUpperCase();
 }
-function watchChip(w, size = 26) {
+export function watchChip(w, size = 26) {
   const cat = inferCategory(w);
   return isSafePhoto(w.photo)
     ? `<img class="cal-chip" src="${w.photo}" alt="" width="${size}" height="${size}" style="--s:${size}px">`
     : `<span class="cal-chip cal-chip-txt" style="--chip:${cat.color};--s:${size}px">${escHtml(watchInitials(w))}</span>`;
 }
 
-function renderCalendar() {
+export function renderCalendar() {
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
   const now = new Date();
@@ -356,9 +354,7 @@ function renderCalendar() {
   }).join('');
   document.querySelectorAll('#cal-days .cal-day-row').forEach(r => r.addEventListener('click', () => openDaySheet(r.dataset.day)));
 }
-window.renderCalendar = renderCalendar;
-
-function shiftCalendarMonth(delta) {
+export function shiftCalendarMonth(delta) {
   const base = _calMonth || new Date();
   _calMonth = new Date(base.getFullYear(), base.getMonth() + delta, 1);
   renderCalendar();
@@ -378,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ── Day sheet: what was worn that day; add or remove watches ── */
-function openDaySheet(key) {
+export function openDaySheet(key) {
   const dt = new Date(key + 'T12:00');
   const raw = dt.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
   const title = raw.charAt(0).toUpperCase() + raw.slice(1);
@@ -433,4 +429,3 @@ function openDaySheet(key) {
   }
   paint();
 }
-window.openDaySheet = openDaySheet;

@@ -23,7 +23,8 @@ def check(name, cond, detail=''):
     print(('  ✓ ' if cond else '  ✗ ') + name + (f'  [{detail}]' if detail and not cond else ''))
 
 async def new_device(browser, health_override=None):
-    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block')
+    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block',
+                                    bypass_csp=True)   # wait_for_function evaluates strings; CSP is checked in e2e_wear
     async def route(r):
         url = r.request.url.replace("https://horlogerie.pedicode-app.workers.dev", f"http://localhost:{PORT}")
         if health_override and url.endswith('/health'):

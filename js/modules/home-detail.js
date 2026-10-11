@@ -1,5 +1,12 @@
 /* ─── HOME ─── */
-function renderHome() {
+import { addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, isSafePhoto, maintenanceAlerts, markWornToday, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
+import { elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui, watchEmoji } from './core.js';
+import { openEditModal } from './modals.js';
+import { renderHistory } from './history.js';
+import { renderBackupReminder } from './settings.js';
+import { importEnabled, importIntoWatch } from './url-import.js';
+
+export function renderHome() {
   const grid  = document.getElementById('watches-grid');
   const empty = document.getElementById('empty-state');
   if (!grid || !empty) return;   // DOM not ready yet
@@ -67,7 +74,7 @@ function renderHome() {
    Rotation, not urgency: suggest the watch that has gone longest without
    wrist time, among those "en rotación". Favourites win ties.
    No alarmist claims: a mechanical watch resting a few weeks is fine. */
-function renderRecommendation(ws, activeW) {
+export function renderRecommendation(ws, activeW) {
   const banner = document.getElementById('recommendation-banner');
   if (!banner) return;
   if (activeW) { banner.innerHTML = ''; return; }
@@ -100,7 +107,7 @@ function renderRecommendation(ws, activeW) {
  * worn in the last 90 days, then favourites. Watches out of rotation and the
  * one on the wrist are excluded.
  */
-function rankWatchesForRotation(ws, now = Date.now()) {
+export function rankWatchesForRotation(ws, now = Date.now()) {
   return ws
     .filter(w => !w.wearStart && w.rotation !== false)
     .map(w => ({ watch: w, stats: wearStats(w, now) }))
@@ -112,16 +119,14 @@ function rankWatchesForRotation(ws, now = Date.now()) {
       return (b.watch.favorite ? 1 : 0) - (a.watch.favorite ? 1 : 0);
     });
 }
-window.rankWatchesForRotation = rankWatchesForRotation;
-
-function formatLastWorn(st) {
+export function formatLastWorn(st) {
   if (st.lastWorn === null) return 'Todavía no lo has llevado';
   if (st.daysSinceLast === 0) return 'Lo llevaste hoy';
   if (st.daysSinceLast === 1) return 'Lo llevaste ayer';
   return `${st.daysSinceLast} días sin salir de la caja`;
 }
 
-function shortLastWorn(w) {
+export function shortLastWorn(w) {
   const st = wearStats(w);
   if (w.rotation === false) return 'Fuera de rotación';
   if (st.lastWorn === null) return 'Sin estrenar';
@@ -131,7 +136,7 @@ function shortLastWorn(w) {
 }
 
 /* ─── DETAIL ─── */
-function openDetail(id) {
+export function openDetail(id) {
   ui.currentWatchId = id;
   const w = getWatch(id);
   if (!w) return;
@@ -182,7 +187,7 @@ function openDetail(id) {
   }
 }
 
-function updateDayCounter(w) {
+export function updateDayCounter(w) {
   const elapsed = elapsedSince(w.wearStart);
   const el = document.getElementById('d-days');
   const se = document.getElementById('d-since');
@@ -193,7 +198,7 @@ function updateDayCounter(w) {
     se.textContent = `Desde el ${started} a las ${startTime}`;
   }
 }
-function startActiveTimer(id) {
+export function startActiveTimer(id) {
   stopActiveTimer();
   const w = getWatch(id);
   if (!w?.wearStart) return;
@@ -207,11 +212,11 @@ function startActiveTimer(id) {
     if (badge) badge.textContent = elapsedShort(c.wearStart);
   }, 60000);
 }
-function stopActiveTimer() {
+export function stopActiveTimer() {
   if (ui.activeTimer) { clearInterval(ui.activeTimer); ui.activeTimer = null; }
 }
 
-function renderDetailActions(w) {
+export function renderDetailActions(w) {
   const div = document.getElementById('d-actions');
   const activeW = getActiveWatch();
   const todayDone = wornDayKeys(w).has(dayKey(Date.now()));
@@ -257,7 +262,7 @@ function renderDetailActions(w) {
 }
 
 /* Usage box: days worn, last time, cost per wear, maintenance alerts */
-function renderUsage(w) {
+export function renderUsage(w) {
   const el = document.getElementById('d-usage');
   if (!el) return;
   const st = wearStats(w);
@@ -276,7 +281,7 @@ function renderUsage(w) {
     ${alerts.map(a => `<div class="maint-alert"><i class="ti ti-tool" aria-hidden="true"></i><span>${escHtml(a.text)}</span></div>`).join('')}`;
 }
 
-function renderSpecs(w) {
+export function renderSpecs(w) {
   const specs = w.specs || {};
   const defs = [
     {k:'calibre',l:'Calibre'},{k:'movimiento',l:'Movimiento'},{k:'cristal',l:'Cristal'},
@@ -314,7 +319,7 @@ function renderSpecs(w) {
   renderSpecsImportBtn(w);
 }
 
-function editSpecInline(key, w) {
+export function editSpecInline(key, w) {
   const valEl = document.getElementById('spec-val-' + key);
   if (!valEl) return;
   const current = (w?.specs || {})[key] || '';
@@ -352,7 +357,7 @@ function editSpecInline(key, w) {
   });
 }
 
-function renderSpecsImportBtn(w) {
+export function renderSpecsImportBtn(w) {
   // "Rellenar desde un enlace" + link to where the specs came from
   const specsEl = document.getElementById('d-specs');
   if (!specsEl) return;
@@ -371,7 +376,7 @@ function renderSpecsImportBtn(w) {
   div.querySelector('#d-import-btn')?.addEventListener('click', () => importIntoWatch(w.id));
 }
 
-function renderPrice(w) {
+export function renderPrice(w) {
   const box = document.getElementById('d-price-box');
   if (w.price?.value) {
     box.style.display = 'block';
@@ -397,14 +402,14 @@ function renderPrice(w) {
 }
 
 /* ─── Wear actions ─── */
-function handleStartWearing(id) {
+export function handleStartWearing(id) {
   const w = getWatch(id);
   if (startWearing(id)) { showToast(`¡Disfruta del ${w.brand} ${w.model}!`); openDetail(id); }
 }
-function handleStopWearing(id) {
+export function handleStopWearing(id) {
   if (stopWearing(id)) { showToast('Sesión guardada en el historial'); stopActiveTimer(); showView('home'); }
 }
-function handleSwitchWearing(id) {
+export function handleSwitchWearing(id) {
   const prev = getActiveWatch();
   const w = getWatch(id);
   if (switchToWatch(id)) {
@@ -414,11 +419,11 @@ function handleSwitchWearing(id) {
 }
 
 /* ─── Date sheet: log a past wear or edit/delete a history entry ─── */
-function toDateInput(ts) {
+export function toDateInput(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
-function fromDateInput(v) {
+export function fromDateInput(v) {
   const [y, m, d] = (v || '').split('-').map(Number);
   return y ? new Date(y, m - 1, d, 12, 0, 0).getTime() : null;
 }
@@ -427,7 +432,7 @@ function fromDateInput(v) {
  * openWearSheet(watchId)              → add a past wear (one day or a range)
  * openWearSheet(watchId, historyIdx)  → edit or delete that entry
  */
-function openWearSheet(watchId, idx = null) {
+export function openWearSheet(watchId, idx = null) {
   const w = getWatch(watchId);
   if (!w) return;
   const entry = idx !== null ? w.history?.[idx] : null;
@@ -484,9 +489,7 @@ function openWearSheet(watchId, idx = null) {
   });
   overlay.querySelector('#ws-from').focus();
 }
-window.openWearSheet = openWearSheet;
-
-function refreshAfterWearChange(watchId) {
+export function refreshAfterWearChange(watchId) {
   const active = document.querySelector('.view.active')?.id;
   if (active === 'view-detail' && ui.currentWatchId === watchId) openDetail(watchId);
   else if (active === 'view-history') renderHistory();
@@ -494,16 +497,14 @@ function refreshAfterWearChange(watchId) {
 }
 
 /* ─── Delete (custom confirm) ─── */
-function handleDeleteWatch(id) {
+export function handleDeleteWatch(id) {
   const w = getWatch(id);
   const name = w ? `${w.brand} ${w.model}` : 'este reloj';
   showConfirm('¿Eliminar reloj?', `Se borrará ${name} y todo su historial. Esta acción no se puede deshacer.`, () => {
     deleteWatch(id); showView('home'); showToast('Reloj eliminado');
   });
 }
-window.handleDeleteWatch = handleDeleteWatch;
-
-function showConfirm(title, msg, onConfirm, { okLabel = 'Eliminar', danger = true } = {}) {
+export function showConfirm(title, msg, onConfirm, { okLabel = 'Eliminar', danger = true } = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   // Above the day and wear sheets (z-index 400), which can open it

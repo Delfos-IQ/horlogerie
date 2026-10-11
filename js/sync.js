@@ -13,18 +13,25 @@
  *     never in the URL. Older Workers still get it as ?userId= (fallback).
  */
 
-const SYNC_META_KEY = 'horlogerie_session_v1';
-const SYNC_EL       = 'sync-status-indicator';
-const USER_HEADER   = 'X-Horlogerie-User';
-const CLOUD_LIMIT   = 3 * 1024 * 1024;   // must match MAX_SYNC_PAYLOAD in the Worker
+import { setOnChange, applyWatchList, clearTombstones, enforceSingleActive, getTombstones, getWatches, getWatchesWithPhotos, getWishlist, mergeById, readJSON, sanitizeWatch, sanitizeWishlistItem, setWishlistSilently } from './storage.js';
+import { CONFIG } from './api.js';
+import { showToast } from './modules/core.js';
+import { renderHome } from './modules/home-detail.js';
+import { renderSettings, renderSystemStatus } from './modules/settings.js';
+import { renderWishlist } from './modules/wishlist.js';
+
+export const SYNC_META_KEY = 'horlogerie_session_v1';
+export const SYNC_EL       = 'sync-status-indicator';
+export const USER_HEADER   = 'X-Horlogerie-User';
+export const CLOUD_LIMIT   = 3 * 1024 * 1024;   // must match MAX_SYNC_PAYLOAD in the Worker
 
 /* ════════════════════════════════════════
    META + SESSION ID
 ════════════════════════════════════════ */
-function getSyncMeta() {
+export function getSyncMeta() {
   return readJSON(SYNC_META_KEY, {}, v => v && typeof v === 'object' && !Array.isArray(v));
 }
-function setSyncMeta(d) {
+export function setSyncMeta(d) {
   try {
     localStorage.setItem(SYNC_META_KEY, JSON.stringify({ ...getSyncMeta(), ...d }));
   } catch (e) {
@@ -32,7 +39,7 @@ function setSyncMeta(d) {
   }
 }
 
-function newUUID() {
+export function newUUID() {
   return crypto.randomUUID
     ? crypto.randomUUID()
     : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -43,23 +50,23 @@ function newUUID() {
 
 /* Short recovery key (Worker v13+): 16 Crockford base32 characters, 80 bits,
    shown in groups of four: 7KQ2-M4XR-9TBW-2HNF */
-const KEY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-const SHORT_KEY_RE = /^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$/;
-const UUID_KEY_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const KEY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+export const SHORT_KEY_RE = /^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$/;
+export const UUID_KEY_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function newShortKey() {
+export function newShortKey() {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   const chars = [...bytes].map(b => KEY_ALPHABET[b & 31]).join('');   // 32 symbols → 5 bits each, no bias
   return chars.match(/.{4}/g).join('-');
 }
-function isShortKey(k) { return SHORT_KEY_RE.test(k || ''); }
+export function isShortKey(k) { return SHORT_KEY_RE.test(k || ''); }
 
 /**
  * Turn whatever the user typed into a session key, or null.
  * Accepts the short key with or without dashes/spaces, lower case and the
  * usual look-alikes (O→0, I/L→1), and old UUID keys.
  */
-function normalizeKey(input) {
+export function normalizeKey(input) {
   const raw = String(input || '').trim();
   if (UUID_KEY_RE.test(raw)) return raw.toLowerCase();
   const c = raw.toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
@@ -67,15 +74,11 @@ function normalizeKey(input) {
   return c.match(/.{4}/g).join('-');
 }
 /** 6-character linking code typed by the user, or null */
-function normalizePairCode(input) {
+export function normalizePairCode(input) {
   const c = String(input || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
   return /^[2-9A-HJKMNP-Z]{6}$/.test(c) ? c : null;
 }
-window.normalizeKey = normalizeKey;
-window.normalizePairCode = normalizePairCode;
-window.isShortKey = isShortKey;
-
-function getSessionId() {
+export function getSessionId() {
   const meta = getSyncMeta();
   if (meta.userId) return meta.userId;
   const id = newUUID();
@@ -84,13 +87,13 @@ function getSessionId() {
 }
 
 /** Cloud on/off. Installs that already synced before this version stay on. */
-function isCloudEnabled() {
+export function isCloudEnabled() {
   const m = getSyncMeta();
   return typeof m.cloudEnabled === 'boolean' ? m.cloudEnabled : !!m.lastPush;
 }
 
 /** Ids known to be in the cloud after the last successful sync */
-function getSyncedIds(meta = getSyncMeta()) {
+export function getSyncedIds(meta = getSyncMeta()) {
   if (Array.isArray(meta.syncedIds)) return meta.syncedIds;
   return Object.keys(meta.watchHashes || {});   // migration from v2.1
 }
@@ -98,9 +101,9 @@ function getSyncedIds(meta = getSyncMeta()) {
 /* ════════════════════════════════════════
    WORKER API
 ════════════════════════════════════════ */
-let _capsPromise = null;
+export let _capsPromise = null;
 /** Ask the Worker what it supports (v11+: user id in header, wishlist in cloud) */
-function workerCaps() {
+export function workerCaps() {
   if (!_capsPromise) {
     _capsPromise = fetch(`${CONFIG.WORKER_URL}/health`)
       .then(r => r.ok ? r.json() : {})
@@ -119,7 +122,7 @@ function workerCaps() {
  * fetch() against the Worker with the session id attached the safest way the
  * Worker supports. `userId` defaults to the current session.
  */
-async function syncApi(path, { method = 'GET', body = null, userId = getSessionId() } = {}) {
+export async function syncApi(path, { method = 'GET', body = null, userId = getSessionId() } = {}) {
   const caps    = await workerCaps();
   const headers = {};
   let url = `${CONFIG.WORKER_URL}${path}`;
@@ -132,7 +135,7 @@ async function syncApi(path, { method = 'GET', body = null, userId = getSessionI
 /* ════════════════════════════════════════
    UI
 ════════════════════════════════════════ */
-function setSyncUI(state, msg) {
+export function setSyncUI(state, msg) {
   setSyncMeta({ lastState: state, lastStateMsg: msg || '', ...(state === 'ok' ? { lastSyncAt: Date.now() } : {}) });
   // The header only shows the cloud when something is wrong; the rest lives in Ajustes
   const el = document.getElementById(SYNC_EL);
@@ -149,7 +152,7 @@ function setSyncUI(state, msg) {
 /* ════════════════════════════════════════
    HASHES — skip unchanged items on push
 ════════════════════════════════════════ */
-async function shortHash(s) {
+export async function shortHash(s) {
   try {
     const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(s));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
@@ -159,29 +162,29 @@ async function shortHash(s) {
     return Math.abs(h).toString(16);
   }
 }
-function hashWatch(w) {
+export function hashWatch(w) {
   return shortHash(JSON.stringify({
     brand: w.brand, model: w.model, ref: w.ref, type: w.type,
     notes: w.notes, specs: w.specs, price: w.price,
     wearStart: w.wearStart, history: w.history, updatedAt: w.updatedAt,
   }));
 }
-function hashPhoto(dataUrl) {
+export function hashPhoto(dataUrl) {
   return dataUrl ? shortHash(dataUrl.length + ':' + dataUrl.slice(0, 2000) + dataUrl.slice(-2000)) : Promise.resolve(null);
 }
 
 /* ════════════════════════════════════════
    PUSH
 ════════════════════════════════════════ */
-let _pushQueue = Promise.resolve();
-function syncPush(forceFull = false) {
+export let _pushQueue = Promise.resolve();
+export function syncPush(forceFull = false) {
   // Serialize pushes: each call waits for the previous one to finish
   const p = _pushQueue.then(() => _syncPush(forceFull));
   _pushQueue = p.catch(() => {});
   return p;
 }
 
-async function _syncPush(forceFull) {
+export async function _syncPush(forceFull) {
   if (!isCloudEnabled()) { setSyncUI('off', 'Copia en la nube desactivada'); return false; }
   setSyncUI('syncing', 'Guardando en la nube…');
   try {
@@ -257,7 +260,7 @@ async function _syncPush(forceFull) {
 /* ════════════════════════════════════════
    PULL — merge cloud into local, then push the merged result
 ════════════════════════════════════════ */
-async function syncPull(silent = false) {
+export async function syncPull(silent = false) {
   if (!isCloudEnabled()) { setSyncUI('off', 'Copia en la nube desactivada'); return false; }
   if (!silent) setSyncUI('syncing', 'Descargando…');
   try {
@@ -318,7 +321,7 @@ async function syncPull(silent = false) {
 ════════════════════════════════════════ */
 
 /** Use the collection of another device. Local watches are merged in, not lost. */
-async function importSession(userId) {
+export async function importSession(userId) {
   setSyncUI('syncing', 'Verificando sesión…');
   try {
     const res = await syncApi('/sync/exists', { userId });
@@ -338,7 +341,7 @@ async function importSession(userId) {
 }
 
 /** Turn the cloud copy on/off. Turning it off keeps whatever is in the cloud. */
-async function setCloudEnabled(on) {
+export async function setCloudEnabled(on) {
   setSyncMeta({ cloudEnabled: !!on });
   if (!on) { setSyncUI('off', 'Copia en la nube desactivada'); return true; }
   const m = getSyncMeta();
@@ -355,7 +358,7 @@ async function setCloudEnabled(on) {
  * New secret key: upload everything under a new id, then delete the old copy.
  * Other devices must import the new id afterwards.
  */
-async function rotateSessionKey() {
+export async function rotateSessionKey() {
   if (!isCloudEnabled()) throw new Error('Activa la copia en la nube primero');
   const oldId = getSessionId();
   const newId = (await workerCaps()).shortKey ? newShortKey() : newUUID();
@@ -372,7 +375,7 @@ async function rotateSessionKey() {
 }
 
 /** Delete this collection from the cloud and turn the cloud copy off. Local data stays. */
-async function deleteCloudData() {
+export async function deleteCloudData() {
   const res = await syncApi('/sync/clear', { method: 'DELETE' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   setSyncMeta({ userId: newUUID(), cloudEnabled: false, lastPush: 0, watchHashes: {}, photoHashes: {},
@@ -385,7 +388,7 @@ async function deleteCloudData() {
    DEVICE LINKING (Worker v13+)
 ════════════════════════════════════════ */
 /** Ask the Worker for a one-use 6-character code pointing to this session (10 min) */
-async function pairCreate() {
+export async function pairCreate() {
   if (!(await workerCaps()).pairing) throw new Error('El servidor aún no admite códigos de vinculación');
   if (!getSyncMeta().lastPush) await syncPush(true);
   let res = await syncApi('/pair/create', { method: 'POST', body: {} });
@@ -399,7 +402,7 @@ async function pairCreate() {
 }
 
 /** Swap a linking code for the session id and use that session here */
-async function pairClaim(code) {
+export async function pairClaim(code) {
   const res = await fetch(`${CONFIG.WORKER_URL}/pair/claim`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
   const data = await res.json().catch(() => ({}));
@@ -407,19 +410,16 @@ async function pairClaim(code) {
   if (!res.ok || !data.userId) throw new Error(data.error || 'Código no válido o caducado');
   return importSession(data.userId);
 }
-window.pairCreate = pairCreate;
-window.pairClaim  = pairClaim;
-
 /* ════════════════════════════════════════
    AUTO + MANUAL
 ════════════════════════════════════════ */
-async function syncAuto() {
+export async function syncAuto() {
   getSessionId();
   let _t = null;
-  window._debouncedPush = () => {
+  setOnChange(() => {
     if (!isCloudEnabled()) return;
     clearTimeout(_t); _t = setTimeout(() => syncPush(), 3000);
-  };
+  });
   window.addEventListener('online', () => { if (isCloudEnabled()) syncPush(); });
 
   if (!isCloudEnabled()) { setSyncUI('off', 'Copia en la nube desactivada'); return; }
@@ -433,7 +433,7 @@ async function syncAuto() {
   }
 }
 
-async function syncManual() {
+export async function syncManual() {
   if (!isCloudEnabled()) {
     showToast('La copia en la nube está desactivada. Puedes activarla en Ajustes.');
     return;
@@ -450,16 +450,3 @@ async function syncManual() {
   }
 }
 
-window.syncPush         = syncPush;
-window.syncPull         = syncPull;
-window.syncAuto         = syncAuto;
-window.syncManual       = syncManual;
-window.syncApi          = syncApi;
-window.workerCaps       = workerCaps;
-window.getSessionId     = getSessionId;
-window.getSyncMeta      = getSyncMeta;
-window.isCloudEnabled   = isCloudEnabled;
-window.setCloudEnabled  = setCloudEnabled;
-window.importSession    = importSession;
-window.rotateSessionKey = rotateSessionKey;
-window.deleteCloudData  = deleteCloudData;

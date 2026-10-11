@@ -11,26 +11,33 @@
  *      ticks what to apply. Nothing is overwritten without a tick.
  */
 
-const IMPORT_LABELS = {
+import { getWatch, updateWatch } from '../storage.js';
+import { CONFIG, FEATURES } from '../api.js';
+import { workerCaps } from '../sync.js';
+import { escHtml, showToast, ui } from './core.js';
+import { openDetail } from './home-detail.js';
+import { updateMaintVisibility } from './modals.js';
+
+export const IMPORT_LABELS = {
   brand: 'Marca', model: 'Modelo', ref: 'Referencia', type: 'Tipo',
   calibre: 'Calibre', movimiento: 'Movimiento', cristal: 'Cristal', diametro: 'Diámetro',
   grosor: 'Grosor', resistencia: 'Agua', reserva: 'Reserva', caja: 'Caja',
   brazalete: 'Brazalete', esfera: 'Esfera', asas: 'Entre asas', precio: 'Precio', notas: 'Notas',
 };
-const IMPORT_SPEC_KEYS = ['calibre','movimiento','cristal','diametro','grosor','resistencia','reserva','caja','brazalete','esfera','asas'];
-const TYPE_LABELS = { automatic: 'Automático', quartz: 'Cuarzo', manual: 'Cuerda manual' };
+export const IMPORT_SPEC_KEYS = ['calibre','movimiento','cristal','diametro','grosor','resistencia','reserva','caja','brazalete','esfera','asas'];
+export const TYPE_LABELS = { automatic: 'Automático', quartz: 'Cuarzo', manual: 'Cuerda manual' };
 
 /* ── Availability ──
    Pasted text works always (parsed on the device). Reading a link needs the
    Worker v13+, which downloads the page; checked only when the user taps. */
-function importEnabled() { return !!FEATURES.urlImport; }
-async function serverSupportsImport() {
+export function importEnabled() { return !!FEATURES.urlImport; }
+export async function serverSupportsImport() {
   const c = await workerCaps();
   return !!c.importSource;
 }
 
 /* ── Network ── */
-async function requestPage(url) {
+export async function requestPage(url) {
   const res = await fetch(`${CONFIG.WORKER_URL}/import-url`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -44,20 +51,20 @@ async function requestPage(url) {
   return res.json();
 }
 
-function looksLikeUrl(v) { return /^https?:\/\/\S+\.\S+/i.test(v.trim()); }
+export function looksLikeUrl(v) { return /^https?:\/\/\S+\.\S+/i.test(v.trim()); }
 
 /**
  * openImportSheet({ title, current, onApply })
  *   current: { brand, model, ref, type, precio, notas, calibre, … } values already saved
  *   onApply(values, meta): values = only the ticked fields; meta = { sourceUrl, source }
  */
-async function openImportSheet(opts) {
+export async function openImportSheet(opts) {
   let canRead = false;
   if (navigator.onLine) { try { canRead = await serverSupportsImport(); } catch {} }
   buildImportSheet({ ...opts, canRead });
 }
 
-function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, onApply, canRead = true }) {
+export function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, onApply, canRead = true }) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = 'display:flex;z-index:450;';
@@ -193,18 +200,16 @@ function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, on
 
   setTimeout(() => (canRead ? $('#imp-url') : $('#imp-text')).focus(), 50);
 }
-window.openImportSheet = openImportSheet;
-
 /* ═══ Contexts ═══ */
 
-function splitImported(values) {
+export function splitImported(values) {
   const specs = {};
   IMPORT_SPEC_KEYS.forEach(k => { if (values[k]) specs[k] = values[k]; });
   return specs;
 }
 
 /* 1) New/edited watch modal */
-function importIntoWatchForm() {
+export function importIntoWatchForm() {
   const current = {
     brand: document.getElementById('f-brand').value, model: document.getElementById('f-model').value,
     ref: document.getElementById('f-ref').value, type: document.getElementById('f-type').value,
@@ -229,7 +234,7 @@ function importIntoWatchForm() {
   });
 }
 
-function showImportedPreview() {
+export function showImportedPreview() {
   const specs = window._pendingDbSpecs || {};
   let n = 0;
   [...IMPORT_SPEC_KEYS, 'precio'].forEach(k => {
@@ -240,10 +245,8 @@ function showImportedPreview() {
   const sec = document.getElementById('f-specs-section');
   if (sec) sec.style.display = n ? 'block' : 'none';
 }
-window.showImportedPreview = showImportedPreview;
-
 /* 2) Existing watch (detail view) */
-function importIntoWatch(watchId) {
+export function importIntoWatch(watchId) {
   const w = getWatch(watchId);
   if (!w) return;
   openImportSheet({
@@ -264,11 +267,9 @@ function importIntoWatch(watchId) {
     },
   });
 }
-window.importIntoWatch = importIntoWatch;
-
 /* 3) Wishlist modal */
-const WL_FIELDS = ['brand','model','ref','precio','notas', ...IMPORT_SPEC_KEYS];
-function importIntoWishlistForm() {
+export const WL_FIELDS = ['brand','model','ref','precio','notas', ...IMPORT_SPEC_KEYS];
+export function importIntoWishlistForm() {
   const current = {};
   WL_FIELDS.forEach(k => { const el = document.getElementById('wl-' + k); if (el) current[k] = el.value; });
   current.type = document.getElementById('wl-type').value;
@@ -285,18 +286,15 @@ function importIntoWishlistForm() {
 }
 
 /* Wire buttons and visibility */
-function refreshImportButtons() {
+export function refreshImportButtons() {
   const on = importEnabled();
   ['url-import-section', 'wl-url-section'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !(id === 'url-import-section' && ui.editingWatchId)) el.hidden = !on;
   });
 }
-window.refreshImportButtons = refreshImportButtons;
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f-import-btn')?.addEventListener('click', importIntoWatchForm);
   document.getElementById('wl-import-btn')?.addEventListener('click', importIntoWishlistForm);
   refreshImportButtons();
 });
-window.importEnabled = importEnabled;
-window.serverSupportsImport = serverSupportsImport;

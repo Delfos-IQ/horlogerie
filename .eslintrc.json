@@ -36,13 +36,46 @@
     "no-cond-assign": "warn",
     "no-useless-escape": "warn",
     "no-inner-declarations": "off",
-    "require-atomic-updates": "off"
+    "require-atomic-updates": "off",
+    "no-undef": "error"
   },
   "ignorePatterns": [
     "js/vendor/**",
     "node_modules/**"
   ],
   "overrides": [
+    {
+      "files": [
+        "js/**/*.js"
+      ],
+      "excludedFiles": [
+        "js/spec-parser.js"
+      ],
+      "parserOptions": {
+        "sourceType": "module"
+      },
+      "globals": {
+        "qrcode": "readonly",
+        "parseSpecs": "readonly"
+      }
+    },
+    {
+      "files": [
+        "js/spec-parser.js"
+      ],
+      "globals": {
+        "module": "writable"
+      }
+    },
+    {
+      "files": [
+        "sw.js"
+      ],
+      "env": {
+        "serviceworker": true,
+        "browser": false
+      }
+    },
     {
       "files": [
         "worker/**/*.js",
@@ -54,7 +87,11 @@
       },
       "env": {
         "node": true,
-        "browser": false
+        "browser": false,
+        "es2022": true
+      },
+      "globals": {
+        "HTMLRewriter": "readonly"
       }
     }
   ]
