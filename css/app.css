@@ -33,22 +33,6 @@ body {
 
 /* ===== HEADER ===== */
 
-/* ===== STATUS BAR ===== */
-.status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  background: var(--dark2);
-  border-bottom: 0.5px solid var(--glass-border);
-  flex-shrink: 0;
-}
-.status-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mid); }
-.status-dot { width: 7px; height: 7px; border-radius: 50%; }
-.dot-active { background: var(--ok); box-shadow: 0 0 6px color-mix(in srgb, var(--ok) 50%, transparent); }
-.dot-none { background: var(--mid); }
-.active-watch-name { color: var(--gold-light); font-size: 12px; font-weight: 500; }
-
 /* ===== WATCHES GRID ===== */
 
 .watch-card:active { transform: scale(0.97); }
@@ -1276,12 +1260,12 @@ button:focus-visible,
 
 /* ===== Utilidades pequeñas (antes estilos en línea del HTML) ===== */
 .mb-0 { margin-bottom:0; }
-.hdr-spacer { width:28px; }
-.hdr-spacer-32 { width:32px; }
+.hdr-spacer { width:44px; }
+.hdr-spacer-32 { width:44px; }
 .section-gap { margin-top:20px; }
 .icon-20 { font-size:20px; }
 .icon-18 { font-size:18px; }
-.hdr-row { display:flex;align-items:center;justify-content:space-between;padding:0 4px; }
+.hdr-row { display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:0 4px; }
 .card-icon-gold { font-size:22px;color:var(--gold-light); }
 .card-icon-info { font-size:22px;color:var(--info); }
 .tint-info { background:color-mix(in srgb,var(--info) 10%,transparent);border-color:color-mix(in srgb,var(--info) 28%,transparent); }
@@ -1306,3 +1290,115 @@ button:focus-visible,
 .hint-tiny { font-size:10px;color:var(--mid); }
 .c-gold { color:var(--gold-light); }
 .hdr-icon-btn { background:none;border:none;color:var(--gold-light);font-size:22px;cursor:pointer;width:28px; }
+
+/* Drawn dial when a watch has no photo */
+.dial-art { display: block; width: 46%; height: auto; color: var(--gold-light); opacity: 0.5; }
+.empty-icon .dial-art { width: 64px; opacity: 1; }
+.detail-img-placeholder .dial-art { width: 34%; max-width: 140px; }
+
+/* ===== «Hoy llevo…» ===== */
+.today-card {
+  display: flex; align-items: center; gap: 12px; margin: 12px 16px 0; padding: 12px 12px 12px 16px;
+  background: var(--dark2); border: 0.5px solid var(--glass-border); border-radius: var(--radius);
+}
+.today-card.is-live { border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.today-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; cursor: default; }
+.today-main[data-open] { cursor: pointer; }
+.today-label { display: flex; align-items: center; gap: 6px; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); }
+.today-label i { font-size: 14px; color: var(--ok); }
+.today-name { font-size: 15px; font-weight: 500; color: var(--light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.today-name.muted { color: var(--mid); font-weight: 400; }
+.today-sub { font-size: 12px; color: var(--mid); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 6px color-mix(in srgb, var(--ok) 60%, transparent); }
+.today-btn {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 48px; padding: 0 18px;
+  border-radius: 24px; border: none; background: var(--gold); color: var(--on-gold);
+  font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.today-btn i { font-size: 18px; }
+.today-btn.ghost { background: transparent; border: 0.5px solid var(--glass-border); color: var(--gold-light); min-height: 44px; padding: 0 14px; font-size: 13px; }
+.today-btn:focus-visible, .today-pick:focus-visible, .rec-wear:focus-visible, .detail-tab:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+.today-list { display: flex; flex-direction: column; gap: 6px; max-height: 56dvh; overflow-y: auto; margin-bottom: 4px; }
+.today-pick {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 12px; text-align: left;
+  background: var(--dark3); border: 0.5px solid transparent; border-radius: 12px; color: var(--light);
+  font-family: var(--font-body); cursor: pointer;
+}
+.today-pick.on { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 16%, var(--dark3)); }
+.today-pick-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.today-pick-txt b { font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.today-pick-txt small { font-size: 12px; color: var(--mid); }
+.today-pick-txt em { font-style: normal; color: var(--gold-light); }
+.today-pick > i { font-size: 22px; color: var(--gold-light); }
+.rec-wear {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex-shrink: 0;
+  min-width: 64px; min-height: 48px; padding: 6px 8px; border-radius: 12px; border: 0.5px solid var(--gold);
+  background: transparent; color: var(--gold-light); font-family: var(--font-body); font-size: 11px; cursor: pointer;
+}
+.rec-wear i { font-size: 18px; }
+.rec-icon i { color: var(--gold-light); font-size: 20px; }
+
+/* ===== Detail sections ===== */
+.detail-tabs {
+  display: flex; gap: 4px; padding: 10px 12px 0; border-bottom: 0.5px solid var(--glass-border);
+  overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
+}
+.detail-tabs::-webkit-scrollbar { display: none; }
+.detail-tab {
+  flex: 1 0 auto; min-height: 48px; padding: 0 12px; background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--mid); font-family: var(--font-body); font-size: 13px; letter-spacing: 0.3px; cursor: pointer;
+}
+.detail-tab.active { color: var(--gold-light); border-bottom-color: var(--gold); font-weight: 500; }
+.detail-panel[hidden] { display: none; }
+#dh-add, #hist-add, #dm-edit { margin: 4px 0 14px; }
+.maint-rows { margin: 4px 0 12px; border: 0.5px solid var(--glass-border); border-radius: var(--radius); overflow: hidden; }
+.maint-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; font-size: 13px; color: var(--mid); }
+.maint-row + .maint-row { border-top: 0.5px solid var(--glass-border); }
+.maint-row b { color: var(--light); font-weight: 500; text-align: right; }
+.maint-row b.muted { color: var(--mid); font-weight: 400; }
+button.maint-alert { width: 100%; text-align: left; font-family: var(--font-body); cursor: pointer; }
+.history-empty i { font-size: 36px; color: var(--mid); }
+.pad-32 { padding: 32px 8px; }
+.pad-24 { padding: 24px 8px; }
+.c-ok { color: var(--ok); }
+.specs-edit-hint i { font-size: 11px; }
+
+/* ===== Touch targets: at least 44-48 px (Android guideline is 48 dp) ===== */
+.chip-btn { min-height: 44px; }
+.year-chip { min-height: 40px; }
+.back-btn, .cal-nav-btn, .status-action-btn, .day-btn, .interval-edit, .hw-open, .hdr-icon-btn, .hdr-alert { min-width: 44px; min-height: 44px; }
+.nav-item { min-height: 48px; justify-content: center; }
+.wl-precio i { font-size: 12px; }
+
+/* ===== Preferences ===== */
+.pref-card { background: var(--dark2); border: 0.5px solid var(--glass-border); border-radius: var(--radius); padding: 4px 14px 12px; }
+.pref-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; font-size: 14px; color: var(--light); }
+.pref-row + .pref-row { border-top: 0.5px solid var(--glass-border); }
+.pref-select { width: auto; max-width: 62%; margin: 0; min-height: 44px; }
+.pref-note { font-size: 12px; color: var(--mid); line-height: 1.5; margin-top: 6px; }
+
+/* ===== Update banner ===== */
+.update-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: var(--gold); color: var(--on-gold);
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 500; box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.update-banner .ti { font-size: 16px; vertical-align: -2px; }
+.update-banner-notes { font-size: 11px; font-weight: 400; opacity: 0.8; margin-top: 2px; }
+.update-banner-btn {
+  background: var(--dark); color: var(--gold-light); border: none; border-radius: 8px; min-height: 44px;
+  padding: 0 16px; font-family: var(--font-body); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.mt-14 { margin-top: 14px; }
+
+/* ===== Onboarding ===== */
+.ob-mark { display: flex; justify-content: center; margin: 4px 0 6px; }
+.ob-mark .dial-art { width: 56px; opacity: 1; }
+.ob-title { text-align: center; }
+.ob-points { list-style: none; margin: 6px 0 18px; display: flex; flex-direction: column; gap: 12px; }
+.ob-points li { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--light); }
+.ob-points i { font-size: 20px; color: var(--gold-light); margin-top: 1px; }
+.btn-wear:disabled { background: transparent; border: 1px solid color-mix(in srgb, var(--ok) 55%, transparent); color: var(--ok); opacity: 1; cursor: default; }
+.detail-img-wrap.no-photo { aspect-ratio: 2 / 1; }

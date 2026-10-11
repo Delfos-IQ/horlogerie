@@ -9,6 +9,7 @@
  *   - stacking: each new sheet sits above the previous one.
  */
 import { escHtml } from './core.js';
+import { t } from '../i18n.js';
 
 let _depth = 0;
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -80,13 +81,13 @@ export function openSheet({ html, label = '', role = 'dialog', onClose, classNam
  * @param {() => void} onConfirm
  * @param {{ okLabel?: string, danger?: boolean }} [opts]
  */
-export function showConfirm(title, msg, onConfirm, { okLabel = 'Eliminar', danger = true } = {}) {
+export function showConfirm(title, msg, onConfirm, { okLabel = t('Eliminar'), danger = true } = {}) {
   const { $, close } = openSheet({
     role: 'alertdialog', label: title,
     html: `<div class="sheet-title">${escHtml(title)}</div>
       <div class="sheet-msg">${escHtml(msg)}</div>
       <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" id="cc" data-close>Cancelar</button>
+        <button class="modal-btn modal-btn-cancel" id="cc" data-close>${t('Cancelar')}</button>
         <button class="modal-btn ${danger ? 'modal-btn-danger' : 'modal-btn-save'}" id="co">${escHtml(okLabel)}</button>
       </div>`,
   });

@@ -23,7 +23,7 @@ def check(name, cond, detail=''):
     print(('  ✓ ' if cond else '  ✗ ') + name + (f'  [{detail}]' if detail and not cond else ''))
 
 async def new_device(browser, health_override=None):
-    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block',
+    ctx = await browser.new_context(locale="es-ES", viewport={"width": 412, "height": 900}, service_workers='block',
                                     bypass_csp=True)   # wait_for_function evaluates strings; CSP is checked in e2e_wear
     async def route(r):
         url = r.request.url.replace("https://horlogerie.pedicode-app.workers.dev", f"http://localhost:{PORT}")
@@ -71,6 +71,8 @@ async def main():
         wid = await page.evaluate("addWatch({brand:'Steeldive', model:'Tuna', type:'automatic'}).then(w => w.id)")
         await page.evaluate("id => updateWatch(id, {specs: {cristal: 'Mineral'}})", wid)
         await page.evaluate("id => openDetail(id)", wid)
+        await page.click("#dtab-specs")
+        check("la ficha técnica está en su propia pestaña", await page.is_visible("#d-specs") and not await page.is_visible("#d-usage"))
         await page.click("#d-import-btn")
         await page.fill("#imp-url", FIX + "oficial.html")
         await page.click("[data-act='read']")
@@ -227,11 +229,11 @@ async def main():
         if SHOTS: await page.screenshot(path=f"{SHOTS}/por-reloj.png")
         await page.click(f"#history-body .hw-card[data-wid='{ids[0]}']")
         await page.wait_for_selector("#hw-back")
-        stat = await page.evaluate("[...document.querySelectorAll('.hw-stats .spec-value')].map(e => e.textContent)")
+        stat = await page.evaluate("[...document.querySelectorAll('#history-body .hw-stats .spec-value')].map(e => e.textContent)")
         bars = await page.locator(".hw-bar").count()
         check("el panel muestra días del año y barras por mes", bars == 12 and stat[0] == '1', f"{stat} {bars}")
         await page.click("#history-body .year-chip[data-year='all']")
-        stat = await page.evaluate("document.querySelector('.hw-stats .spec-value').textContent")
+        stat = await page.evaluate("document.querySelector('#history-body .hw-stats .spec-value').textContent")
         check("con «Todo» suma también el año pasado", stat == '31', stat)
         if SHOTS: await page.screenshot(path=f"{SHOTS}/reloj-panel.png")
         # borrar un uso desde el panel pide confirmación

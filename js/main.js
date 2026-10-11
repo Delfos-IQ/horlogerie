@@ -21,13 +21,20 @@ import * as session from './modules/session.js';
 import * as updates from './modules/updates.js';
 import * as urlImport from './modules/url-import.js';
 import * as db from './db.js';
+import * as i18n from './i18n.js';
+import * as onboarding from './modules/onboarding.js';
 
-storage.setNotifier(core.showToast);
+// Language and theme first: the static HTML is translated before anything is drawn
+i18n.applyTheme();
+i18n.translateDOM();
+storage.setNotifier(msg => core.showToast(i18n.t(msg)));
 
 /* ── Actions available to data-action="…" (and data-arg) ── */
 const actions = {
   showView:          arg => core.showView(arg),
   historyMode:       arg => history.setHistoryMode(arg, true),
+  detailTab:         arg => homeDetail.setDetailTab(arg),
+  openTodaySheet:    () => homeDetail.openTodaySheet(),
   openLinkSheet:     () => session.openLinkSheet(),
   openPairSheet:     () => session.openPairSheet(),
   openSaveKeySheet:  () => session.openSaveKeySheet(),
@@ -58,6 +65,9 @@ const changeHandlers = {
   cloudToggle:       e => session.handleCloudToggle(e.target.checked),
   handlePhotoUpload: e => modals.handlePhotoUpload(e),
   processImportJSON: e => settings.processImportJSON(e),
+  prefLang:          e => settings.handlePrefChange('lang', e.target.value),
+  prefTheme:         e => settings.handlePrefChange('theme', e.target.value),
+  prefCurrency:      e => settings.handlePrefChange('currency', e.target.value),
 };
 const inputHandlers = {
   dbSearch: e => modals.handleDbSearch(e.target.value),
@@ -94,6 +104,7 @@ setTimeout(() => {
 storage.loadPhotos().then(() => {
   homeDetail.renderHome(); core.updateFab('home');
   if (storage.getWatches().length) storage.requestPersistence();
+  else if (!location.hash.startsWith('#vincular=')) setTimeout(() => onboarding.maybeShowOnboarding(), 1900);   // after the splash
 });
 
 // Service workers registered outside /horlogerie/ by very old versions
@@ -126,7 +137,7 @@ window.addEventListener('load', () => {
 /* ── Console and test access ──
    window.rotor exposes the modules for debugging. On localhost (tests,
    development) every exported function is also global, as before. */
-const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db };
+const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db, i18n, onboarding };
 window.rotor = modulesApi;
 if (['localhost', '127.0.0.1'].includes(location.hostname)) {
   for (const mod of Object.values(modulesApi)) {

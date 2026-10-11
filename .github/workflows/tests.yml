@@ -36,6 +36,9 @@ jobs:
       - name: Todos los módulos disponibles sin conexión
         run: node tools/check-sw.mjs
 
+      - name: Todos los textos tienen versión en inglés
+        run: node tools/check-i18n.mjs
+
       - name: Lógica de datos (unitarias)
         run: TZ=Europe/Lisbon node tests/storage.test.mjs
 
@@ -69,3 +72,6 @@ jobs:
 
       - name: Nube, clave corta y vincular dispositivos
         run: python tests/e2e_cloud.py 8712
+
+      - name: Inglés, tema, moneda, bienvenida y ficha por secciones
+        run: python tests/e2e_i18n.py

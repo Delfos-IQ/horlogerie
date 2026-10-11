@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<title>Privacy · Rotor</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --dark:#F3EEE3; --dark2:#FBF8F1; --dark3:#E8E1D2; --gold:#B8963E; --gold-light:#7E6118; --light:#1E1B16; --mid:#655D51;
+          --line:rgba(126,97,24,.24); color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --dark:#0B1220; --dark2:#141D30; --dark3:#1F2A42; --gold-light:#D4AF6A; --light:#E6E1D6; --mid:#97A0B1;
+            --line:rgba(184,150,62,.24); color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'Jost', system-ui, sans-serif;
+         font-size: 16px; line-height: 1.65; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+       letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+       margin: 36px 0 8px; }
+  p, li { color: var(--light); }
+  .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+  .box { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid var(--line); }
+  th { color: var(--gold-light); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--gold-light); }
+  code { font-size: 13px; background: var(--dark3); padding: 1px 5px; border-radius: 4px; }
+  .back { margin-top: 40px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy</h1>
+  <div class="meta">Rotor (formerly Horlogerie) · Last updated: 12 October 2026 (v2.14) · <a href="./privacidad.html" lang="es">Español</a></div>
+
+  <div class="box">
+    <p><strong>In short:</strong> your collection is stored on your device. It only leaves it if you turn on “Cloud backup”, and then it is encrypted on your device before upload so you can use it on other devices. There are no accounts, no ads, no analytics and no selling of data. You can delete your cloud data from inside the app.</p>
+  </div>
+
+  <h2>Who is responsible</h2>
+  <p>Rotor is an app by Delfos-IQ. Contact for any privacy matter: <a href="mailto:pedicode.app@gmail.com">pedicode.app@gmail.com</a>.</p>
+
+  <h2>What data the app handles</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>Data</th><th>Where it is stored</th><th>What for</th></tr>
+    <tr><td>Watches (brand, model, specifications, notes, price and dates you enter)</td><td>On your device. In the cloud only if you turn it on.</td><td>Showing your collection.</td></tr>
+    <tr><td>Photos of your watches</td><td>On your device (compressed). In the cloud only if you turn it on.</td><td>Showing your collection.</td></tr>
+    <tr><td>Wear history (which days you wore each watch)</td><td>On your device. In the cloud only if you turn it on.</td><td>Statistics and suggestions.</td></tr>
+    <tr><td>Wishlist</td><td>On your device. In the cloud only if you turn it on.</td><td>Noting watches you are interested in.</td></tr>
+    <tr><td>Recovery key (random code)</td><td>On your device. The server only receives values derived from it.</td><td>Identifying your cloud backup without accounts or email.</td></tr>
+    <tr><td>Linking code (6 characters)</td><td>Created on your device; the server keeps an encrypted package for 10 minutes at most and deletes it once used.</td><td>Passing your key to another of your devices without typing it.</td></tr>
+  </table>
+  </div>
+  <p>The app does not ask for or collect your name, email, location, contacts or advertising identifiers.</p>
+
+  <h2>Cloud backup (optional)</h2>
+  <p>It is off on new installs. If you turn it on in Settings, your collection, photos, history and wishlist are stored on our own service hosted on Cloudflare (Cloudflare, Inc., as data processor).</p>
+  <p><strong>End-to-end encryption:</strong> before leaving your device, each watch, wishlist item and photo is encrypted (256-bit AES-GCM) with a key derived from your recovery key, which is never sent. The server only stores ciphertext, an account identifier derived from the key and the hash of a write token: neither we nor Cloudflare can read your collection. What the server does see is how many items you have, their size and when they change.</p>
+  <ul>
+    <li><strong>Your recovery key works like a password:</strong> whoever has it can see and delete your backup. Don’t share it. You can change it in Settings (“Change key”). As there are no accounts or email, if you lose it we cannot recover it for you.</li>
+    <li><strong>Linking another device:</strong> your device encrypts the key with a 6-character code that is generated on it and never sent; the server keeps that ciphertext for 10 minutes at most and deletes it once used.</li>
+    <li><strong>Deletion:</strong> Settings → “Delete from the cloud” removes your backup immediately. If you turn the backup off without deleting it, it stays stored until you delete it.</li>
+    <li><strong>Technical logs:</strong> to limit abuse, the service keeps for 1 hour a counter tied to an encrypted digest (hash) of your IP address, and for 24 hours technical errors with that same digest. Never the plain IP.</li>
+    <li><strong>International transfers:</strong> Cloudflare may process data outside the European Economic Area under the safeguards of its standard contractual clauses.</li>
+  </ul>
+
+  <h2>Fill in from a link</h2>
+  <p>If you use “Fill in from a link” with a link, that link is sent to our service on Cloudflare, which downloads the public page and returns its text to your device, where the app reads the specifications. No artificial intelligence or other external service is used, and nothing from your collection, your photos or your key is sent. The text of each page is cached for 30 days so it is not downloaded again. If you paste the spec text instead of a link, it is read on your device and never leaves it.</p>
+
+  <h2>Third parties</h2>
+  <p>Apart from the two optional features described (cloud backup and fill in from a link), the app does not talk to external services: fonts, icons and libraries are bundled with the app. QR codes are generated on your device. There is no advertising or analytics SDK.</p>
+
+  <h2>Backups</h2>
+  <p>“Backup (JSON)” creates a file on your device with your data and photos. That file stays under your control: the app does not send it anywhere.</p>
+
+  <h2>Your rights</h2>
+  <p>You can access your data (it is in the app and in the JSON backup), correct it and delete it from inside the app. For any other request (GDPR: access, rectification, erasure, objection, restriction, portability) write to the contact address. You can also complain to the data protection authority of your country (in Portugal, the CNPD; in Spain, the AEPD; in the UK, the ICO).</p>
+
+  <h2>Children</h2>
+  <p>The app is not aimed at children under 16 and does not knowingly collect their data.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, this page and the date above will be updated. The Spanish version is the reference text.</p>
+
+  <p class="back"><a href="./">← Back to Rotor</a></p>
+</main>
+</body>
+</html>

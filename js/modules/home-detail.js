@@ -1,11 +1,15 @@
 /* ─── HOME ─── */
-import { addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, isSafePhoto, maintenanceAlerts, markWornToday, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
+import { addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, isSafePhoto, maintenanceAlerts, markWornToday, removeWearDay, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
 import { openSheet, showConfirm } from './sheet.js';
-import { elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui, watchEmoji } from './core.js';
+import { dialArt, elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui } from './core.js';
 import { openEditModal } from './modals.js';
-import { renderHistory } from './history.js';
+import { intervalsHTML, renderHistory, watchChip } from './history.js';
 import { renderBackupReminder } from './settings.js';
 import { importEnabled, importIntoWatch } from './url-import.js';
+import { locale, money, t } from '../i18n.js';
+
+const name = w => `${escHtml(w.brand)} ${escHtml(w.model)}`;
+const daysTxt = n => n === 1 ? t('1 día') : t('{n} días', { n });
 
 export function renderHome() {
   const grid  = document.getElementById('watches-grid');
@@ -17,21 +21,19 @@ export function renderHome() {
   // Header: how many watches and how much they cost (only those with a price)
   const sub = document.getElementById('home-subtitle');
   if (sub) {
-    const spent = ws.reduce((t, w) => t + (Number(w.purchasePrice) > 0 ? Number(w.purchasePrice) : 0), 0);
-    sub.textContent = !ws.length ? 'Tu colección de relojes'
-      : `${ws.length} ${ws.length === 1 ? 'reloj' : 'relojes'}${spent ? ` · ${Math.round(spent).toLocaleString('es-ES')} € invertidos` : ''}`;
+    const spent = ws.reduce((s, w) => s + (Number(w.purchasePrice) > 0 ? Number(w.purchasePrice) : 0), 0);
+    sub.textContent = !ws.length ? t('Tu colección de relojes')
+      : (ws.length === 1 ? t('1 reloj') : t('{n} relojes', { n: ws.length }))
+        + (spent ? ' · ' + t('{v} invertidos', { v: money(spent, { decimals: 0 }) }) : '');
   }
   if (typeof renderBackupReminder === 'function') renderBackupReminder();
 
-  const dot = document.getElementById('status-dot');
-  dot.className = 'status-dot ' + (activeW ? 'dot-active' : 'dot-none');
-  document.getElementById('status-text').textContent = activeW ? 'Reloj activo' : 'Ningún reloj activo';
-  document.getElementById('status-watch-name').textContent = activeW ? `${activeW.brand} ${activeW.model}` : '';
+  renderToday(ws, activeW);
 
   if (!ws.length) {
     grid.style.display = 'none';
     empty.style.display = 'flex';
-    const _rb = document.getElementById('recommendation-banner'); if (_rb) _rb.innerHTML = '';
+    const rb = document.getElementById('recommendation-banner'); if (rb) rb.innerHTML = '';
     return;
   }
   grid.style.display = 'grid';
@@ -41,17 +43,16 @@ export function renderHome() {
 
   grid.innerHTML = ws.map(w => {
     const isActive = !!w.wearStart;
-    const locked   = false;   // any watch can be opened and switched to
     return `
-      <div class="watch-card${locked ? ' locked' : ''}${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}" role="button" tabindex="0" aria-label="${escHtml(w.brand)} ${escHtml(w.model)}${isActive ? ' — actualmente puesto' : ''}">
+      <div class="watch-card${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}" role="button" tabindex="0" aria-label="${name(w)}${isActive ? ' — ' + t('puesto ahora') : ''}">
         <div class="watch-img-wrap">
           ${isSafePhoto(w.photo)
-            ? `<img src="${w.photo}" alt=""${escHtml(w.brand)} ${escHtml(w.model)}" loading="lazy">`
-            : `<div class="watch-img-placeholder">${watchEmoji(w.type)}</div>`}
+            ? `<img src="${w.photo}" alt="" loading="lazy">`
+            : `<div class="watch-img-placeholder">${dialArt()}</div>`}
           <div class="watch-type-badge">${typeLabel(w.type)}</div>
-          ${isActive ? `<div class="active-badge">Puesto</div>` : ''}
-          ${w.favorite ? `<div class="fav-badge" aria-label="Favorito"><i class="ti ti-star" aria-hidden="true"></i></div>` : ''}
-          ${maintenanceAlerts(w).length ? `<div class="alert-badge" aria-label="Necesita mantenimiento"><i class="ti ti-tool" aria-hidden="true"></i></div>` : ''}
+          ${isActive ? `<div class="active-badge">${t('Puesto')}</div>` : ''}
+          ${w.favorite ? `<div class="fav-badge" aria-label="${t('Favorito')}"><i class="ti ti-star" aria-hidden="true"></i></div>` : ''}
+          ${maintenanceAlerts(w).length ? `<div class="alert-badge" aria-label="${t('Necesita mantenimiento')}"><i class="ti ti-tool" aria-hidden="true"></i></div>` : ''}
         </div>
         <div class="watch-info">
           <div class="watch-brand">${escHtml(w.brand)}</div>
@@ -61,8 +62,6 @@ export function renderHome() {
       </div>`;
   }).join('');
 
-  // All cards clickable — locked ones open read-only
-  // keyboard + click support for accessibility
   grid.querySelectorAll('.watch-card').forEach(card => {
     card.addEventListener('click', () => openDetail(card.dataset.id));
     card.addEventListener('keydown', e => {
@@ -71,36 +70,123 @@ export function renderHome() {
   });
 }
 
+/* ─── «Hoy llevo…»: the main action of the app is one tap ─── */
+export function wornTodayList(ws = getWatches()) {
+  const k = dayKey(Date.now());
+  return ws.filter(w => wornDayKeys(w).has(k));
+}
+export function renderToday(ws, activeW) {
+  const box = document.getElementById('today-card');
+  if (!box) return;
+  if (!ws.length) { box.innerHTML = ''; return; }
+  const today = wornTodayList(ws);
+  if (activeW) {
+    box.innerHTML = `<div class="today-card is-live">
+      <div class="today-main" role="button" tabindex="0" data-open="${escHtml(activeW.id)}">
+        <span class="today-label"><span class="live-dot" aria-hidden="true"></span>${t('Llevas ahora')}</span>
+        <span class="today-name">${name(activeW)}</span>
+        <span class="today-sub">${elapsedSince(activeW.wearStart)}</span>
+      </div>
+      <button class="today-btn ghost" id="today-change">${t('Cambiar')}</button>
+    </div>`;
+  } else if (today.length) {
+    box.innerHTML = `<div class="today-card is-done">
+      <div class="today-main">
+        <span class="today-label"><i class="ti ti-circle-check" aria-hidden="true"></i>${t('Hoy llevas')}</span>
+        <span class="today-name">${today.map(name).join(' · ')}</span>
+      </div>
+      <button class="today-btn ghost" id="today-change">${t('Cambiar')}</button>
+    </div>`;
+  } else {
+    box.innerHTML = `<div class="today-card">
+      <div class="today-main">
+        <span class="today-label">${t('Hoy')}</span>
+        <span class="today-name muted">${t('¿Qué reloj llevas?')}</span>
+      </div>
+      <button class="today-btn" id="today-change"><i class="ti ti-hand-finger" aria-hidden="true"></i>${t('Hoy llevo…')}</button>
+    </div>`;
+  }
+  box.querySelector('#today-change')?.addEventListener('click', openTodaySheet);
+  const open = box.querySelector('[data-open]');
+  if (open) {
+    open.addEventListener('click', () => openDetail(open.dataset.open));
+    open.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(open.dataset.open); } });
+  }
+}
+
+/** Sheet to pick today's watch: rotation order first (the one that is due on top) */
+export function openTodaySheet() {
+  const sh = openSheet({ label: t('Hoy llevo…'), html: '', onClose: () => renderHome() });
+  function paint() {
+    const ws = getWatches();
+    const ranked = rankWatchesForRotation(ws).map(r => r.watch);
+    const rest = ws.filter(w => !ranked.includes(w))
+      .sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
+    const todayIds = new Set(wornTodayList(ws).map(w => w.id));
+    const dueId = ranked.find(w => !todayIds.has(w.id))?.id;
+    const row = w => {
+      const on = todayIds.has(w.id);
+      return `<button class="today-pick${on ? ' on' : ''}" data-id="${escHtml(w.id)}" aria-pressed="${on}">
+        ${watchChip(w, 40)}
+        <span class="today-pick-txt"><b>${name(w)}</b><small>${w.id === dueId ? `<em>${t('Te toca')}</em> · ` : ''}${escHtml(shortLastWorn(w))}</small></span>
+        <i class="ti ${on ? 'ti-circle-check' : 'ti-circle'}" aria-hidden="true"></i>
+      </button>`;
+    };
+    sh.setContent(`<div class="modal-title">${t('Hoy llevo…')}</div>
+      <div class="sheet-text">${t('Toca el reloj que llevas hoy. Puedes marcar más de uno.')}</div>
+      <div class="today-list">${[...ranked, ...rest].map(row).join('')}</div>
+      <button class="modal-btn modal-btn-save sheet-done" data-close>${t('Hecho')}</button>`);
+    sh.$$('.today-pick').forEach(b => b.addEventListener('click', () => {
+      const id = b.dataset.id, w = getWatch(id);
+      if (todayIds.has(id)) {
+        const r = removeWearDay(id, Date.now());
+        if (r === 'active') { showToast(t('Lo llevas puesto ahora: quítatelo desde su ficha')); return; }
+        showToast(t('Quitado de hoy'));
+      } else {
+        markWornToday(id);
+        showToast(t('Apuntado: hoy llevas el {w}', { w: `${w.brand} ${w.model}` }));
+      }
+      paint();
+    }));
+  }
+  paint();
+}
+
 /* ─── Recommendation banner ───
    Rotation, not urgency: suggest the watch that has gone longest without
    wrist time, among those "en rotación". Favourites win ties.
-   No alarmist claims: a mechanical watch resting a few weeks is fine. */
+   Hidden once something is logged for today. */
 export function renderRecommendation(ws, activeW) {
   const banner = document.getElementById('recommendation-banner');
   if (!banner) return;
-  if (activeW) { banner.innerHTML = ''; return; }
+  if (activeW || wornTodayList(ws).length) { banner.innerHTML = ''; return; }
 
-  // Watches already worn today are not "due": suggest from the rest
   const ranked = rankWatchesForRotation(ws).filter(r => r.stats.daysSinceLast !== 0);
   if (!ranked.length) { banner.innerHTML = ''; return; }
 
   const [top, ...rest] = ranked;
   const w = top.watch;
-  const others = rest.slice(0, 2).map(r => `${escHtml(r.watch.brand)} ${escHtml(r.watch.model)}`);
+  const others = rest.slice(0, 2).map(r => name(r.watch));
   banner.innerHTML = `
-    <div class="recommendation-card" role="button" tabindex="0" aria-label="Recomendación: ${escHtml(w.brand)} ${escHtml(w.model)}">
-      <div class="rec-icon"><i class="ti ti-refresh" style="color:var(--gold-light);font-size:20px;" aria-hidden="true"></i></div>
+    <div class="recommendation-card" role="button" tabindex="0" aria-label="${t('Recomendación')}: ${name(w)}">
+      <div class="rec-icon"><i class="ti ti-refresh" aria-hidden="true"></i></div>
       <div class="rec-body">
-        <div class="rec-label">Toca ponerse</div>
-        <div class="rec-watch">${escHtml(w.brand)} ${escHtml(w.model)}${w.favorite ? ' <i class="ti ti-star" aria-label="favorito"></i>' : ''}</div>
+        <div class="rec-label">${t('Toca ponerse')}</div>
+        <div class="rec-watch">${name(w)}${w.favorite ? ` <i class="ti ti-star" aria-label="${t('Favorito')}"></i>` : ''}</div>
         <div class="rec-reason">${formatLastWorn(top.stats)}</div>
-        ${others.length ? `<div class="rec-others">Después: ${others.join(' · ')}</div>` : ''}
+        ${others.length ? `<div class="rec-others">${t('Después')}: ${others.join(' · ')}</div>` : ''}
       </div>
-      <i class="ti ti-chevron-right" style="color:var(--mid);font-size:18px;flex-shrink:0;" aria-hidden="true"></i>
+      <button class="rec-wear" id="rec-wear" aria-label="${t('Lo llevo hoy')}: ${name(w)}"><i class="ti ti-check" aria-hidden="true"></i><span>${t('Lo llevo hoy')}</span></button>
     </div>`;
   const card = banner.querySelector('.recommendation-card');
   card.addEventListener('click', () => openDetail(w.id));
-  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(w.id); } });
+  card.addEventListener('keydown', e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(w.id); } });
+  banner.querySelector('#rec-wear').addEventListener('click', e => {
+    e.stopPropagation();
+    markWornToday(w.id);
+    showToast(t('Apuntado: hoy llevas el {w}', { w: `${w.brand} ${w.model}` }));
+    renderHome();
+  });
 }
 
 /**
@@ -121,26 +207,52 @@ export function rankWatchesForRotation(ws, now = Date.now()) {
     });
 }
 export function formatLastWorn(st) {
-  if (st.lastWorn === null) return 'Todavía no lo has llevado';
-  if (st.daysSinceLast === 0) return 'Lo llevaste hoy';
-  if (st.daysSinceLast === 1) return 'Lo llevaste ayer';
-  return `${st.daysSinceLast} días sin salir de la caja`;
+  if (st.lastWorn === null) return t('Todavía no lo has llevado');
+  if (st.daysSinceLast === 0) return t('Lo llevaste hoy');
+  if (st.daysSinceLast === 1) return t('Lo llevaste ayer');
+  return t('{n} días sin salir de la caja', { n: st.daysSinceLast });
 }
 
 export function shortLastWorn(w) {
   const st = wearStats(w);
-  if (w.rotation === false) return 'Fuera de rotación';
-  if (st.lastWorn === null) return 'Sin estrenar';
-  if (st.daysSinceLast === 0) return 'Hoy';
-  if (st.daysSinceLast === 1) return 'Ayer';
-  return `Hace ${st.daysSinceLast} días`;
+  if (w.rotation === false) return t('Fuera de rotación');
+  if (st.lastWorn === null) return t('Sin estrenar');
+  if (st.daysSinceLast === 0) return t('Hoy');
+  if (st.daysSinceLast === 1) return t('Ayer');
+  return t('Hace {n} días', { n: st.daysSinceLast });
+}
+
+/** Maintenance alert text (the data layer only gives kind and age) */
+export function alertText(a) {
+  if (a.kind === 'battery') return t('Pila cambiada hace {n} meses: revísala antes de que se agote y pierda líquido', { n: a.months });
+  return a.from === 'purchase'
+    ? t('Comprado hace {n} años: toca revisión (cada 5 años aprox.)', { n: a.years })
+    : t('Última revisión hace {n} años: toca revisión (cada 5 años aprox.)', { n: a.years });
 }
 
 /* ─── DETAIL ─── */
-export function openDetail(id) {
-  ui.currentWatchId = id;
+export const DETAIL_TABS = ['summary', 'specs', 'history', 'maint'];
+let _detailTab = 'summary';
+
+export function setDetailTab(tab) {
+  if (!DETAIL_TABS.includes(tab)) tab = 'summary';
+  _detailTab = tab;
+  for (const k of DETAIL_TABS) {
+    const on = k === tab;
+    const b = document.getElementById('dtab-' + k);
+    if (b) { b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; }
+    const p = document.getElementById('dt-' + k);
+    if (p) p.hidden = !on;
+  }
+}
+
+export function openDetail(id, tab) {
   const w = getWatch(id);
   if (!w) return;
+  // Same watch re-rendered: keep the tab; a different watch starts on Resumen
+  if (tab) _detailTab = tab;
+  else if (ui.currentWatchId !== id) _detailTab = 'summary';
+  ui.currentWatchId = id;
 
   document.getElementById('d-brand').textContent = w.brand;
   document.getElementById('d-name').textContent  = w.model + (w.ref ? ` · ${w.ref}` : '');
@@ -150,8 +262,9 @@ export function openDetail(id) {
   if (isSafePhoto(w.photo)) {
     img.src = w.photo; img.style.display = 'block'; ph.style.display = 'none';
   } else {
-    img.style.display = 'none'; ph.style.display = 'flex'; ph.textContent = watchEmoji(w.type);
+    img.style.display = 'none'; ph.style.display = 'flex'; ph.innerHTML = dialArt();
   }
+  ph.parentElement?.classList.toggle('no-photo', !isSafePhoto(w.photo));
 
   const wearBox = document.getElementById('d-wear-info');
   if (w.wearStart) {
@@ -165,10 +278,13 @@ export function openDetail(id) {
   renderUsage(w);
   renderSpecs(w);
   renderPrice(w);
+  renderDetailHistory(w);
+  renderMaintenance(w);
 
   const notesEl = document.getElementById('d-notes-val');
   if (notesEl) notesEl.textContent = w.notes || '—';
 
+  setDetailTab(_detailTab);
   showView('detail');
   startActiveTimer(id);
 
@@ -188,15 +304,25 @@ export function openDetail(id) {
   }
 }
 
+/* Arrow keys move between the detail tabs (ARIA tabs pattern) */
+document.addEventListener('keydown', e => {
+  const tab = e.target?.closest?.('.detail-tab');
+  if (!tab || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+  e.preventDefault();
+  const i = DETAIL_TABS.indexOf(_detailTab);
+  const next = e.key === 'Home' ? 0 : e.key === 'End' ? DETAIL_TABS.length - 1
+    : (i + (e.key === 'ArrowRight' ? 1 : -1) + DETAIL_TABS.length) % DETAIL_TABS.length;
+  setDetailTab(DETAIL_TABS[next]);
+  document.getElementById('dtab-' + DETAIL_TABS[next])?.focus();
+});
+
 export function updateDayCounter(w) {
-  const elapsed = elapsedSince(w.wearStart);
   const el = document.getElementById('d-days');
   const se = document.getElementById('d-since');
-  if (el) el.textContent = elapsed;
+  if (el) el.textContent = elapsedSince(w.wearStart);
   if (se) {
-    const started = formatDate(w.wearStart);
-    const startTime = new Date(w.wearStart).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
-    se.textContent = `Desde el ${started} a las ${startTime}`;
+    const startTime = new Date(w.wearStart).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+    se.textContent = t('Desde el {d} a las {h}', { d: formatDate(w.wearStart), h: startTime });
   }
 }
 export function startActiveTimer(id) {
@@ -208,7 +334,6 @@ export function startActiveTimer(id) {
     const c = getWatch(id);
     if (!c?.wearStart) { stopActiveTimer(); return; }
     updateDayCounter(c);
-    // Also refresh the grid badge if visible
     const badge = document.querySelector(`.watch-card[data-id="${id}"] .days-badge`);
     if (badge) badge.textContent = elapsedShort(c.wearStart);
   }, 60000);
@@ -217,29 +342,31 @@ export function stopActiveTimer() {
   if (ui.activeTimer) { clearInterval(ui.activeTimer); ui.activeTimer = null; }
 }
 
+/* Main action: «Lo llevo hoy» (one tap). Timing a session is optional. */
 export function renderDetailActions(w) {
   const div = document.getElementById('d-actions');
   const activeW = getActiveWatch();
   const todayDone = wornDayKeys(w).has(dayKey(Date.now()));
   let main;
   if (w.wearStart) {
-    main = `<button class="action-btn btn-stop" data-act="stop"><i class="ti ti-player-stop" aria-hidden="true"></i> Quitarme este reloj</button>`;
-  } else if (activeW) {
-    main = `<button class="action-btn btn-wear" data-act="switch"><i class="ti ti-switch-horizontal" aria-hidden="true"></i> Cambiar a este reloj</button>
-            <div class="action-hint">Ahora llevas el ${escHtml(activeW.brand)} ${escHtml(activeW.model)}: se cerrará su sesión.</div>`;
+    main = `<button class="action-btn btn-stop" data-act="stop"><i class="ti ti-player-stop" aria-hidden="true"></i> ${t('Quitármelo')}</button>
+            <div class="action-hint">${t('El tiempo puesto se guarda en el historial.')}</div>`;
   } else {
-    main = `<button class="action-btn btn-wear" data-act="start"><i class="ti ti-player-play" aria-hidden="true"></i> Ponerme este reloj</button>`;
+    main = `<button class="action-btn btn-wear" data-act="today" ${todayDone ? 'disabled' : ''}>
+              <i class="ti ti-${todayDone ? 'circle-check' : 'check'}" aria-hidden="true"></i> ${todayDone ? t('Hoy ya cuenta') : t('Lo llevo hoy')}</button>`;
   }
+  const timing = w.wearStart ? '' : activeW
+    ? `<button class="chip-btn" data-act="switch" title="${t('Ahora llevas el {w}: se cerrará su sesión.', { w: `${activeW.brand} ${activeW.model}` })}"><i class="ti ti-switch-horizontal" aria-hidden="true"></i> ${t('Cambiar a este reloj')}</button>`
+    : `<button class="chip-btn" data-act="start"><i class="ti ti-player-play" aria-hidden="true"></i> ${t('Medir tiempo puesto')}</button>`;
   div.innerHTML = `
     ${main}
     <div class="wear-quick">
-      ${w.wearStart ? '' : `<button class="chip-btn" data-act="today" ${todayDone ? 'disabled' : ''}>
-        <i class="ti ti-check" aria-hidden="true"></i> ${todayDone ? 'Hoy ya cuenta' : 'Lo llevé hoy'}</button>`}
-      <button class="chip-btn" data-act="past"><i class="ti ti-calendar-plus" aria-hidden="true"></i> Otro día</button>
+      <button class="chip-btn" data-act="past"><i class="ti ti-calendar-plus" aria-hidden="true"></i> ${t('Otro día')}</button>
+      ${timing}
       <button class="chip-btn${w.favorite ? ' on' : ''}" data-act="fav" aria-pressed="${!!w.favorite}">
-        <i class="ti ti-star" aria-hidden="true"></i> Favorito</button>
+        <i class="ti ti-star" aria-hidden="true"></i> ${t('Favorito')}</button>
       <button class="chip-btn${w.rotation === false ? ' on' : ''}" data-act="rotation" aria-pressed="${w.rotation === false}">
-        <i class="ti ti-ban" aria-hidden="true"></i> Fuera de rotación</button>
+        <i class="ti ti-ban" aria-hidden="true"></i> ${t('Fuera de rotación')}</button>
     </div>`;
   div.querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', () => {
     const act = btn.dataset.act;
@@ -248,7 +375,7 @@ export function renderDetailActions(w) {
     if (act === 'switch') return handleSwitchWearing(w.id);
     if (act === 'today') {
       const r = markWornToday(w.id);
-      showToast(r === 'already' ? 'Hoy ya estaba apuntado' : 'Apuntado: lo llevaste hoy');
+      showToast(r === 'already' ? t('Hoy ya estaba apuntado') : t('Apuntado: lo llevas hoy'));
       return openDetail(w.id);
     }
     if (act === 'past') return openWearSheet(w.id);
@@ -256,7 +383,7 @@ export function renderDetailActions(w) {
     if (act === 'rotation') {
       const out = w.rotation !== false;
       setWatchFlag(w.id, 'rotation', !out);
-      showToast(out ? 'Fuera de rotación: no se te recomendará' : 'De vuelta en la rotación');
+      showToast(out ? t('Fuera de rotación: no se te recomendará') : t('De vuelta en la rotación'));
       return openDetail(w.id);
     }
   }));
@@ -268,55 +395,50 @@ export function renderUsage(w) {
   if (!el) return;
   const st = wearStats(w);
   const alerts = maintenanceAlerts(w);
-  const eur = v => v.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: v < 10 ? 2 : 0 });
   const cells = [
-    { l: 'Días de uso', v: st.daysWorn },
-    { l: 'Últimos 90 días', v: st.daysWorn90 },
-    { l: 'Última vez', v: st.lastWorn === null ? 'Nunca' : st.daysSinceLast === 0 ? 'Hoy' : st.daysSinceLast === 1 ? 'Ayer' : `Hace ${st.daysSinceLast} d` },
-    { l: 'Coste por uso', v: st.costPerWear !== null ? eur(st.costPerWear) : (w.purchasePrice ? '—' : 'Sin precio'), small: st.costPerWear === null && !w.purchasePrice },
+    { l: t('Días de uso'), v: st.daysWorn },
+    { l: t('Últimos 90 días'), v: st.daysWorn90 },
+    { l: t('Última vez'), v: st.lastWorn === null ? t('Nunca') : st.daysSinceLast === 0 ? t('Hoy') : st.daysSinceLast === 1 ? t('Ayer') : t('Hace {n} d', { n: st.daysSinceLast }) },
+    { l: t('Coste por uso'), v: st.costPerWear !== null ? money(st.costPerWear) : (w.purchasePrice ? '—' : t('Sin precio')), small: st.costPerWear === null && !w.purchasePrice },
   ];
   el.innerHTML = `
     <div class="usage-grid">${cells.map(c => `
       <div class="usage-cell"><div class="usage-val${c.small ? ' is-text' : ''}">${escHtml(String(c.v))}</div><div class="usage-label">${c.l}</div></div>`).join('')}
     </div>
-    ${alerts.map(a => `<div class="maint-alert"><i class="ti ti-tool" aria-hidden="true"></i><span>${escHtml(a.text)}</span></div>`).join('')}`;
+    ${alerts.map(a => `<button class="maint-alert" data-goto="maint"><i class="ti ti-tool" aria-hidden="true"></i><span>${escHtml(alertText(a))}</span></button>`).join('')}`;
+  el.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => setDetailTab('maint')));
 }
+
+export const SPEC_DEFS = [
+  { k: 'calibre', l: 'Calibre' }, { k: 'movimiento', l: 'Movimiento' }, { k: 'cristal', l: 'Cristal' },
+  { k: 'brazalete', l: 'Brazalete' }, { k: 'esfera', l: 'Esfera' }, { k: 'caja', l: 'Caja' },
+  { k: 'resistencia', l: 'Agua' }, { k: 'reserva', l: 'Reserva' }, { k: 'diametro', l: 'Diámetro' },
+  { k: 'grosor', l: 'Grosor' }, { k: 'asas', l: 'Entre asas' },
+];
 
 export function renderSpecs(w) {
   const specs = w.specs || {};
-  const defs = [
-    {k:'calibre',l:'Calibre'},{k:'movimiento',l:'Movimiento'},{k:'cristal',l:'Cristal'},
-    {k:'brazalete',l:'Brazalete'},{k:'esfera',l:'Esfera'},{k:'caja',l:'Caja'},
-    {k:'resistencia',l:'Agua'},{k:'reserva',l:'Reserva'},{k:'diametro',l:'Diámetro'},{k:'grosor',l:'Grosor'},
-    {k:'asas',l:'Entre asas'},
-  ];
-
   document.getElementById('d-specs').innerHTML = `
     <div class="specs-edit-hint" id="specs-edit-hint">
-      <i class="ti ti-pencil" style="font-size:11px;" aria-hidden="true"></i>
-      Toca cualquier campo para editar
+      <i class="ti ti-pencil" aria-hidden="true"></i>
+      ${t('Toca cualquier campo para editarlo')}
     </div>
-    ${defs.map(s => {
+    ${SPEC_DEFS.map(s => {
       const val = specs[s.k] || '';
-      const isEmpty = !val;
+      const l = t(s.l);
       return `
-      <div class="spec-card${isEmpty ? ' spec-empty' : ''}"
-           data-key="${s.k}"
-           role="button" tabindex="0"
-           aria-label="Editar ${s.l}: ${val || 'vacío'}"
-           title="Toca para editar">
-        <div class="spec-label">${s.l}</div>
-        <div class="spec-value" id="spec-val-${s.k}">${isEmpty ? '<span class="spec-placeholder">Añadir…</span>' : escHtml(val)}</div>
+      <div class="spec-card${val ? '' : ' spec-empty'}" data-key="${s.k}" role="button" tabindex="0"
+           aria-label="${escHtml(t('Editar {campo}: {valor}', { campo: l, valor: val || t('vacío') }))}">
+        <div class="spec-label">${l}</div>
+        <div class="spec-value" id="spec-val-${s.k}">${val ? escHtml(val) : `<span class="spec-placeholder">${t('Añadir…')}</span>`}</div>
       </div>`;
     }).join('')}`;
 
   document.getElementById('d-specs').querySelectorAll('.spec-card').forEach(card => {
     const activate = () => editSpecInline(card.dataset.key, getWatch(ui.currentWatchId));
     card.addEventListener('click', activate);
-    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }});
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
   });
-
-  // Also show URL import button in detail view
   renderSpecsImportBtn(w);
 }
 
@@ -327,7 +449,8 @@ export function editSpecInline(key, w) {
   const input = document.createElement('input');
   input.className = 'spec-input-inline';
   input.value = current === '—' ? '' : current;
-  input.placeholder = 'Añadir valor...';
+  input.placeholder = t('Añadir valor…');
+  input.setAttribute('aria-label', t(SPEC_DEFS.find(s => s.k === key)?.l || key));
   valEl.replaceWith(input);
   input.focus(); input.select();
   let done = false;
@@ -344,7 +467,7 @@ export function editSpecInline(key, w) {
     newEl.className = 'spec-value'; newEl.id = 'spec-val-' + key;
     newEl.textContent = newVal || '—';
     input.replaceWith(newEl);
-    if (newVal && newVal !== prevVal) showToast('Guardado');
+    if (newVal && newVal !== prevVal) showToast(t('Guardado'));
   }
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', e => {
@@ -371,8 +494,8 @@ export function renderSpecsImportBtn(w) {
   div.id = 'd-specs-import';
   div.className = 'specs-import-row';
   div.innerHTML = `
-    ${canImport ? `<button type="button" class="chip-btn" id="d-import-btn"><i class="ti ti-link" aria-hidden="true"></i> Rellenar desde un enlace</button>` : ''}
-    ${host ? `<a class="source-link" href="${escHtml(w.sourceUrl)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> Fuente: ${escHtml(host)}</a>` : ''}`;
+    ${canImport ? `<button type="button" class="chip-btn" id="d-import-btn"><i class="ti ti-link" aria-hidden="true"></i> ${t('Rellenar desde un enlace')}</button>` : ''}
+    ${host ? `<a class="source-link" href="${escHtml(w.sourceUrl)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${t('Fuente')}: ${escHtml(host)}</a>` : ''}`;
   specsEl.insertAdjacentElement('afterend', div);
   div.querySelector('#d-import-btn')?.addEventListener('click', () => importIntoWatch(w.id));
 }
@@ -383,17 +506,16 @@ export function renderPrice(w) {
     box.style.display = 'block';
     document.getElementById('d-price').textContent = w.price.value;
     let note = w.price.note || '';
-    if (w._warning) note = `${note ? note + ' · ' : ''}estimado por la IA de una versión antigua`;
+    if (w._warning) note = `${note ? note + ' · ' : ''}${t('estimado por la IA de una versión antigua')}`;
     document.getElementById('d-price-note').textContent = note;
   } else {
     box.style.display = 'none';
   }
   // Where the specs come from
-  const old = document.getElementById('d-source-badge');
-  if (old) old.remove();
+  document.getElementById('d-source-badge')?.remove();
   let html = '';
-  if (w._source === 'local_db') html = `<i class="ti ti-database" aria-hidden="true"></i> Ficha de la base de datos de Rotor`;
-  else if (w._warning) html = `<i class="ti ti-info-circle" aria-hidden="true"></i> Esta ficha la rellenó la IA de una versión antigua y puede tener errores. Compruébala, o usa «Rellenar desde un enlace» con la página del reloj.`;
+  if (w._source === 'local_db') html = `<i class="ti ti-database" aria-hidden="true"></i> ${t('Ficha de la base de datos de Rotor')}`;
+  else if (w._warning) html = `<i class="ti ti-info-circle" aria-hidden="true"></i> ${t('Esta ficha la rellenó la IA de una versión antigua y puede tener errores. Compruébala, o usa «Rellenar desde un enlace» con la página del reloj.')}`;
   if (!html) return;
   const badge = document.createElement('div');
   badge.id = 'd-source-badge';
@@ -402,19 +524,63 @@ export function renderPrice(w) {
   document.getElementById('d-specs')?.insertAdjacentElement('afterend', badge);
 }
 
+/* Historial tab: every use of this watch, editable */
+export function renderDetailHistory(w) {
+  const el = document.getElementById('d-history');
+  if (!el) return;
+  const st = wearStats(w);
+  const keys = [...wornDayKeys(w)].sort();
+  el.innerHTML = `
+    <div class="hw-stats">
+      <div class="spec-card"><div class="spec-label">${t('Días de uso')}</div><div class="spec-value">${st.daysWorn}</div></div>
+      <div class="spec-card"><div class="spec-label">${t('Últimos 90 días')}</div><div class="spec-value">${st.daysWorn90}</div></div>
+      <div class="spec-card"><div class="spec-label">${t('Primera vez')}</div><div class="spec-value">${keys.length ? formatDate(new Date(keys[0] + 'T12:00').getTime()) : '—'}</div></div>
+    </div>
+    <button class="chip-btn" id="dh-add"><i class="ti ti-calendar-plus" aria-hidden="true"></i> ${t('Apuntar un uso')}</button>
+    <div class="dh-list">${intervalsHTML(w, 'all')}</div>`;
+  el.querySelector('#dh-add').addEventListener('click', () => openWearSheet(w.id));
+  el.querySelectorAll('.interval-edit').forEach(b =>
+    b.addEventListener('click', () => openWearSheet(w.id, Number(b.dataset.idx))));
+}
+
+/* Mantenimiento tab: purchase, service and battery, with the alerts */
+export function renderMaintenance(w) {
+  const el = document.getElementById('d-maint');
+  if (!el) return;
+  const st = wearStats(w);
+  const rows = [
+    { l: t('Precio pagado'), v: w.purchasePrice ? money(w.purchasePrice, { decimals: 2 }) : null },
+    { l: t('Fecha de compra'), v: w.purchaseDate ? formatDate(w.purchaseDate) : null },
+    w.type === 'quartz'
+      ? { l: t('Cambio de pila'), v: w.batteryChanged ? formatDate(w.batteryChanged) : null }
+      : { l: t('Última revisión'), v: w.lastService ? formatDate(w.lastService) : null },
+    { l: t('Coste por uso'), v: st.costPerWear !== null ? money(st.costPerWear) : null },
+  ];
+  const alerts = maintenanceAlerts(w);
+  el.innerHTML = `
+    ${alerts.map(a => `<div class="maint-alert"><i class="ti ti-tool" aria-hidden="true"></i><span>${escHtml(alertText(a))}</span></div>`).join('')}
+    <div class="maint-rows">${rows.map(r => `
+      <div class="maint-row"><span>${r.l}</span><b class="${r.v ? '' : 'muted'}">${r.v ? escHtml(r.v) : t('Sin apuntar')}</b></div>`).join('')}
+    </div>
+    <div class="sheet-text">${w.type === 'quartz'
+      ? t('Una pila dura unos 2 o 3 años. Cambiarla a tiempo evita que se derrame dentro del reloj.')
+      : t('Un mecánico agradece una revisión cada 5 años más o menos: limpieza, aceites y juntas.')}</div>
+    <button class="chip-btn" id="dm-edit"><i class="ti ti-pencil" aria-hidden="true"></i> ${t('Editar compra y mantenimiento')}</button>`;
+  el.querySelector('#dm-edit').addEventListener('click', () => openEditModal(w.id, { maintenance: true }));
+}
+
 /* ─── Wear actions ─── */
 export function handleStartWearing(id) {
   const w = getWatch(id);
-  if (startWearing(id)) { showToast(`¡Disfruta del ${w.brand} ${w.model}!`); openDetail(id); }
+  if (startWearing(id)) { showToast(t('Contando el tiempo con el {w}', { w: `${w.brand} ${w.model}` })); openDetail(id); }
 }
 export function handleStopWearing(id) {
-  if (stopWearing(id)) { showToast('Sesión guardada en el historial'); stopActiveTimer(); showView('home'); }
+  if (stopWearing(id)) { showToast(t('Guardado en el historial')); stopActiveTimer(); showView('home'); }
 }
 export function handleSwitchWearing(id) {
-  const prev = getActiveWatch();
   const w = getWatch(id);
   if (switchToWatch(id)) {
-    showToast(`Guardado el ${prev ? prev.brand : ''} · ahora llevas el ${w.brand} ${w.model}`);
+    showToast(t('Ahora llevas el {w}', { w: `${w.brand} ${w.model}` }));
     openDetail(id);
   }
 }
@@ -440,41 +606,43 @@ export function openWearSheet(watchId, idx = null) {
   const today = toDateInput(Date.now());
   const from  = entry ? toDateInput(entry.start) : today;
   const to    = entry ? toDateInput(entry.end)   : today;
+  const title = entry ? t('Editar uso') : t('Apuntar un uso');
   const { $, close } = openSheet({
-    label: entry ? 'Editar uso' : 'Apuntar un uso',
-    html: `<div class="modal-title">${entry ? 'Editar uso' : 'Apuntar un uso'}</div>
-      <div class="sheet-text">${escHtml(w.brand)} ${escHtml(w.model)}. Cuenta cada día del rango como un día de uso.</div>
+    label: title,
+    html: `<div class="modal-title">${title}</div>
+      <div class="sheet-text">${name(w)}. ${t('Cuenta cada día del rango como un día de uso.')}</div>
       <div class="form-grid-2">
-        <div class="form-field"><label class="form-label" for="ws-from">Desde</label>
+        <div class="form-field"><label class="form-label" for="ws-from">${t('Desde')}</label>
           <input class="form-input" type="date" id="ws-from" value="${from}" max="${today}"></div>
-        <div class="form-field"><label class="form-label" for="ws-to">Hasta</label>
+        <div class="form-field"><label class="form-label" for="ws-to">${t('Hasta')}</label>
           <input class="form-input" type="date" id="ws-to" value="${to}" max="${today}"></div>
       </div>
       <div class="modal-actions">
-        ${entry ? '<button class="modal-btn modal-btn-danger" id="ws-del">Borrar</button>' : ''}
-        <button class="modal-btn modal-btn-cancel" id="ws-cancel" data-close>Cancelar</button>
-        <button class="modal-btn modal-btn-save" id="ws-save">Guardar</button>
+        ${entry ? `<button class="modal-btn modal-btn-danger" id="ws-del">${t('Borrar')}</button>` : ''}
+        <button class="modal-btn modal-btn-cancel" id="ws-cancel" data-close>${t('Cancelar')}</button>
+        <button class="modal-btn modal-btn-save" id="ws-save">${t('Guardar')}</button>
       </div>`,
   });
   $('#ws-save').addEventListener('click', () => {
     const a = fromDateInput($('#ws-from').value);
     const b = fromDateInput($('#ws-to').value) ?? a;
-    if (!a) { showToast('Elige una fecha'); return; }
+    if (!a) { showToast(t('Elige una fecha')); return; }
     const ok = entry ? updateHistoryEntry(watchId, idx, a, b) : addWearDays(watchId, a, b);
-    if (!ok) { showToast('No se pueden apuntar días futuros'); return; }
+    if (!ok) { showToast(t('No se pueden apuntar días futuros')); return; }
     close();
-    showToast(entry ? 'Uso actualizado' : 'Uso apuntado');
+    showToast(entry ? t('Uso actualizado') : t('Uso apuntado'));
     refreshAfterWearChange(watchId);
   });
   $('#ws-del')?.addEventListener('click', () => {
     const days = calendarDaysBetween(entry.start, entry.end) + 1;
-    const when = days === 1 ? `del ${formatDate(entry.start)}` : `del ${formatDate(entry.start)} al ${formatDate(entry.end)} (${days} días)`;
-    showConfirm('¿Borrar este uso?', `Se quitará el uso ${when} del ${w.brand} ${w.model}.`, () => {
+    const when = days === 1 ? t('del {d}', { d: formatDate(entry.start) })
+      : t('del {a} al {b} ({n})', { a: formatDate(entry.start), b: formatDate(entry.end), n: daysTxt(days) });
+    showConfirm(t('¿Borrar este uso?'), t('Se quitará el uso {when} del {w}.', { when, w: `${w.brand} ${w.model}` }), () => {
       deleteHistoryEntry(watchId, idx);
       close();
-      showToast('Uso borrado');
+      showToast(t('Uso borrado'));
       refreshAfterWearChange(watchId);
-    }, { okLabel: 'Borrar' });
+    }, { okLabel: t('Borrar') });
   });
 }
 export function refreshAfterWearChange(watchId) {
@@ -487,9 +655,8 @@ export function refreshAfterWearChange(watchId) {
 /* ─── Delete (custom confirm) ─── */
 export function handleDeleteWatch(id) {
   const w = getWatch(id);
-  const name = w ? `${w.brand} ${w.model}` : 'este reloj';
-  showConfirm('¿Eliminar reloj?', `Se borrará ${name} y todo su historial. Esta acción no se puede deshacer.`, () => {
-    deleteWatch(id); showView('home'); showToast('Reloj eliminado');
+  const nm = w ? `${w.brand} ${w.model}` : t('este reloj');
+  showConfirm(t('¿Eliminar reloj?'), t('Se borrará {w} y todo su historial. Esta acción no se puede deshacer.', { w: nm }), () => {
+    deleteWatch(id); showView('home'); showToast(t('Reloj eliminado'));
   });
 }
-

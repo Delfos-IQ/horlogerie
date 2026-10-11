@@ -123,6 +123,7 @@
     const t = clean(v);
     const words = t.toLowerCase().split(/[\s,/]+/).filter(Boolean);
     if (words.length <= 4 && words.every(w => w in WORDS.color)) {
+      if (OUT_LANG === 'en') return cap(words.filter(w => w !== 'dial').join(' '));
       const out = words.map(w => WORDS.color[w]).filter(Boolean).join(' ');
       return out ? cap(out) : t;
     }
@@ -227,11 +228,42 @@
   ];
 
   /**
-   * parseSpecs({ text, title, jsonld, hostname })
+   * parseSpecs({ text, title, jsonld, hostname, lang })   lang 'en' → values in English
    * → { brand, model, ref, type, precio, calibre, movimiento, cristal, diametro,
    *     grosor, resistencia, reserva, caja, brazalete, esfera, asas, _from: {campo: línea} }
    */
-  function parseSpecs({ text = '', title = '', jsonld = null } = {}) {
+  function parseSpecs({ text = '', title = '', jsonld = null, lang = 'es' } = {}) {
+    OUT_LANG = lang;
+    try {
+      const res = parseSpecsEs({ text, title, jsonld });
+      return lang === 'en' ? toEnglish(res) : res;
+    } finally { OUT_LANG = 'es'; }
+  }
+
+  /* Values are normalised in Spanish; this rewrites them for an English interface */
+  const EN_WORDS = [
+    [/Zafiro abombado/g, 'Domed sapphire'], [/Mineral abombado/g, 'Domed mineral'], [/Acrílico abombado/g, 'Domed acrylic'],
+    [/Hardlex abombado/g, 'Domed Hardlex'], [/\(antirreflejos\)/g, '(anti-reflective)'],
+    [/\bZafiro\b/g, 'Sapphire'], [/\bAcrílico\b/g, 'Acrylic'], [/\bTitanio\b/g, 'Titanium'], [/\bBronce\b/g, 'Bronze'],
+    [/\bCerámica\b/g, 'Ceramic'], [/Acero inoxidable/g, 'Stainless steel'], [/\bLatón\b/g, 'Brass'], [/\bAleación\b/g, 'Alloy'],
+    [/\bCarbono\b/g, 'Carbon'], [/\bgrado\b/g, 'grade'], [/^Piel$/g, 'Leather'], [/^Caucho$/g, 'Rubber'], [/^Silicona$/g, 'Silicone'],
+    [/Nailon \(NATO\)/g, 'Nylon (NATO)'], [/^Malla$/g, 'Mesh'], [/^Acero$/g, 'Steel'],
+    [/Cuerda manual/g, 'Hand-wound'], [/\bAutomático\b/g, 'Automatic'], [/\bCuarzo\b/g, 'Quartz'],
+    [/(\d+) rubíes/g, '$1 jewels'], [/con parada de segundero/g, 'hacking seconds'],
+  ];
+  let OUT_LANG = 'es';   // set by parseSpecs for the duration of one call
+  function toEnglish(res) {
+    const out = { ...res };
+    for (const [k, v] of Object.entries(res)) {
+      if (typeof v !== 'string' || ['brand', 'model', 'ref', 'type'].includes(k)) continue;
+      let e = v.replace(/(\d),(\d)/g, '$1.$2');                       // decimal comma → point
+      for (const [re, rep] of EN_WORDS) e = e.replace(re, rep);
+      out[k] = e;
+    }
+    return out;
+  }
+
+  function parseSpecsEs({ text = '', title = '', jsonld = null } = {}) {
     const out = {}; const from = {};
     const pretty = l => clean(String(l || '').replace(/^\s*\|\s*/, '').replace(/\s*\|\s*|\t+/, ': ').replace(/\s*\|\s*|\t+/g, ' · '));
     const set = (k, v, line) => { if (v && !out[k]) { out[k] = v; from[k] = pretty(line).slice(0, 120); } };

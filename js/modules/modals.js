@@ -4,6 +4,7 @@ import { addWatch, compressPhoto, getWatch, updateWatch } from '../storage.js';
 import { escHtml, showToast, ui } from './core.js';
 import { openDetail, renderHome } from './home-detail.js';
 import { importEnabled, showImportedPreview } from './url-import.js';
+import { currencySymbol, t } from '../i18n.js';
 
 export function openAddModal() {
   ui.editingWatchId = null;
@@ -12,8 +13,8 @@ export function openAddModal() {
   window._pendingDbPrice = null;
   window._pendingSource  = null;
   window._pendingSourceUrl = null;
-  document.getElementById('modal-title-text').textContent = 'Añadir Reloj';
-  document.getElementById('modal-save-btn').textContent   = 'Guardar';
+  document.getElementById('modal-title-text').textContent = t('Añadir reloj');
+  document.getElementById('modal-save-btn').textContent   = t('Guardar');
   document.getElementById('f-brand').value  = '';
   document.getElementById('f-model').value  = '';
   document.getElementById('f-ref').value    = '';
@@ -52,18 +53,19 @@ export function openAddModal() {
 
 export function resetDbHint() {
   const hint = document.getElementById('db-hint');
-  if (hint) hint.innerHTML = '<i class="ti ti-database" style="color:var(--gold-light);"></i> Berny · Pagani Design · San Martin · Cadisen · OBLVLO · Seagull · CIGA Design · Carnival · Reef Tiger · Steeldive';
+  if (hint) hint.innerHTML = '<i class="ti ti-database c-gold" aria-hidden="true"></i> Berny · Pagani Design · San Martin · Cadisen · OBLVLO · Seagull · CIGA Design · Carnival · Reef Tiger · Steeldive';
 }
 
-export function openEditModal(id) {
+/** @param {string} id @param {{ maintenance?: boolean }} [opts] maintenance: open with «Compra y mantenimiento» unfolded */
+export function openEditModal(id, opts = {}) {
   const w = getWatch(id);
   if (!w) return;
   ui.editingWatchId   = id;
   ui.editingPhotoData = w.photo || null;
   window._pendingDbSpecs = null;
   window._pendingDbPrice = null;
-  document.getElementById('modal-title-text').textContent = 'Editar Reloj';
-  document.getElementById('modal-save-btn').textContent   = 'Actualizar';
+  document.getElementById('modal-title-text').textContent = t('Editar reloj');
+  document.getElementById('modal-save-btn').textContent   = t('Actualizar');
   document.getElementById('f-brand').value  = w.brand;
   document.getElementById('f-model').value  = w.model;
   document.getElementById('f-ref').value    = w.ref || '';
@@ -81,6 +83,10 @@ export function openEditModal(id) {
   const dbSec = document.getElementById('db-search-section');
   if (dbSec) dbSec.style.display = 'none';
   document.getElementById('add-modal').style.display = 'flex';
+  if (opts.maintenance) {
+    const det = document.getElementById('f-maint');
+    if (det) { det.open = true; setTimeout(() => det.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50); }
+  }
 }
 
 export function closeAddModal() {
@@ -152,12 +158,12 @@ export function applyDbResult(w) {
   document.getElementById('db-search-results').style.display = 'none';
   document.getElementById('db-search-input').value = `${w.brand} ${w.model}`;
   const hint = document.getElementById('db-hint');
-  if (hint) hint.innerHTML = `<i class="ti ti-check" style="color:var(--ok);"></i> <strong>${escHtml(w.brand)} ${escHtml(w.model)}</strong> — specs encontradas`;
+  if (hint) hint.innerHTML = `<i class="ti ti-check c-ok" aria-hidden="true"></i> <strong>${escHtml(w.brand)} ${escHtml(w.model)}</strong> — ${t('ficha encontrada')}`;
   window._pendingDbSpecs = w.specs;
   window._pendingDbPrice = w.price;
   window._pendingSource  = 'local_db';
   if (typeof showImportedPreview === 'function') showImportedPreview();
-  showToast(`${w.brand} ${w.model} seleccionado`);
+  showToast(t('{w} seleccionado', { w: `${w.brand} ${w.model}` }));
 }
 
 /* ─── Save watch ─── */
@@ -168,12 +174,12 @@ export async function saveWatch() {
   const type  = document.getElementById('f-type').value;
   const notes = document.getElementById('f-notes').value.trim();
   const maint = readMaintFields();
-  if (!brand) { showToast('Introduce la marca'); return; }
+  if (!brand) { showToast(t('Introduce la marca')); return; }
   if (maint === null) return;
-  if (!model) { showToast('Introduce el modelo'); return; }
+  if (!model) { showToast(t('Introduce el modelo')); return; }
 
   const btn = document.getElementById('modal-save-btn');
-  btn.disabled = true; btn.textContent = 'Guardando…';
+  btn.disabled = true; btn.textContent = t('Guardando…');
 
   try {
     if (ui.editingWatchId) {
@@ -183,7 +189,7 @@ export async function saveWatch() {
       await updateWatch(ui.editingWatchId, changes);
       if (window._pendingDbSpecs) await updateWatch(ui.editingWatchId, pendingSpecChanges(getWatch(ui.editingWatchId)));
       closeAddModal();
-      showToast('Reloj actualizado');
+      showToast(t('Reloj actualizado'));
       openDetail(ui.editingWatchId);
     } else {
       const newW = await addWatch({ brand, model, ref, type, notes, photo: ui.editingPhotoData });
@@ -203,12 +209,12 @@ export async function saveWatch() {
       window._pendingSource = null;
       window._pendingSourceUrl = null;
       closeAddModal();
-      showToast(autoFilled ? `${brand} ${model} añadido con su ficha técnica` : `${brand} ${model} añadido`);
+      showToast(autoFilled ? t('{w} añadido con su ficha técnica', { w: `${brand} ${model}` }) : t('{w} añadido', { w: `${brand} ${model}` }));
       renderHome();
     }
   } finally {
     btn.disabled = false;
-    btn.textContent = ui.editingWatchId ? 'Actualizar' : 'Guardar';
+    btn.textContent = ui.editingWatchId ? t('Actualizar') : t('Guardar');
   }
 }
 
@@ -230,6 +236,8 @@ export function setMaintFields(w) {
   document.getElementById('f-battery').value        = tsToDateInput(w.batteryChanged);
   const today = tsToDateInput(Date.now());
   ['f-purchase-date', 'f-last-service', 'f-battery'].forEach(id => document.getElementById(id).max = today);
+  const cur = document.getElementById('f-price-cur');
+  if (cur) cur.textContent = currencySymbol();
   const details = document.getElementById('f-maint');
   if (details) details.open = !!(w.purchasePrice || w.purchaseDate || w.lastService || w.batteryChanged);
   updateMaintVisibility();
@@ -244,7 +252,7 @@ export function updateMaintVisibility() {
 export function readMaintFields() {
   const raw = document.getElementById('f-purchase-price').value.trim().replace(',', '.');
   const price = raw === '' ? null : Number(raw);
-  if (price !== null && (!isFinite(price) || price < 0)) { showToast('El precio debe ser un número'); return null; }
+  if (price !== null && (!isFinite(price) || price < 0)) { showToast(t('El precio debe ser un número')); return null; }
   const out = {
     purchasePrice:  price,
     purchaseDate:   dateInputToTs(document.getElementById('f-purchase-date').value),
@@ -252,7 +260,7 @@ export function readMaintFields() {
     batteryChanged: dateInputToTs(document.getElementById('f-battery').value),
   };
   if (Object.entries(out).some(([k, v]) => k !== 'purchasePrice' && v !== null && v > Date.now())) {
-    showToast('Las fechas no pueden ser futuras'); return null;
+    showToast(t('Las fechas no pueden ser futuras')); return null;
   }
   return out;
 }

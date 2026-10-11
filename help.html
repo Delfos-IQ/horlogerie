@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<title>Help · Rotor</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --dark:#F3EEE3; --dark2:#FBF8F1; --dark3:#E8E1D2; --gold:#B8963E; --gold-light:#7E6118; --light:#1E1B16; --mid:#655D51;
+          --line:rgba(126,97,24,.24); color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --dark:#0B1220; --dark2:#141D30; --dark3:#1F2A42; --gold-light:#D4AF6A; --light:#E6E1D6; --mid:#97A0B1;
+            --line:rgba(184,150,62,.24); color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'Jost', system-ui, sans-serif;
+         font-size: 16px; line-height: 1.65; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+       letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+       margin: 36px 0 8px; }
+  p, li { color: var(--light); }
+  .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+  .box { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid var(--line); }
+  th { color: var(--gold-light); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--gold-light); }
+  code { font-size: 13px; background: var(--dark3); padding: 1px 5px; border-radius: 4px; }
+  details { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 12px 16px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 500; color: var(--light); }
+  details[open] summary { margin-bottom: 6px; }
+  .key { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--dark3); padding: 1px 6px; border-radius: 5px; }
+  .back { margin-top: 40px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Help</h1>
+  <div class="meta">Rotor · Cloud backup, recovery key and other devices · <a href="./ayuda.html" lang="es">Español</a></div>
+
+  <div class="box"><p><strong>The essentials:</strong> your watches live on your phone. If you turn on the cloud backup, they are also stored on a server and you can restore them with your <strong>recovery key</strong>. Rotor doesn’t ask for an email or an account: the key is the only thing that identifies your backup, so keep it safe.</p></div>
+
+  <h2>Logging what you wear</h2>
+  <details open><summary>How do I log today’s watch?</summary>
+    <p>On the Collection screen tap <strong>Today I wear…</strong> and pick the watch. One tap is enough; tap it again to undo. You can also tap <strong>I’m wearing it today</strong> on the suggested watch or on any watch’s page. For other days use <strong>Another day</strong>, or tap a day in History → Calendar.</p></details>
+  <details><summary>What is “Time how long I wear it”?</summary>
+    <p>Optional. It starts a live timer on that watch until you tap <strong>Take it off</strong>. Most people only log days; timing is there if you want hours too.</p></details>
+
+  <h2>The cloud backup</h2>
+  <details open><summary>What is saved and when?</summary>
+    <p>Your watches (with photos and wear history) and your wishlist. They are saved automatically a few seconds after each change, when you open the app and when the connection comes back. Settings → System status shows when it last happened.</p></details>
+  <details open><summary>Who can see my backup?</summary>
+    <p>Nobody but you. Everything is encrypted on your phone with a key derived from your recovery key, and that key is never sent. The server only holds ciphertext: neither Rotor nor Cloudflare can read it. For that same reason, <strong>if you lose the key and have no device left with Rotor, the backup cannot be recovered</strong>.</p></details>
+  <details><summary>What happens if I turn it off?</summary>
+    <p>Changes stop being uploaded. What was already in the cloud stays there until you tap “Delete from the cloud”.</p></details>
+
+  <h2>Your recovery key</h2>
+  <details open><summary>What is it?</summary>
+    <p>A 16-character code, for example <span class="key">7KQ2-M4XR-9TBW-2HNF</span>, created when you turn the cloud on. It works like a password: whoever has it can see and delete your backup. Keys created before version 2.8 are longer and still work; “Change key” gives you a short one.</p></details>
+  <details><summary>Where do I keep it?</summary>
+    <p>In your password manager, or send it to yourself with the “Save…” button. It is in Settings → Cloud backup.</p></details>
+  <details><summary>I think someone has seen it</summary>
+    <p>Tap “Change key”: a new key is created and the backup saved with the old one is deleted. Then link your other devices again.</p></details>
+
+  <h2>Using Rotor on another device</h2>
+  <details open><summary>With a 6-character code (fastest)</summary>
+    <p>On the device that already has your watches: Settings → <strong>Link another device</strong>. A code such as <span class="key">K7Q-M4X</span> and a QR code appear.</p>
+    <p>On the new one: Settings → <strong>Use a key or code</strong> and type the code, or scan the QR code with the camera. The code works once and expires after 10 minutes.</p></details>
+  <details><summary>With your recovery key</summary>
+    <p>On the new device: Settings → <strong>Use a key or code</strong> and type the key. Whatever was already there is combined with the backup; nothing is deleted.</p></details>
+
+  <h2>I changed phones or reinstalled the app</h2>
+  <details open><summary>How do I get my watches back?</summary>
+    <p>Uninstalling deletes the app’s data from the phone. To get it back:</p>
+    <ul>
+      <li><strong>If the cloud was on:</strong> open Rotor, tap “I already use Rotor: restore my watches” (or Settings → Use a key or code) and type your key. If you still have another device with Rotor, a linking code also works.</li>
+      <li><strong>If you didn’t use the cloud:</strong> you need a backup file (Settings → Backup JSON). Restore it in Settings → Restore backup.</li>
+    </ul>
+    <p>If the cloud was on but you lost the key and have no device left with Rotor, there is no way to recover the backup: we don’t know whose it is.</p></details>
+
+  <h2>Backups (JSON)</h2>
+  <details><summary>Why do I need them if I use the cloud?</summary>
+    <p>They are a file you keep, independent of the server. If you don’t use the cloud, they are the only way not to lose your collection. The app reminds you after a month without a backup.</p></details>
+
+  <h2>Fill in from a link</h2>
+  <details><summary>How does it work?</summary>
+    <p>Paste the link to the shop or the official site and the server downloads that public page. The app looks for the spec sheet in it (tables and lines like “Diameter: 41 mm”) and copies the data word for word; it doesn’t use artificial intelligence or guess anything. Under each detail you see the line of the page it came from, and you choose what to apply.</p>
+    <p>Some shops (Amazon, Chrono24…) block automatic downloads. In that case copy the specifications table and paste it into “Paste the spec text”: it is read on your phone and sent nowhere.</p></details>
+
+  <h2>Contact</h2>
+  <p>Write to <a href="mailto:pedicode.app@gmail.com?subject=Rotor">pedicode.app@gmail.com</a>.</p>
+  <p class="back"><a href="./">← Back to Rotor</a></p>
+</main>
+</body>
+</html>

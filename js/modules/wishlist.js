@@ -3,11 +3,12 @@ import { escHtml, showToast } from './core.js';
 import { renderHome } from './home-detail.js';
 import { showConfirm } from './sheet.js';
 import { importEnabled } from './url-import.js';
+import { t } from '../i18n.js';
 
 export const PRIORITY_CFG = {
-  high:   { label: '🔥 Alta',  color: 'var(--danger)' },
-  medium: { label: '⭐ Media', color: 'var(--gold-light)' },
-  low:    { label: '💭 Baja',  color: 'var(--mid)' },
+  high:   { label: 'Prioridad alta',  color: 'var(--danger)' },
+  medium: { label: 'Prioridad media', color: 'var(--gold-light)' },
+  low:    { label: 'Prioridad baja',  color: 'var(--mid)' },
 };
 
 export let _wlEditingId = null;   // item being edited in the wishlist modal (null = new)
@@ -33,23 +34,23 @@ export function renderWishlist() {
   list.innerHTML = sorted.map(item => {
     const p = PRIORITY_CFG[item.priority] || PRIORITY_CFG.medium;
     const specCount = Object.values(item.specs || {}).filter(v => v).length;
-    const specLabel = specCount > 0 ? `${specCount} specs guardadas` : 'Sin specs aún';
+    const specLabel = specCount === 0 ? t('Sin datos técnicos todavía') : specCount === 1 ? t('1 dato técnico guardado') : t('{n} datos técnicos guardados', { n: specCount });
     return `
       <div class="wl-card" data-wlid="${escHtml(item.id)}">
         <div class="wl-card-header">
-          <div class="wl-priority-dot" style="background:${p.color};" title="${p.label}"></div>
+          <div class="wl-priority-dot" style="background:${p.color};" title="${t(p.label)}" role="img" aria-label="${t(p.label)}"></div>
           <div class="wl-card-title">
             <div class="wl-brand">${escHtml(item.brand)}</div>
             <div class="wl-model">${escHtml(item.model)}${item.ref ? ` <span class="wl-ref">· ${escHtml(item.ref)}</span>` : ''}</div>
           </div>
           <div class="wl-card-actions">
-            <button class="wl-btn-icon" data-action="edit" aria-label="Editar ${escHtml(item.brand)} ${escHtml(item.model)}" title="Editar"><i class="ti ti-edit" aria-hidden="true"></i></button>
-            <button class="wl-btn-icon" data-action="promote" aria-label="Añadir ${escHtml(item.brand)} ${escHtml(item.model)} a mi colección" title="Añadir a colección"><i class="ti ti-device-watch" aria-hidden="true"></i></button>
-            <button class="wl-btn-icon wl-btn-danger" data-action="delete" aria-label="Eliminar ${escHtml(item.brand)} ${escHtml(item.model)} de deseos" title="Eliminar"><i class="ti ti-trash" aria-hidden="true"></i></button>
+            <button class="wl-btn-icon" data-action="edit" aria-label="${escHtml(t('Editar {w}', { w: `${item.brand} ${item.model}` }))}" title="${t('Editar')}"><i class="ti ti-edit" aria-hidden="true"></i></button>
+            <button class="wl-btn-icon" data-action="promote" aria-label="${escHtml(t('Añadir {w} a mi colección', { w: `${item.brand} ${item.model}` }))}" title="${t('Añadir a la colección')}"><i class="ti ti-device-watch" aria-hidden="true"></i></button>
+            <button class="wl-btn-icon wl-btn-danger" data-action="delete" aria-label="${escHtml(t('Eliminar {w} de deseos', { w: `${item.brand} ${item.model}` }))}" title="${t('Eliminar')}"><i class="ti ti-trash" aria-hidden="true"></i></button>
           </div>
         </div>
         <div class="wl-card-body">
-          ${item.precio ? `<div class="wl-precio"><i class="ti ti-tag" style="font-size:12px;"></i> ${escHtml(item.precio)}</div>` : ''}
+          ${item.precio ? `<div class="wl-precio"><i class="ti ti-tag" aria-hidden="true"></i> ${escHtml(item.precio)}</div>` : ''}
           <div class="wl-spec-count">${specLabel}</div>
           ${item.notas ? `<div class="wl-notas">${escHtml(item.notas)}</div>` : ''}
         </div>
@@ -80,8 +81,8 @@ export function renderWishlist() {
 /* ── Modal: add new ── */
 export function openWishlistAdd() {
   _wlEditingId = null;
-  document.getElementById('wl-modal-title').textContent = 'Añadir a lista de deseos';
-  document.getElementById('wl-save-btn').textContent    = 'Guardar';
+  document.getElementById('wl-modal-title').textContent = t('Añadir a la lista de deseos');
+  document.getElementById('wl-save-btn').textContent    = t('Guardar');
   clearWishlistForm();
   window._wlSourceUrl = '';
   const urlSec = document.getElementById('wl-url-section');
@@ -95,8 +96,8 @@ export function openWishlistEdit(id) {
   const item = getWishlist().find(i => i.id === id);
   if (!item) return;
   _wlEditingId = id;
-  document.getElementById('wl-modal-title').textContent = 'Editar reloj deseado';
-  document.getElementById('wl-save-btn').textContent    = 'Actualizar';
+  document.getElementById('wl-modal-title').textContent = t('Editar reloj deseado');
+  document.getElementById('wl-save-btn').textContent    = t('Actualizar');
   document.getElementById('wl-brand').value      = item.brand;
   document.getElementById('wl-model').value      = item.model;
   document.getElementById('wl-ref').value        = item.ref || '';
@@ -137,8 +138,8 @@ export function closeWishlistModalIfOutside(e) {
 export function saveWishlistItem() {
   const brand = document.getElementById('wl-brand').value.trim();
   const model = document.getElementById('wl-model').value.trim();
-  if (!brand) { showToast('Introduce la marca'); return; }
-  if (!model) { showToast('Introduce el modelo'); return; }
+  if (!brand) { showToast(t('Introduce la marca')); return; }
+  if (!model) { showToast(t('Introduce el modelo')); return; }
 
   const data = {
     brand, model,
@@ -176,10 +177,10 @@ export function saveWishlistItem() {
       };
       saveWishlist(items);
     }
-    showToast('Reloj actualizado');
+    showToast(t('Reloj actualizado'));
   } else {
     addWishlistItem(data);
-    showToast(`${brand} ${model} añadido a deseos`);
+    showToast(t('{w} añadido a deseos', { w: `${brand} ${model}` }));
   }
 
   closeWishlistModal();
@@ -191,15 +192,15 @@ export async function handleWishlistPromote(id) {
   const item = getWishlist().find(i => i.id === id);
   if (!item) return;
   showConfirm(
-    '¿Añadir a tu colección?',
-    `${item.brand} ${item.model} pasará a tu colección de relojes. Podrás añadirle foto después.`,
+    t('¿Añadir a tu colección?'),
+    t('{w} pasará a tu colección de relojes. Podrás añadirle foto después.', { w: `${item.brand} ${item.model}` }),
     async () => {
       const watchData = promoteWishlistToCollection(id);
       const newWatch  = await addWatch(watchData);
       if (watchData.specs) await updateWatch(newWatch.id, { specs: watchData.specs, _source: 'wishlist',
         ...(watchData.sourceUrl ? { sourceUrl: watchData.sourceUrl } : {}) });
       deleteWishlistItem(id);
-      showToast(`¡${item.brand} ${item.model} añadido a la colección!`);
+      showToast(t('{w} añadido a la colección', { w: `${item.brand} ${item.model}` }));
       renderWishlist();
       renderHome();
     }
@@ -210,9 +211,9 @@ export async function handleWishlistPromote(id) {
 export function handleWishlistDelete(id) {
   const item = getWishlist().find(i => i.id === id);
   if (!item) return;
-  showConfirm('¿Eliminar de deseos?', `Se eliminará ${item.brand} ${item.model} de la lista.`, () => {
+  showConfirm(t('¿Eliminar de deseos?'), t('Se eliminará {w} de la lista.', { w: `${item.brand} ${item.model}` }), () => {
     deleteWishlistItem(id);
-    showToast('Eliminado de deseos');
+    showToast(t('Eliminado de deseos'));
     renderWishlist();
   });
 }

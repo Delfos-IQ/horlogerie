@@ -23,7 +23,7 @@ async def main():
     print("\n=== Registro de uso, recomendación, PDF y autonomía ===")
     async with async_playwright() as p:
         b = await (p.chromium.launch(executable_path=CHROME) if CHROME else p.chromium.launch())
-        ctx = await b.new_context(viewport={"width": 412, "height": 900}, accept_downloads=True)
+        ctx = await b.new_context(locale="es-ES", viewport={"width": 412, "height": 900}, accept_downloads=True)
         external = []
         async def guard(route):
             url = route.request.url
@@ -102,8 +102,26 @@ async def main():
         await page.evaluate("addWatch({brand:'Orient', model:'Bambino', type:'automatic'}).then(() => showView('home'))")
         await page.wait_for_timeout(100)
         rec = await page.inner_text("#recommendation-banner")
+        check("con un reloj ya apuntado hoy no se sugiere otro", rec.strip() == '', rec)
+        # «Hoy llevo…»: the sheet puts the one that is due first
+        await page.click("#today-change")
+        first = await page.inner_text(".today-pick >> nth=0")
+        check("«Hoy llevo…» pone primero el que toca", 'Orient' in first and 'Te toca' in first, first)
+        await page.keyboard.press("Escape")
+        await page.evaluate("getWatches().forEach(w => removeWearDay(w.id, Date.now())); showView('home')")
+        await page.wait_for_timeout(100)
+        today_txt = await page.inner_text("#today-card")
+        check("sin nada apuntado hoy, la portada pregunta qué reloj llevas", 'Hoy llevo' in today_txt, today_txt)
+        rec = await page.inner_text("#recommendation-banner")
         check("recomienda el que nunca se ha puesto, sin el aviso alarmista del aceite",
-              'Orient' in rec and 'aceite' not in rec.lower() and 'toca ponerse' in rec.lower(), rec)
+              'Todavía no lo has llevado' in rec and 'aceite' not in rec.lower() and 'toca ponerse' in rec.lower(), rec)
+        top = await page.evaluate("rankWatchesForRotation(getWatches())[0].watch.id")
+        await page.click("#rec-wear")
+        await page.wait_for_timeout(100)
+        st_o = await page.evaluate("id => wearStats(getWatch(id))", top)
+        today_txt = await page.inner_text("#today-card")
+        brand = await page.evaluate("id => getWatch(id).brand", top)
+        check("«Lo llevo hoy» desde la sugerencia apunta el día con un toque", st_o['daysSinceLast'] == 0 and brand in today_txt, today_txt)
 
         # ── Coste por uso y mantenimiento ──
         await page.evaluate("id => updateWatch(id, {purchasePrice: 120})", A)

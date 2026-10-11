@@ -1,7 +1,8 @@
 import { escHtml, showToast } from './core.js';
 import { renderSystemStatus } from './settings.js';
+import { lang, t } from '../i18n.js';
 
-export const APP_VERSION = '2.13.0'; // Must match version.json
+export const APP_VERSION = '2.14.0'; // Must match version.json
 
 export async function initVersionCheck() {
   // Silent check on every launch — fetch version.json bypassing cache
@@ -20,22 +21,14 @@ export function showUpdateBanner(newVersion, notes) {
 
   const banner = document.createElement('div');
   banner.id = 'update-banner';
-  banner.style.cssText = `
-    position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-    background: var(--gold); color: var(--on-gold);
-    padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 12px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; font-family: var(--font-body); font-size: 13px;
-    font-weight: 500; cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-  `;
+  banner.className = 'update-banner';
+  const showNotes = notes && lang() === 'es';   // release notes are written in Spanish
   banner.innerHTML = `
     <div>
-      <span>⬆️ Nueva versión ${newVersion} disponible</span>
-      ${notes ? `<div style="font-size:11px;font-weight:400;opacity:0.8;margin-top:2px;">${escHtml(notes)}</div>` : ''}
+      <span><i class="ti ti-arrow-up-circle" aria-hidden="true"></i> ${t('Nueva versión {v} disponible', { v: escHtml(newVersion) })}</span>
+      ${showNotes ? `<div class="update-banner-notes">${escHtml(notes)}</div>` : ''}
     </div>
-    <button style="background:var(--dark);color:var(--gold-light);border:none;border-radius:8px;
-      padding:7px 14px;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;
-      white-space:nowrap;" data-action="applyUpdate">Actualizar</button>
+    <button class="update-banner-btn" data-action="applyUpdate">${t('Actualizar')}</button>
   `;
   document.body.appendChild(banner);
 }
@@ -46,30 +39,30 @@ export async function checkForUpdate() {
   const val  = document.getElementById('status-version-val');
   const sub  = document.getElementById('status-version-sub');
   if (icon) icon.style.animation = 'spin 1s linear infinite';
-  if (val) { val.dataset.busy = '1'; val.textContent = 'Comprobando…'; val.style.color = 'var(--mid)'; }
+  if (val) { val.dataset.busy = '1'; val.textContent = t('Comprobando…'); val.style.color = 'var(--mid)'; }
   try {
     const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) throw new Error('No se pudo conectar');
+    if (!res.ok) throw new Error(t('No se pudo conectar'));
     const data = await res.json();
     if (data.version && data.version !== APP_VERSION) {
-      if (val) { val.textContent = `v${data.version} disponible · instalando…`; val.style.color = 'var(--gold-light)'; }
-      showToast(`Nueva versión ${data.version}. Instalando…`, 3000);
+      if (val) { val.textContent = t('v{v} disponible · instalando…', { v: data.version }); val.style.color = 'var(--gold-light)'; }
+      showToast(t('Nueva versión {v}. Instalando…', { v: data.version }), 3000);
       setTimeout(() => applyUpdate(), 1500);
     } else {
       delete val?.dataset.busy;
       if (typeof renderSystemStatus === 'function') await renderSystemStatus();
-      showToast('Ya tienes la versión más reciente');
+      showToast(t('Ya tienes la versión más reciente'));
     }
   } catch {
     if (val) { delete val.dataset.busy; val.textContent = `v${APP_VERSION}`; val.style.color = 'var(--light)'; }
-    if (sub) sub.textContent = 'Sin conexión: no se pudo comprobar';
-    showToast('Sin conexión: no se pudo comprobar');
+    if (sub) sub.textContent = t('Sin conexión: no se pudo comprobar');
+    showToast(t('Sin conexión: no se pudo comprobar'));
   }
   if (icon) icon.style.animation = '';
 }
 
 export async function applyUpdate() {
-  showToast('Reinstalando… la app se reiniciará');
+  showToast(t('Reinstalando… la app se reiniciará'));
   try {
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();

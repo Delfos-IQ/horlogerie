@@ -11,6 +11,7 @@
  * - Settings: stats, sync, PDF export, JSON backup
  */
 
+import { t, locale } from '../i18n.js';
 import { renderHome, stopActiveTimer } from './home-detail.js';
 import { openAddModal } from './modals.js';
 import { renderHistory } from './history.js';
@@ -136,11 +137,9 @@ export function elapsedSince(ts) {
     return `${totalMin} min`;
   } else if (hours < 24) {
     return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
-  } else if (days === 1) {
-    return remHours > 0 ? `1 día ${remHours}h` : `1 día`;
-  } else {
-    return remHours > 0 ? `${days} días ${remHours}h` : `${days} días`;
   }
+  const d = days === 1 ? t('1 día') : t('{n} días', { n: days });
+  return remHours > 0 ? `${d} ${remHours}h` : d;
 }
 
 /** Short version for the grid card badge */
@@ -151,17 +150,16 @@ export function elapsedShort(ts) {
   const days     = Math.floor(hours / 24);
   if (totalMin < 60)  return `${totalMin}min`;
   if (hours < 24)     return `${hours}h`;
-  if (days === 1)     return `1 día`;
-  return `${days} días`;
+  return days === 1 ? t('1 día') : t('{n} días', { n: days });
 }
 export function formatDate(ts) {
-  return new Date(ts).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  return new Date(ts).toLocaleDateString(locale(), { day:'2-digit', month:'short', year:'numeric' });
 }
-export function watchEmoji(type) {
-  return type === 'automatic' ? '⚙️' : type === 'quartz' ? '🔋' : '🕰️';
-}
+/** Drawn dial used when a watch has no photo (inline SVG, follows the text colour) */
+export const DIAL_SVG = '<svg class="dial-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="57" y="29" width="4" height="6" rx="1" fill="currentColor" opacity=".55"/><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M32.0 13.0L32.0 9.0M42.2 14.2L43.5 12.1M49.8 21.8L51.9 20.5M51.0 32.0L55.0 32.0M49.8 42.2L51.9 43.5M42.2 49.8L43.5 51.9M32.0 51.0L32.0 55.0M21.8 49.8L20.5 51.9M14.2 42.3L12.1 43.5M13.0 32.0L9.0 32.0M14.2 21.8L12.1 20.5M21.7 14.2L20.5 12.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M32 32L23.5 26.5M32 32L40.5 17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="32" cy="32" r="2" fill="currentColor"/></svg>';
+export function dialArt() { return DIAL_SVG; }
 export function typeLabel(type) {
-  return type === 'automatic' ? 'Auto' : type === 'quartz' ? 'Quartz' : 'Manual';
+  return type === 'automatic' ? t('Automático') : type === 'quartz' ? t('Cuarzo') : t('Manual');
 }
 export function escHtml(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -208,11 +206,11 @@ export function updateFab(v) {
   if (v === 'home') {
     fab.style.display = 'flex';
     fab.onclick = () => openAddModal();
-    fab.setAttribute('aria-label', 'Añadir reloj');
+    fab.setAttribute('aria-label', t('Añadir reloj'));
   } else if (v === 'wishlist') {
     fab.style.display = 'flex';
     fab.onclick = () => openWishlistAdd();
-    fab.setAttribute('aria-label', 'Añadir a la lista de deseos');
+    fab.setAttribute('aria-label', t('Añadir a la lista de deseos'));
   } else {
     fab.style.display = 'none';
   }

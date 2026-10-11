@@ -32,7 +32,7 @@ def kv():
     return json.loads(urllib.request.urlopen(f"http://localhost:{PORT}/__kv").read())
 
 async def device(browser, name):
-    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block')
+    ctx = await browser.new_context(locale="es-ES", viewport={"width": 412, "height": 900}, service_workers='block')
     async def route(r):
         url = r.request.url.replace("https://horlogerie.pedicode-app.workers.dev", f"http://localhost:{PORT}")
         resp = await r.fetch(url=url)

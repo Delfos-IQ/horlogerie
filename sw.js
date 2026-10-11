@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.13.0';
+const CACHE   = 'horlogerie-v2.14.0';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
@@ -18,10 +18,12 @@ const SHELL = [
   `${BASE}/ayuda.html`,
   `${BASE}/licencias.html`,
   `${BASE}/privacidad.html`,
-  `${BASE}/css/app.css?v=2.13.0`,
-  `${BASE}/css/fonts.css?v=2.13.0`,
-  `${BASE}/css/icons.css?v=2.13.0`,
-  `${BASE}/css/icons/tabler-icons-2a4af5f0.woff2`,
+  `${BASE}/privacy.html`,
+  `${BASE}/help.html`,
+  `${BASE}/css/app.css?v=2.14.0`,
+  `${BASE}/css/fonts.css?v=2.14.0`,
+  `${BASE}/css/icons.css?v=2.14.0`,
+  `${BASE}/css/icons/tabler-icons-bfc43494.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-600-normal.woff2`,
@@ -53,13 +55,18 @@ const SHELL = [
   `${BASE}/js/modules/wishlist.js`,
   `${BASE}/js/modules/session.js`,
   `${BASE}/js/modules/updates.js`,
-  `${BASE}/js/spec-parser.js?v=2.13.0`,
-  `${BASE}/js/main.js?v=2.13.0`,
+  `${BASE}/js/i18n.js`,
+  `${BASE}/js/i18n/en.js`,
+  `${BASE}/js/theme-boot.js?v=2.14.0`,
+  `${BASE}/js/spec-parser.js?v=2.14.0`,
+  `${BASE}/js/main.js?v=2.14.0`,
   `${BASE}/js/modules/url-import.js`,
+  `${BASE}/js/modules/onboarding.js`,
   `${BASE}/js/vendor/qrcode-generator-1.4.4.js`,
   `${BASE}/brand/rotor-symbol.svg`,
   `${BASE}/manifest.json`,
-  `${BASE}/watches_db.json`,  `${BASE}/icons/icon-192.png`,
+  `${BASE}/watches_db.json`,
+  `${BASE}/icons/icon-192.png`,
   `${BASE}/icons/icon-512.png`,
   `${BASE}/icons/icon-maskable-192.png`,
   `${BASE}/icons/icon-maskable-512.png`,

@@ -33,7 +33,7 @@ PHOTO_JS = """(seed) => { const c=document.createElement('canvas'); c.width=c.he
   return c.toDataURL('image/jpeg', 0.92); }"""
 
 async def device(browser, url=APP):
-    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block', bypass_csp=True)
+    ctx = await browser.new_context(locale="es-ES", viewport={"width": 412, "height": 900}, service_workers='block', bypass_csp=True)
     async def route(r):
         u = r.request.url.replace(WORKER, f"http://localhost:{PORT}")
         resp = await r.fetch(url=u)

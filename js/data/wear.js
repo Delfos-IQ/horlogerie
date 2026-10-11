@@ -91,7 +91,7 @@ export function maintenanceAlerts(w, now = Date.now()) {
               : typeof w.purchaseDate === 'number' ? w.purchaseDate : null;
     if (ref !== null) {
       const y = (now - ref) / (365.25 * DAY_MS);
-      if (y >= SERVICE_YEARS) out.push({ kind: 'service', years: Math.floor(y),
+      if (y >= SERVICE_YEARS) out.push({ kind: 'service', years: Math.floor(y), from: typeof w.lastService === 'number' ? 'service' : 'purchase',
         text: `${typeof w.lastService === 'number' ? 'Última revisión' : 'Comprado'} hace ${Math.floor(y)} años: toca revisión (cada ${SERVICE_YEARS} años aprox.)` });
     }
   }

@@ -17,8 +17,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <title>Rotor</title>
-<link rel="stylesheet" href="./css/fonts.css?v=2.13.0">
-<link rel="stylesheet" href="./css/icons.css?v=2.13.0">
+<script src="./js/theme-boot.js?v=2.14.0"></script>
+<link rel="stylesheet" href="./css/fonts.css?v=2.14.0">
+<link rel="stylesheet" href="./css/icons.css?v=2.14.0">
 <style>
 /* CRITICAL CSS - inlined to survive SW cache issues */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -39,8 +40,9 @@
   --safe-bottom:env(safe-area-inset-bottom,0px);
   color-scheme:light;
 }
+/* Tema oscuro «azul medianoche»: automático si el móvil está en oscuro (salvo que se elija Claro en Ajustes) o forzado */
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     /* Tema oscuro automático «azul medianoche» */
     --gold:#B8963E;--gold-light:#D4AF6A;--gold-pale:#F5EDD6;--on-gold:#0B1220;
     --dark:#0B1220;--dark2:#141D30;--dark3:#1F2A42;
@@ -50,6 +52,16 @@
     --scrim:rgba(0,0,0,0.75);
     color-scheme:dark;
   }
+}
+:root[data-theme="dark"]{
+    /* Tema oscuro automático «azul medianoche» */
+    --gold:#B8963E;--gold-light:#D4AF6A;--gold-pale:#F5EDD6;--on-gold:#0B1220;
+    --dark:#0B1220;--dark2:#141D30;--dark3:#1F2A42;
+    --mid:#97A0B1;--light:#E6E1D6;--white:#F4F1EA;
+    --glass-border:rgba(184,150,62,0.24);
+    --ok:#6FCF7F;--danger:#EF8A8A;--danger-fill:#C94A4A;--warn:#E5A073;--info:#8AABDC;
+    --scrim:rgba(0,0,0,0.75);
+    color-scheme:dark;
 }
 html,body{height:100%;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;}
 body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
@@ -109,7 +121,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 .loading-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--mid);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 </style>
-<link rel="stylesheet" href="./css/app.css?v=2.13.0">
+<link rel="stylesheet" href="./css/app.css?v=2.14.0">
 </head>
 <body>
 <a href="#view-home" class="sr-only skip-link">Saltar al contenido principal</a>
@@ -167,17 +179,11 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       </div>
     </div>
     <div id="backup-reminder"></div>
-    <div class="status-bar" id="status-bar">
-      <div class="status-item">
-        <div class="status-dot dot-none" id="status-dot"></div>
-        <span id="status-text">Ningún reloj activo</span>
-      </div>
-      <div class="active-watch-name" id="status-watch-name"></div>
-    </div>
+    <div id="today-card"></div>
     <div id="recommendation-banner"></div>
     <div class="watches-grid" id="watches-grid"></div>
     <div class="empty-state" id="empty-state" style="display:none;">
-      <div class="empty-icon">⌚</div>
+      <div class="empty-icon"><svg class="dial-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="57" y="29" width="4" height="6" rx="1" fill="currentColor" opacity=".55"/><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M32.0 13.0L32.0 9.0M42.2 14.2L43.5 12.1M49.8 21.8L51.9 20.5M51.0 32.0L55.0 32.0M49.8 42.2L51.9 43.5M42.2 49.8L43.5 51.9M32.0 51.0L32.0 55.0M21.8 49.8L20.5 51.9M14.2 42.3L12.1 43.5M13.0 32.0L9.0 32.0M14.2 21.8L12.1 20.5M21.7 14.2L20.5 12.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M32 32L23.5 26.5M32 32L40.5 17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="32" cy="32" r="2" fill="currentColor"/></svg></div>
       <div class="empty-title">Tu colección está vacía</div>
       <div class="empty-text">Pulsa el botón <strong>+</strong> para añadir tu primer reloj</div>
       <button class="chip-btn empty-recover" data-action="openLinkSheet">
@@ -203,32 +209,44 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       <div class="detail-img-placeholder" id="d-img-placeholder"></div>
       <img id="d-img" style="display:none" alt="Foto del reloj">
     </div>
+    <div class="detail-tabs" role="tablist" aria-label="Secciones del reloj">
+      <button class="detail-tab active" role="tab" aria-selected="true" aria-controls="dt-summary" id="dtab-summary" data-action="detailTab" data-arg="summary">Resumen</button>
+      <button class="detail-tab" role="tab" aria-selected="false" aria-controls="dt-specs" id="dtab-specs" data-action="detailTab" data-arg="specs">Ficha</button>
+      <button class="detail-tab" role="tab" aria-selected="false" aria-controls="dt-history" id="dtab-history" data-action="detailTab" data-arg="history">Historial</button>
+      <button class="detail-tab" role="tab" aria-selected="false" aria-controls="dt-maint" id="dtab-maint" data-action="detailTab" data-arg="maint">Mantenimiento</button>
+    </div>
     <div class="detail-body">
-      <div id="d-wear-info" style="display:none;" class="wear-info-box">
-        <div class="wear-info-label">Puesto actualmente</div>
-        <div class="wear-info-days big-num" id="d-days">—</div>
-        <div class="wear-info-since" id="d-since"></div>
-      </div>
-      <div id="d-actions"></div>
+      <section class="detail-panel" id="dt-summary" role="tabpanel" aria-labelledby="dtab-summary">
+        <div id="d-wear-info" style="display:none;" class="wear-info-box">
+          <div class="wear-info-label">Puesto ahora</div>
+          <div class="wear-info-days big-num" id="d-days">—</div>
+          <div class="wear-info-since" id="d-since"></div>
+        </div>
+        <div id="d-actions"></div>
+        <div class="section-title">Uso</div>
+        <div id="d-usage"></div>
+        <div class="mt6-mb10" id="d-notes-section">
+          <div class="section-title mb-6">Notas</div>
+          <div class="hint-box" id="d-notes-val"></div>
+        </div>
+      </section>
 
-      <div class="section-title">Uso</div>
-      <div id="d-usage"></div>
+      <section class="detail-panel" id="dt-specs" role="tabpanel" aria-labelledby="dtab-specs" hidden>
+        <div class="specs-grid" id="d-specs"></div>
+        <div id="d-price-box" style="display:none;" class="price-box">
+          <div class="price-label">Precio de referencia</div>
+          <div class="price-value" id="d-price"></div>
+          <div class="price-note" id="d-price-note"></div>
+        </div>
+      </section>
 
-      <div class="section-title">Especificaciones</div>
-      <div class="specs-grid" id="d-specs"></div>
+      <section class="detail-panel" id="dt-history" role="tabpanel" aria-labelledby="dtab-history" hidden>
+        <div id="d-history"></div>
+      </section>
 
-      <div id="d-price-box" style="display:none;" class="price-box">
-        <div class="price-label">Precio de referencia</div>
-        <div class="price-value" id="d-price"></div>
-        <div class="price-note" id="d-price-note"></div>
-      </div>
-
-      <!-- Specs can be edited inline by tapping each field -->
-
-      <div class="mt6-mb10" id="d-notes-section">
-        <div class="section-title mb-6">Notas</div>
-        <div class="hint-box" id="d-notes-val"></div>
-      </div>
+      <section class="detail-panel" id="dt-maint" role="tabpanel" aria-labelledby="dtab-maint" hidden>
+        <div id="d-maint"></div>
+      </section>
 
       <div class="spacer-6"></div>
       <button class="action-btn btn-delete" aria-label="Eliminar reloj">
@@ -271,7 +289,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         <button class="cal-nav-btn" id="cal-next" aria-label="Mes siguiente"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
       </div>
       <div class="cal-summary" id="cal-summary"></div>
-      <div class="cal-weekdays" aria-hidden="true"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+      <div class="cal-weekdays" aria-hidden="true"></div>
       <div class="cal-grid" id="cal-grid" role="grid" aria-label="Días del mes"></div>
       <div class="cal-legend">Toca un día para ver qué llevaste, añadir o quitar relojes.</div>
       <div class="cal-days" id="cal-days"></div>
@@ -306,7 +324,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
     <div class="pad-16" id="wishlist-list"></div>
 
     <div class="empty-state" id="wishlist-empty" style="display:none;">
-      <div class="empty-icon">🤩</div>
+      <div class="empty-icon"><i class="ti ti-heart" aria-hidden="true"></i></div>
       <div class="empty-title">Sin deseos todavía</div>
       <div class="empty-text">Pulsa <strong>+</strong> para apuntar los relojes que te gustaría tener, con su precio objetivo y sus especificaciones.</div>
     </div>
@@ -402,8 +420,8 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       </div>
 
       <div class="form-field">
-        <label class="form-label">Precio estimado (€)</label>
-        <input class="form-input" id="wl-precio" aria-label="Precio objetivo" placeholder="~85 EUR">
+        <label class="form-label">Precio estimado</label>
+        <input class="form-input" id="wl-precio" aria-label="Precio objetivo" placeholder="~85">
       </div>
       <div class="form-field">
         <label class="form-label">Dónde comprarlo / Notas</label>
@@ -412,9 +430,9 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       <div class="form-field">
         <label class="form-label">Prioridad</label>
         <select class="form-input form-select" id="wl-priority">
-          <option value="high">🔥 Alta — lo quiero pronto</option>
-          <option value="medium" selected>⭐ Media — en algún momento</option>
-          <option value="low">💭 Baja — algún día</option>
+          <option value="high">Alta — lo quiero pronto</option>
+          <option value="medium" selected>Media — en algún momento</option>
+          <option value="low">Baja — algún día</option>
         </select>
       </div>
 
@@ -501,7 +519,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         <summary>Compra y mantenimiento <span class="form-details-hint">coste por uso y avisos</span></summary>
         <div class="form-grid-2">
           <div class="form-field">
-            <label class="form-label" for="f-purchase-price">Precio pagado (€)</label>
+            <label class="form-label" for="f-purchase-price">Precio pagado (<span id="f-price-cur">€</span>)</label>
             <input class="form-input" id="f-purchase-price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="89">
           </div>
           <div class="form-field">
@@ -539,7 +557,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
           <div class="spec-imported-row"><span class="spec-imp-label">Precio</span><span class="spec-imp-val" id="fi-precio">—</span></div>
         </div>
         <div class="hint-small">
-          <i class="ti ti-info-circle" aria-hidden="true"></i> Podrás editar cada spec tocándola en la vista de detalle
+          <i class="ti ti-info-circle" aria-hidden="true"></i> Podrás corregir cada dato tocándolo en la ficha del reloj
         </div>
       </div>
 
@@ -656,6 +674,18 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         </div>
       </div>
 
+      <!-- PREFERENCIAS -->
+      <div class="settings-section-title section-gap">Preferencias</div>
+      <div class="pref-card">
+        <label class="pref-row" for="pref-lang"><span>Idioma</span>
+          <select class="form-input form-select pref-select" id="pref-lang" data-change="prefLang"></select></label>
+        <label class="pref-row" for="pref-theme"><span>Tema</span>
+          <select class="form-input form-select pref-select" id="pref-theme" data-change="prefTheme"></select></label>
+        <label class="pref-row" for="pref-currency"><span>Moneda</span>
+          <select class="form-input form-select pref-select" id="pref-currency" data-change="prefCurrency"></select></label>
+        <div class="pref-note">La moneda solo cambia cómo se muestran los precios: no convierte los importes que ya apuntaste.</div>
+      </div>
+
       <!-- EXPORT -->
       <div class="settings-section-title section-gap">Exportar</div>
 
@@ -665,7 +695,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         </div>
         <div class="settings-card-text">
           <div class="settings-card-title">Exportar PDF</div>
-          <div class="settings-card-sub">Fichas de cada reloj con fotos, specs e historial</div>
+          <div class="settings-card-sub">Fichas de cada reloj con fotos, datos técnicos e historial</div>
         </div>
         <i class="ti ti-chevron-right settings-card-arrow"></i>
       </div>
@@ -696,8 +726,8 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       <!-- ABOUT -->
       <div class="settings-section-title section-gap">Acerca de</div>
       <div class="about-links">
-        <a href="./ayuda.html"><i class="ti ti-help-circle" aria-hidden="true"></i><span>Ayuda<small>La nube, tu clave y cómo recuperar tus relojes</small></span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
-        <a href="./privacidad.html"><i class="ti ti-shield-lock" aria-hidden="true"></i><span>Política de privacidad</span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+        <a href="./ayuda.html" data-href-en="./help.html"><i class="ti ti-help-circle" aria-hidden="true"></i><span>Ayuda<small>La nube, tu clave y cómo recuperar tus relojes</small></span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+        <a href="./privacidad.html" data-href-en="./privacy.html"><i class="ti ti-shield-lock" aria-hidden="true"></i><span>Política de privacidad</span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
         <a href="./licencias.html"><i class="ti ti-license" aria-hidden="true"></i><span>Licencias de terceros</span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
         <a href="mailto:pedicode.app@gmail.com?subject=Rotor"><i class="ti ti-mail" aria-hidden="true"></i><span>Contacto<small>pedicode.app@gmail.com</small></span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
       </div>
@@ -709,7 +739,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 </div><!-- #app -->
 
 <script src="./js/vendor/qrcode-generator-1.4.4.js"></script>
-<script src="./js/spec-parser.js?v=2.13.0"></script>
-<script type="module" src="./js/main.js?v=2.13.0"></script>
+<script src="./js/spec-parser.js?v=2.14.0"></script>
+<script type="module" src="./js/main.js?v=2.14.0"></script>
 </body>
 </html>

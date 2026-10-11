@@ -14,6 +14,7 @@
  * vista. Gana el sello más reciente, elemento a elemento.
  */
 import { CONFIG } from './api.js';
+import { t } from './i18n.js';
 import {
   getWatchesWithPhotos, getWishlist, setWishlistSilently, getTombstones, clearTombstones,
   sanitizeWatch, sanitizeWishlistItem, itemStamp, enforceSingleActive, applyWatchList, idbDeletePhoto, readJSON,
@@ -265,8 +266,8 @@ export async function pairClaim2(code) {
   const { lookup, aes } = await pairKeys(code);
   const res = await fetch(`${CONFIG.WORKER_URL}/v2/pair/claim`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lookup }) });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 429) throw new Error('Demasiados intentos. Prueba dentro de una hora.');
-  if (!res.ok || !data.blob) throw new Error(data.error || 'Código no válido o caducado');
+  if (res.status === 429) throw new Error(t('Demasiados intentos. Prueba dentro de una hora.'));
+  if (!res.ok || !data.blob) throw new Error(data.error || t('Código no válido o caducado'));
   return decryptText(aes, data.blob, 'pair');
 }
 

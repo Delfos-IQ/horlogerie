@@ -17,5 +17,12 @@ const missing = [];
   const src = readFileSync(file, 'utf8');
   for (const m of src.matchAll(/^\s*(?:import|export)\s[^'"]*?from\s+['"](\.[^'"]+)['"]/gm)) walk(join(dirname(file), m[1]));
 })(join(root, 'js/main.js'));
+// Classic scripts loaded by index.html
+const html = readFileSync(join(root, 'index.html'), 'utf8');
+for (const m of html.matchAll(/<script[^>]*\ssrc="\.\/([^"?]+)(\?[^"]*)?"/g)) {
+  if (seen.has(join(root, m[1]))) continue;
+  seen.add(join(root, m[1]));
+  if (!new RegExp('\\$\\{BASE\\}/' + m[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\?v=[^`]*)?`').test(sw)) missing.push(m[1]);
+}
 if (missing.length) { console.log('Faltan en la lista SHELL de sw.js:', missing.join(', ')); process.exit(1); }
 console.log(`✓ ${seen.size} módulos, todos en la caché sin conexión`);

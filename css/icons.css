@@ -1,5 +1,5 @@
 /*!
- * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (59 iconos)
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (63 iconos)
  * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
  * No editar a mano: vuelve a ejecutar el script.
  */
@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("./icons/tabler-icons-2a4af5f0.woff2") format("woff2");
+  src: url("./icons/tabler-icons-bfc43494.woff2") format("woff2");
 }
 .ti {
   font-family: "tabler-icons" !important;
@@ -23,6 +23,7 @@
 }
 .ti-alert-triangle:before { content: "\ea06"; }
 .ti-arrow-left:before { content: "\ea19"; }
+.ti-arrow-up-circle:before { content: "\ea20"; }
 .ti-ban:before { content: "\ea2e"; }
 .ti-calendar-month:before { content: "\fd2f"; }
 .ti-calendar-plus:before { content: "\ebba"; }
@@ -33,6 +34,8 @@
 .ti-check:before { content: "\ea5e"; }
 .ti-chevron-left:before { content: "\ea60"; }
 .ti-chevron-right:before { content: "\ea61"; }
+.ti-circle:before { content: "\ea6b"; }
+.ti-circle-check:before { content: "\ea67"; }
 .ti-clock:before { content: "\ea70"; }
 .ti-cloud:before { content: "\ea76"; }
 .ti-cloud-download:before { content: "\ea71"; }
@@ -48,6 +51,7 @@
 .ti-external-link:before { content: "\ea99"; }
 .ti-eye:before { content: "\ea9a"; }
 .ti-file-type-pdf:before { content: "\fb10"; }
+.ti-hand-finger:before { content: "\ee94"; }
 .ti-heart:before { content: "\eabe"; }
 .ti-help-circle:before { content: "\f91d"; }
 .ti-info-circle:before { content: "\eac5"; }

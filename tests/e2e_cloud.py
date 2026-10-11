@@ -26,7 +26,7 @@ def kv():
     return json.loads(urllib.request.urlopen(f"http://localhost:{PORT}/__kv").read())
 
 async def device(browser, health=None, url=APP):
-    ctx = await browser.new_context(viewport={"width": 412, "height": 900}, service_workers='block',
+    ctx = await browser.new_context(locale="es-ES", viewport={"width": 412, "height": 900}, service_workers='block',
                                     bypass_csp=True)   # wait_for_function evaluates strings; CSP is checked in e2e_wear
     async def route(r):
         u = r.request.url.replace(WORKER, f"http://localhost:{PORT}")
@@ -62,7 +62,7 @@ async def main():
                                           const v = await addWatch({ brand: 'Seagull', model: '1963' });
                                           await updateWatch(v.id, { purchasePrice: 229 }); renderHome(); }""")
         sub = await a.text_content("#home-subtitle")
-        check("subtítulo con número de relojes y lo invertido", sub == '2 relojes · 368 € invertidos', sub)
+        check("subtítulo con número de relojes y lo invertido", sub.replace('\xa0', ' ').replace('\u202f', ' ') == '2 relojes · 368 € invertidos', sub)
 
         # ── Ajustes ──
         await a.evaluate("showView('settings')"); await a.wait_for_timeout(300)

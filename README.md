@@ -14,6 +14,7 @@ horlogerie/
 ├── index.html              Única página de la app (vistas, modales, registro del SW)
 ├── privacidad.html         Política de privacidad pública (enlazada en Ajustes y en Play)
 ├── ayuda.html              Ayuda: nube, clave de recuperación, vincular y reinstalar
+├── privacy.html, help.html Las dos anteriores en inglés (la app enlaza la del idioma activo)
 ├── licencias.html          Licencias de terceros (MIT y OFL)
 ├── brand/                  Logo maestro (rotor-icon.svg) y símbolo sin fondo (rotor-symbol.svg)
 ├── manifest.json           Manifest PWA (scope /horlogerie/)
@@ -27,6 +28,9 @@ horlogerie/
 ├── icons/                  Iconos PWA y favicons
 ├── js/
 │   ├── main.js             Entrada (módulo ES): importa todo, delegación de eventos y arranque
+│   ├── i18n.js             Idioma (es/en), tema (auto/claro/oscuro) y moneda; t('texto en español')
+│   ├── i18n/en.js          Diccionario español → inglés (tools/check-i18n.mjs vigila que esté completo)
+│   ├── theme-boot.js       Aplica el tema elegido antes de pintar (script clásico en <head>)
 │   ├── spec-parser.js      Lector de fichas sin IA (también se prueba en Node)
 │   ├── db.js               Carga y búsqueda en watches_db.json
 │   ├── storage.js          Capa de datos (reexporta js/data/*)
@@ -39,7 +43,8 @@ horlogerie/
 │   └── modules/
 │       ├── core.js         Estado, utilidades, navegación y gesto atrás de Android
 │       ├── sheet.js        Hoja común para todos los diálogos (foco, Escape, atrás)
-│       ├── home-detail.js  Colección, recomendación y ficha del reloj
+│       ├── home-detail.js  Colección, «Hoy llevo…», recomendación y ficha por secciones
+│       ├── onboarding.js   Bienvenida de la primera vez
 │       ├── modals.js       Alta/edición de relojes y búsqueda en la base
 │       ├── history.js      Calendario, ranking top 10 y detalle por reloj (filtro por año)
 │       ├── settings.js     Estadísticas, copias JSON, tamaño en la nube, inicio de la app
@@ -60,7 +65,9 @@ horlogerie/
 │   ├── storage.test.mjs    Unitarias de la lógica de datos (Node)
 │   ├── spec-parser.test.mjs  Unitarias del lector de fichas (Node)
 │   ├── e2e_import_history.py  Rellenar desde un enlace, calendario, ranking y «Por reloj»
-│   └── e2e_cloud.py        Clave corta, vincular dispositivos, recuperar, avisos y Ajustes
+│   ├── e2e_cloud.py        Clave corta, vincular dispositivos, recuperar, avisos y Ajustes
+│   ├── e2e_cloud2.py       Nube 2.0 cifrada de extremo a extremo (Worker con D1)
+│   └── e2e_i18n.py         Inglés, tema, moneda, bienvenida y ficha por secciones
 └── tools/
     ├── bump-version.mjs    Propaga la versión de version.json al resto de archivos
     ├── build-icons.py      Regenera el subconjunto de iconos (ejecutar al usar un icono nuevo)
@@ -85,6 +92,10 @@ Desde `localhost` el Worker real rechaza las peticiones (CORS limitado a `delfos
 ### Pruebas
 
 `tests/e2e_sync.py` abre varios navegadores (dispositivos A, B, C, D) contra el Worker real ejecutado en Node con un KV en memoria, y comprueba fusión, borrados entre dispositivos, conflictos, copias con fotos, migración, cambio de llave y borrado de la nube. Instrucciones en la cabecera del archivo. `tests/e2e_wear.py` comprueba el registro de uso por días, la recomendación, los avisos, el PDF y que la app no pide nada fuera de su dominio. GitHub Actions ejecuta ambas en cada push (`.github/workflows/tests.yml`).
+
+### Idiomas
+
+Los textos se escriben en español dentro de `t('…')` (o como texto en `index.html`, que se traduce al arrancar). Para el inglés, añade la entrada en `js/i18n/en.js`; `node tools/check-i18n.mjs` falla en CI si falta alguna. Un móvil en español, gallego, catalán o euskera ve la app en español; cualquier otro, en inglés. Ajustes → Preferencias permite elegir idioma, tema y moneda (la moneda solo cambia el formato: no convierte importes). Otro idioma = otro archivo en `js/i18n/` y una línea en `DICTS` y `LANGS` de `js/i18n.js`.
 
 ### Iconos
 

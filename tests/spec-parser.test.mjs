@@ -99,5 +99,17 @@ expect('guarda la línea de origen', { from: ev._from.resistencia }, { from: 'Wa
 expect('cuarzo por palabra', parseSpecs({ text: 'Movement: Japanese quartz (Seiko VH31 sweep)' }), { type: 'quartz', calibre: 'Seiko VH31' });
 expect('cuerda manual', parseSpecs({ text: 'Movimiento: Seagull ST3600 de cuerda manual' }), { type: 'manual', calibre: 'Seagull ST3600' });
 
+// 12) English interface: same reading, values in English
+const enSpec = `Case material: 316L stainless steel
+Case diameter: 38,4 mm
+Crystal: domed sapphire with anti-reflective coating
+Strap: rubber
+Dial colour: navy blue
+Movement: Automatic, Seiko NH35, 24 jewels, hacking
+Power reserve: 41 hours`;
+expect('ficha en inglés para una app en inglés', parseSpecs({ text: enSpec, lang: 'en' }),
+  { caja: 'Stainless steel 316L', diametro: '38.4 mm', cristal: 'Domed sapphire (anti-reflective)', brazalete: 'Rubber',
+    esfera: 'Navy blue', reserva: '41 h', movimiento: 'Automatic · Seiko NH35 · 24 jewels · hacking seconds' });
+
 console.log(`--- ${ok}/${ok + ko} OK`);
 process.exit(ko ? 1 : 0);

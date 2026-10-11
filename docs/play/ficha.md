@@ -21,7 +21,7 @@ Rotor es el cuaderno de tu colección de relojes. Apunta los que tienes, registr
 
 QUÉ PUEDES HACER
 • Tu colección de un vistazo: foto, tipo de movimiento y cuándo lo llevaste por última vez.
-• Registro de uso sin complicaciones: «Lo llevé hoy» con un toque, apunta días pasados o cronometra la sesión mientras lo llevas.
+• Registro de uso sin complicaciones: «Hoy llevo…» y un toque; apunta días pasados o, si quieres, cronometra el tiempo puesto.
 • Rotación inteligente: te sugiere el reloj que más tiempo lleva sin salir, y puedes marcar favoritos o dejar alguno fuera de rotación.
 • Ficha técnica de cada reloj: calibre, cristal, diámetro, grosor, resistencia al agua, reserva de marcha y más. Incluye una base de modelos de microbrands y homenajes para autocompletar.
 • Coste por uso: añade lo que pagaste y verás cuánto te sale cada día que lo llevas.
@@ -33,9 +33,40 @@ QUÉ PUEDES HACER
 TUS DATOS SON TUYOS
 • Sin cuentas ni registro.
 • Todo se guarda en tu móvil y funciona sin conexión.
-• Copia en la nube opcional para usar la colección en varios dispositivos; puedes borrarla cuando quieras.
+• Copia en la nube opcional y cifrada de extremo a extremo para usar la colección en varios dispositivos; puedes borrarla cuando quieras.
 • Copia de seguridad completa en un archivo, con fotos incluidas.
 • Sin anuncios y sin analítica.
+```
+
+## Inglés (en-GB y en-US) — la app ya está en inglés
+
+**Título** (25): `Rotor: watch rotation log`
+
+**Descripción breve** (77): `Which watch you wore, which one is due today, what each wear costs. No login.`
+
+**Descripción completa:**
+
+```
+Rotor is the notebook for your watch collection. Log the watches you own, record when you wear each one and let the app tell you which has spent longest in the box.
+
+WHAT YOU CAN DO
+• Your collection at a glance: photo, movement type and when you last wore it.
+• Effortless wear log: “Today I wear…” and one tap. Log past days or, if you like, time how long you wear it.
+• Smart rotation: suggests the watch that has gone longest without wrist time. Mark favourites or take a watch out of rotation.
+• Spec sheet for every watch: calibre, crystal, diameter, thickness, water resistance, power reserve and more. Fill it in from a shop or brand page: only what the page states is copied, nothing is guessed.
+• Cost per wear: enter what you paid and see what each day on the wrist costs you, in your currency.
+• Maintenance reminders: battery changes for quartz, regular service for mechanical watches.
+• Calendar history: tap a day to see or log what you wore. Your 10 most worn watches, the forgotten ones and each watch year by year.
+• Wishlist with target price and specs.
+• Export your collection to PDF with spec pages, photos and history.
+• Light and dark themes.
+
+YOUR DATA IS YOURS
+• No accounts, no sign-up.
+• Everything stays on your phone and works offline.
+• Optional cloud backup, end-to-end encrypted, to use your collection on several devices. Delete it whenever you want.
+• Full backup to a file, photos included.
+• No ads, no analytics.
 ```
 
 ## Portugués (pt-PT)
@@ -68,7 +99,7 @@ OS TEUS DADOS SÃO TEUS
 • Sem anúncios e sem analítica.
 ```
 
-> La app está en español. Si publicas la ficha en portugués, avisa en la primera línea («App em espanhol») o traduce la interfaz antes, para evitar reseñas negativas.
+> La app está en español e inglés; un móvil en portugués la ve en inglés. Si publicas la ficha en portugués, avisa en la primera línea («App em inglês e espanhol») o traduce la interfaz antes (el diccionario `js/i18n/en.js` sirve de plantilla para `pt.js`).
 
 ---
 

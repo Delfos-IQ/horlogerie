@@ -9,7 +9,8 @@
  */
 
 import { calendarDaysBetween, getWatches, isSafePhoto, wearIntervals, wearStats } from './storage.js';
-import { formatDate, showToast } from './modules/core.js';
+import { formatDate, showToast, typeLabel } from './modules/core.js';
+import { locale, t } from './i18n.js';
 
 // Paleta «esfera crema» (misma que el tema claro de la app; imprime bien)
 export const PDF_DARK    = [251, 248, 241];  // fondo de página  #FBF8F1
@@ -32,11 +33,11 @@ export async function generateCollectionPDF() {
   const ws = getWatches();
 
   if (!ws.length) {
-    showToast('No hay relojes en la colección');
+    showToast(t('No hay relojes en la colección'));
     return;
   }
 
-  showToast('Generando PDF…');
+  showToast(t('Generando PDF…'));
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const W = 210; // A4 width
@@ -56,9 +57,9 @@ export async function generateCollectionPDF() {
   drawSummaryPage(doc, ws, W, H);
 
   /* ── Download ── */
-  const filename = `rotor-coleccion-${new Date().toISOString().slice(0,10)}.pdf`;
+  const filename = `${t('rotor-coleccion')}-${new Date().toISOString().slice(0,10)}.pdf`;
   doc.save(filename);
-  showToast('PDF descargado');
+  showToast(t('PDF descargado'));
 }
 
 /* ════════════════════════════════════════
@@ -85,7 +86,7 @@ export function drawCover(doc, ws, W, H) {
   doc.setTextColor(...PDF_MID);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
-  doc.text('Colección Personal de Relojes', W / 2, 97, { align: 'center', charSpace: 1.5 });
+  doc.text(t('Colección Personal de Relojes'), W / 2, 97, { align: 'center', charSpace: 1.5 });
 
   // Stats block
   const totalSessions = ws.reduce((a, w) => a + wearStats(w).sessions, 0);
@@ -94,11 +95,11 @@ export function drawCover(doc, ws, W, H) {
   const quartzCount = ws.filter(w => w.type === 'quartz').length;
 
   const stats = [
-    { label: 'Relojes',       value: String(ws.length) },
-    { label: 'Automáticos',   value: String(autoCount) },
-    { label: 'Cuarzo',        value: String(quartzCount) },
-    { label: 'Días de uso',   value: String(totalDays) },
-    { label: 'Sesiones',      value: String(totalSessions) },
+    { label: t('Relojes'),       value: String(ws.length) },
+    { label: t('Automáticos'),   value: String(autoCount) },
+    { label: t('Cuarzo'),        value: String(quartzCount) },
+    { label: t('Días de uso'),   value: String(totalDays) },
+    { label: t('Sesiones'),      value: String(totalSessions) },
   ];
 
   const bw = 34, bh = 28, bx0 = (W - stats.length * bw - (stats.length - 1) * 4) / 2;
@@ -125,7 +126,7 @@ export function drawCover(doc, ws, W, H) {
   doc.setTextColor(...PDF_GOLD);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text('ÍNDICE DE RELOJES', W / 2, cy, { align: 'center', charSpace: 2 });
+  doc.text(t('ÍNDICE DE RELOJES'), W / 2, cy, { align: 'center', charSpace: 2 });
   cy += 6;
   doc.setFillColor(...PDF_GOLD);
   doc.rect(W / 2 - 20, cy, 40, 0.3, 'F');
@@ -146,7 +147,7 @@ export function drawCover(doc, ws, W, H) {
     doc.text(`${w.brand} ${w.model}${w.ref ? ` · ${w.ref}` : ''}`, px + 16, cy + 0.5);
     doc.setTextColor(...PDF_MID);
     doc.setFontSize(7.5);
-    const typeStr = w.type === 'automatic' ? 'Auto' : w.type === 'quartz' ? 'Quartz' : 'Manual';
+    const typeStr = typeLabel(w.type);
     doc.text(typeStr, W - px - 2, cy + 0.5, { align: 'right' });
     cy += 10;
   });
@@ -154,7 +155,7 @@ export function drawCover(doc, ws, W, H) {
   // Footer
   doc.setTextColor(...PDF_MID);
   doc.setFontSize(8);
-  doc.text(`Generado el ${new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' })}`, W / 2, H - 12, { align: 'center' });
+  doc.text(`${t('Generado el')} ${new Date().toLocaleDateString(locale(), { day:'2-digit', month:'long', year:'numeric' })}`, W / 2, H - 12, { align: 'center' });
   doc.setFillColor(...PDF_GOLD);
   doc.rect(0, H - 2, W, 2, 'F');
 }
@@ -190,13 +191,13 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.setTextColor(...PDF_MID);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text(`Ref. ${w.ref}`, 14, cy + 7);
+    doc.text(`${t('Ref.')} ${w.ref}`, 14, cy + 7);
     cy += 7;
   }
   cy += 5;
 
   // Type badge
-  const typeLabel = w.type === 'automatic' ? 'AUTOMÁTICO' : w.type === 'quartz' ? 'CUARZO' : 'CUERDA MANUAL';
+  const typeTag = (w.type === 'manual' ? t('Cuerda manual') : typeLabel(w.type)).toUpperCase();
   doc.setFillColor(...PDF_DARK3);
   doc.roundedRect(14, cy - 4, 30, 6, 1.5, 1.5, 'F');
   doc.setDrawColor(...PDF_GOLD);
@@ -204,7 +205,7 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
   doc.roundedRect(14, cy - 4, 30, 6, 1.5, 1.5, 'S');
   doc.setTextColor(...PDF_GOLD_L);
   doc.setFontSize(6.5);
-  doc.text(typeLabel, 29, cy + 0.2, { align: 'center', charSpace: 0.8 });
+  doc.text(typeTag, 29, cy + 0.2, { align: 'center', charSpace: 0.8 });
   cy += 8;
 
   // Gold separator
@@ -241,24 +242,24 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
 
   const specs = w.specs || {};
   const specDefs = [
-    { k: 'calibre',     l: 'Calibre' },
-    { k: 'movimiento',  l: 'Movimiento' },
-    { k: 'cristal',     l: 'Cristal' },
-    { k: 'brazalete',   l: 'Brazalete' },
-    { k: 'esfera',      l: 'Esfera' },
-    { k: 'caja',        l: 'Caja' },
-    { k: 'resistencia', l: 'Agua' },
-    { k: 'reserva',     l: 'Reserva' },
-    { k: 'diametro',    l: 'Diámetro' },
-    { k: 'grosor',      l: 'Grosor' },
-    { k: 'asas',        l: 'Entre asas' },
+    { k: 'calibre',     l: t('Calibre') },
+    { k: 'movimiento',  l: t('Movimiento') },
+    { k: 'cristal',     l: t('Cristal') },
+    { k: 'brazalete',   l: t('Brazalete') },
+    { k: 'esfera',      l: t('Esfera') },
+    { k: 'caja',        l: t('Caja') },
+    { k: 'resistencia', l: t('Agua') },
+    { k: 'reserva',     l: t('Reserva') },
+    { k: 'diametro',    l: t('Diámetro') },
+    { k: 'grosor',      l: t('Grosor') },
+    { k: 'asas',        l: t('Entre asas') },
   ].filter(s => specs[s.k]);
 
   if (specDefs.length) {
     doc.setTextColor(...PDF_GOLD);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.text('ESPECIFICACIONES', specX, sy + 4, { charSpace: 1.5 });
+    doc.text(t('ESPECIFICACIONES'), specX, sy + 4, { charSpace: 1.5 });
     sy += 8;
 
     specDefs.forEach(s => {
@@ -278,9 +279,9 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
   } else {
     doc.setTextColor(...PDF_MID);
     doc.setFontSize(8);
-    doc.text('Sin especificaciones.', specX, sy + 10);
+    doc.text(t('Sin especificaciones.'), specX, sy + 10);
     doc.setFontSize(7);
-    doc.text('Toca cada campo en la ficha para añadirlas.', specX, sy + 18);
+    doc.text(t('Se añaden tocando cada campo en la ficha.'), specX, sy + 18);
   }
 
   cy = photoY + photoH + 8;
@@ -294,7 +295,7 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.roundedRect(14, cy, W - 28, 16, 2, 2, 'S');
     doc.setTextColor(...PDF_GOLD);
     doc.setFontSize(7);
-    doc.text('PRECIO DE MERCADO', 20, cy + 5, { charSpace: 1 });
+    doc.text(t('PRECIO DE MERCADO'), 20, cy + 5, { charSpace: 1 });
     doc.setTextColor(...PDF_LIGHT);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
@@ -323,11 +324,11 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.setTextColor(...PDF_GREEN);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
-    doc.text('PUESTO ACTUALMENTE', 25, cy + 7, { charSpace: 1 });
+    doc.text(t('PUESTO ACTUALMENTE'), 25, cy + 7, { charSpace: 1 });
     doc.setTextColor(...PDF_LIGHT);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text(`Día ${d} · Desde el ${formatDate(w.wearStart)}`, W - 20, cy + 7, { align: 'right' });
+    doc.text(`${t('Día {n}', { n: d })} · ${t('Desde el {d}', { d: formatDate(w.wearStart) })}`, W - 20, cy + 7, { align: 'right' });
     cy += 18;
   }
 
@@ -338,7 +339,7 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.setTextColor(...PDF_GOLD);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.text('HISTORIAL DE USO', 14, cy + 4, { charSpace: 1.5 });
+    doc.text(t('HISTORIAL DE USO'), 14, cy + 4, { charSpace: 1.5 });
     cy += 8;
 
     const wst       = wearStats(w);
@@ -357,8 +358,8 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.setTextColor(...PDF_MID);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.5);
-    doc.text('SESIONES', 14 + (W - 28) / 4, cy + 7 + 5, { align: 'center', charSpace: 0.8 });
-    doc.text('DÍAS DE USO', 14 + (W - 28) * 3 / 4 + 2, cy + 7 + 5, { align: 'center', charSpace: 0.8 });
+    doc.text(t('SESIONES'), 14 + (W - 28) / 4, cy + 7 + 5, { align: 'center', charSpace: 0.8 });
+    doc.text(t('DÍAS DE USO'), 14 + (W - 28) * 3 / 4 + 2, cy + 7 + 5, { align: 'center', charSpace: 0.8 });
     cy += 18;
 
     // Last 8 intervals (most recent first)
@@ -375,7 +376,7 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
       doc.text(formatDate(interval.start), 18, cy + 1.5);
       doc.setTextColor(...PDF_MID);
       doc.text('→', 70, cy + 1.5, { align: 'center' });
-      doc.text(interval.active ? 'hoy' : formatDate(interval.end), 80, cy + 1.5);
+      doc.text(interval.active ? t('hoy') : formatDate(interval.end), 80, cy + 1.5);
       doc.setTextColor(...PDF_LIGHT);
       doc.setFont('helvetica', 'bold');
       doc.text(`${d2}d`, W - 20, cy + 1.5, { align: 'right' });
@@ -396,7 +397,7 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
       doc.setTextColor(...PDF_GOLD);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
-      doc.text('NOTAS', 14, cy, { charSpace: 1.5 });
+      doc.text(t('NOTAS'), 14, cy, { charSpace: 1.5 });
       cy += 5;
       doc.setFillColor(...PDF_DARK2);
       const lines = doc.splitTextToSize(w.notes, W - 32);
@@ -416,7 +417,7 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
   doc.setTextColor(...PDF_MID);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.text('Rotor · Colección personal', W / 2, H - 5, { align: 'center' });
+  doc.text(t('Rotor · Colección personal'), W / 2, H - 5, { align: 'center' });
 }
 
 /* ════════════════════════════════════════
@@ -432,7 +433,7 @@ export function drawSummaryPage(doc, ws, W, H) {
   doc.setTextColor(...PDF_GOLD_L);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text('RESUMEN DE COLECCIÓN', W / 2, cy, { align: 'center', charSpace: 3 });
+  doc.text(t('RESUMEN DE COLECCIÓN'), W / 2, cy, { align: 'center', charSpace: 3 });
   cy += 4;
   doc.setFillColor(...PDF_GOLD);
   doc.rect(W / 2 - 25, cy, 50, 0.3, 'F');
@@ -440,7 +441,7 @@ export function drawSummaryPage(doc, ws, W, H) {
 
   // Table header
   const cols = [14, 50, 90, 120, 148, 175];
-  const headers = ['RELOJ', 'REFERENCIA', 'TIPO', 'CALIBRE', 'DÍAS', 'PRECIO'];
+  const headers = [t('RELOJ'), t('REFERENCIA'), t('TIPO'), t('CALIBRE'), t('DÍAS'), t('PRECIO')];
   doc.setFillColor(...PDF_DARK2);
   doc.rect(14, cy - 4, W - 28, 9, 'F');
   doc.setTextColor(...PDF_GOLD);
@@ -478,7 +479,7 @@ export function drawSummaryPage(doc, ws, W, H) {
     doc.setTextColor(...PDF_MID);
     doc.text(w.ref || '—', cols[1], cy + 1.5);
 
-    const typeStr = w.type === 'automatic' ? 'Auto' : w.type === 'quartz' ? 'Quartz' : 'Manual';
+    const typeStr = typeLabel(w.type);
     doc.text(typeStr, cols[2], cy + 1.5);
 
     doc.setTextColor(...PDF_LIGHT);
@@ -509,7 +510,7 @@ export function drawSummaryPage(doc, ws, W, H) {
   doc.setTextColor(...PDF_MID);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.text(`Rotor · ${new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' })}`, W / 2, H - 5, { align: 'center' });
+  doc.text(`Rotor · ${new Date().toLocaleDateString(locale(), { day:'2-digit', month:'long', year:'numeric' })}`, W / 2, H - 5, { align: 'center' });
 }
 
 /* ════════════════════════════════════════
@@ -522,11 +523,20 @@ export function drawNoPhoto(doc, x, y, w, h) {
   doc.setDrawColor(...PDF_GOLD);
   doc.setLineWidth(0.3);
   doc.roundedRect(x, y, w, h, 3, 3, 'S');
+  // Drawn dial (helvetica has no watch glyph)
+  const cx = x + w / 2, cyy = y + h / 2 - 2, r = Math.min(w, h) * 0.18;
+  doc.setDrawColor(...PDF_MID);
+  doc.setLineWidth(0.5);
+  doc.circle(cx, cyy, r, 'S');
+  for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6, r1 = r * (i % 3 ? 0.82 : 0.72);
+    doc.line(cx + r1 * Math.sin(a), cyy - r1 * Math.cos(a), cx + r * 0.9 * Math.sin(a), cyy - r * 0.9 * Math.cos(a));
+  }
+  doc.line(cx, cyy, cx - r * 0.45, cyy - r * 0.3);
+  doc.line(cx, cyy, cx + r * 0.38, cyy - r * 0.62);
   doc.setTextColor(...PDF_MID);
-  doc.setFontSize(22);
-  doc.text('⌚', x + w / 2, y + h / 2 + 4, { align: 'center' });
   doc.setFontSize(7);
-  doc.text('Sin foto', x + w / 2, y + h / 2 + 12, { align: 'center' });
+  doc.text(t('Sin foto'), x + w / 2, y + h / 2 + r + 4, { align: 'center' });
 }
 
 export function roundedRect(doc, x, y, w, h, r, fillColor) {
