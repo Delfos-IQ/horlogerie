@@ -1,6 +1,6 @@
 const PRIORITY_CFG = {
-  high:   { label: '🔥 Alta',  color: '#e57373' },
-  medium: { label: '⭐ Media', color: '#D4AF6A' },
+  high:   { label: '🔥 Alta',  color: 'var(--danger)' },
+  medium: { label: '⭐ Media', color: 'var(--gold-light)' },
   low:    { label: '💭 Baja',  color: 'var(--mid)' },
 };
 

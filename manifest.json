@@ -6,8 +6,8 @@
   "scope": "/horlogerie/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0D0D0D",
-  "theme_color": "#0D0D0D",
+  "background_color": "#F3EEE3",
+  "theme_color": "#F3EEE3",
   "icons": [
     {
       "src": "/horlogerie/icons/icon-192.png",

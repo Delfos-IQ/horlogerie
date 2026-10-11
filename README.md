@@ -20,7 +20,7 @@ horlogerie/
 ├── watches_db.json         Base local de modelos que usa el autocompletado
 ├── css/
 │   ├── app.css
-│   ├── fonts.css + fonts/  Cormorant Garamond y DM Sans (OFL), solo latín
+│   ├── fonts.css + fonts/  Bodoni Moda y Jost (OFL), solo latín
 │   └── icons.css + icons/  Subconjunto de Tabler Icons (lo genera tools/build-icons.py)
 ├── icons/                  Iconos PWA y favicons
 ├── js/

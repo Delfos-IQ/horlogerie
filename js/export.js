@@ -8,14 +8,15 @@
  *   → triggers browser download / share sheet on mobile
  */
 
-const PDF_DARK    = [13,  13,  13];   // #0D0D0D
-const PDF_DARK2   = [26,  26,  26];   // #1A1A1A
-const PDF_DARK3   = [42,  42,  42];   // #2A2A2A
+// Paleta «esfera crema» (misma que el tema claro de la app; imprime bien)
+const PDF_DARK    = [251, 248, 241];  // fondo de página  #FBF8F1
+const PDF_DARK2   = [243, 238, 227];  // tarjetas          #F3EEE3
+const PDF_DARK3   = [232, 225, 210];  // líneas y rellenos #E8E1D2
 const PDF_GOLD    = [184, 150, 62];   // #B8963E
-const PDF_GOLD_L  = [212, 175, 106];  // #D4AF6A
-const PDF_LIGHT   = [232, 226, 216];  // #E8E2D8
-const PDF_MID     = [120, 120, 120];
-const PDF_GREEN   = [76,  175, 80];
+const PDF_GOLD_L  = [126, 97,  24];   // dorado para texto #7E6118
+const PDF_LIGHT   = [30,  27,  22];   // texto             #1E1B16
+const PDF_MID     = [101, 93,  81];   // texto secundario  #655D51
+const PDF_GREEN   = [46,  125, 50];
 const PDF_WHITE   = [250, 248, 244];
 
 async function generateCollectionPDF() {
@@ -544,7 +545,7 @@ function photoToSquareJpeg(dataUrl, size = 600) {
       const c = document.createElement('canvas');
       c.width = c.height = Math.min(size, side);
       const g = c.getContext('2d');
-      g.fillStyle = '#1A1A1A'; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = '#E8E1D2'; g.fillRect(0, 0, c.width, c.height);
       g.drawImage(img, sx, sy, side, side, 0, 0, c.width, c.height);
       resolve(c.toDataURL('image/jpeg', 0.85));
     };

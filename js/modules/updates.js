@@ -1,4 +1,4 @@
-const APP_VERSION = '2.6.0'; // Must match version.json
+const APP_VERSION = '2.7.0'; // Must match version.json
 
 async function initVersionCheck() {
   // Hidden legacy elements kept for backward compatibility with other modules
@@ -29,7 +29,7 @@ function showUpdateBanner(newVersion, notes) {
   banner.id = 'update-banner';
   banner.style.cssText = `
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-    background: var(--gold); color: var(--dark);
+    background: var(--gold); color: var(--on-gold);
     padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 12px;
     display: flex; align-items: center; justify-content: space-between;
     gap: 12px; font-family: var(--font-body); font-size: 13px;
@@ -40,7 +40,7 @@ function showUpdateBanner(newVersion, notes) {
       <span>⬆️ Nueva versión ${newVersion} disponible</span>
       ${notes ? `<div style="font-size:11px;font-weight:400;opacity:0.8;margin-top:2px;">${escHtml(notes)}</div>` : ''}
     </div>
-    <button style="background:var(--dark);color:var(--gold);border:none;border-radius:8px;
+    <button style="background:var(--dark);color:var(--gold-light);border:none;border-radius:8px;
       padding:7px 14px;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;
       white-space:nowrap;" onclick="applyUpdate()">Actualizar</button>
   `;
@@ -72,11 +72,11 @@ async function checkForUpdate() {
       // New version — show gold icon + toast
       if (headerIcon) {
         headerIcon.style.animation = '';
-        headerIcon.style.color = 'var(--gold)';
+        headerIcon.style.color = 'var(--gold-light)';
         headerIcon.className = 'ti ti-arrow-bar-to-down';
       }
       if (status) {
-        status.style.color = '#4CAF50';
+        status.style.color = 'var(--ok)';
         status.innerHTML = `⬆️ Nueva versión <strong>${data.version}</strong> — actualizando…`;
       }
       showToast(`Nueva versión ${data.version} disponible. Instalando…`, 3000);
@@ -85,17 +85,17 @@ async function checkForUpdate() {
       // Already up to date
       if (headerIcon) {
         headerIcon.style.animation = '';
-        headerIcon.style.color = '#4CAF50';
+        headerIcon.style.color = 'var(--ok)';
         setTimeout(() => {
           if (headerIcon) { headerIcon.style.color = 'var(--mid)'; }
         }, 2000);
       }
-      if (status) { status.style.color = '#4CAF50'; status.textContent = '✓ Ya tienes la versión más reciente'; }
+      if (status) { status.style.color = 'var(--ok)'; status.textContent = '✓ Ya tienes la versión más reciente'; }
       showToast('✓ App al día — versión ' + APP_VERSION);
     }
   } catch (e) {
-    if (headerIcon) { headerIcon.style.animation = ''; headerIcon.style.color = 'rgba(220,80,80,0.8)'; }
-    if (status) { status.style.color = 'rgba(220,80,80,0.8)'; status.textContent = 'Sin conexión'; }
+    if (headerIcon) { headerIcon.style.animation = ''; headerIcon.style.color = 'var(--danger)'; }
+    if (status) { status.style.color = 'var(--danger)'; status.textContent = 'Sin conexión'; }
     showToast('Sin conexión — no se pudo comprobar');
   }
 

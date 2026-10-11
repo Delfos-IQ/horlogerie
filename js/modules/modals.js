@@ -46,7 +46,7 @@ function openAddModal() {
 
 function resetDbHint() {
   const hint = document.getElementById('db-hint');
-  if (hint) hint.innerHTML = '<i class="ti ti-database" style="color:var(--gold);"></i> Berny · Pagani Design · San Martin · Cadisen · OBLVLO · Seagull · CIGA Design · Carnival · Reef Tiger · Steeldive';
+  if (hint) hint.innerHTML = '<i class="ti ti-database" style="color:var(--gold-light);"></i> Berny · Pagani Design · San Martin · Cadisen · OBLVLO · Seagull · CIGA Design · Carnival · Reef Tiger · Steeldive';
 }
 
 function openEditModal(id) {
@@ -146,7 +146,7 @@ function applyDbResult(w) {
   document.getElementById('db-search-results').style.display = 'none';
   document.getElementById('db-search-input').value = `${w.brand} ${w.model}`;
   const hint = document.getElementById('db-hint');
-  if (hint) hint.innerHTML = `<i class="ti ti-check" style="color:#4CAF50;"></i> <strong>${escHtml(w.brand)} ${escHtml(w.model)}</strong> — specs encontradas`;
+  if (hint) hint.innerHTML = `<i class="ti ti-check" style="color:var(--ok);"></i> <strong>${escHtml(w.brand)} ${escHtml(w.model)}</strong> — specs encontradas`;
   window._pendingDbSpecs = w.specs;
   window._pendingDbPrice = w.price;
   window._pendingSource  = 'local_db';

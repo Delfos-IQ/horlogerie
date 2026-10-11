@@ -30,7 +30,7 @@ Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app ser
 2. *Package for stores* → **Android** → *Generate package* → *Options*:
    - Package ID: `com.delfosiq.rotor`
    - App name: `Rotor` · Short name: `Rotor`
-   - Display mode: `standalone` · Status bar y nav bar color: `#0D0D0D`
+   - Display mode: `standalone` · Status bar `#F3EEE3` (oscuro: `#0B1220`) · Nav bar `#FBF8F1` (oscuro: `#141D30`)
    - Signing key: **Create new** y guarda el `.keystore` y sus contraseñas en un sitio seguro (gestor de contraseñas + copia). Si los pierdes, no podrás actualizar la app. Con *Play App Signing* (paso 3) Google guarda la clave de firma final y la tuya queda como clave de subida.
 3. Descarga el ZIP. Contiene el `.aab` para Play, un `.apk` para probar en tu móvil y un `assetlinks.json`.
 4. Comprueba en el informe que el **target SDK es 36** (Android 16). Play no acepta apps nuevas por debajo desde el 31/08/2026. Si sale menor, usa la opción Bubblewrap.

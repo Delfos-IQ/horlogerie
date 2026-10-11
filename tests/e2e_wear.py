@@ -162,7 +162,7 @@ async def main():
         await page.evaluate("showView('home')")
         await page.wait_for_timeout(300)
         fonts_ok = await page.evaluate("""() => document.fonts.check('16px "tabler-icons"') &&
-                                              document.fonts.check('16px "DM Sans"')""")
+                                              document.fonts.check('16px "Jost"')""")
         check("iconos y fuentes cargan desde la propia app", fonts_ok)
         check("ninguna petición a servicios externos", not external, ', '.join(external[:3]))
         check("sin errores de JavaScript", not errs, '; '.join(errs[:3]))

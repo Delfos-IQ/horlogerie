@@ -258,11 +258,11 @@ function renderUsage(w) {
     { l: 'Días de uso', v: st.daysWorn },
     { l: 'Últimos 90 días', v: st.daysWorn90 },
     { l: 'Última vez', v: st.lastWorn === null ? 'Nunca' : st.daysSinceLast === 0 ? 'Hoy' : st.daysSinceLast === 1 ? 'Ayer' : `Hace ${st.daysSinceLast} d` },
-    { l: 'Coste por uso', v: st.costPerWear !== null ? eur(st.costPerWear) : (w.purchasePrice ? '—' : 'Añade el precio') },
+    { l: 'Coste por uso', v: st.costPerWear !== null ? eur(st.costPerWear) : (w.purchasePrice ? '—' : 'Sin precio'), small: st.costPerWear === null && !w.purchasePrice },
   ];
   el.innerHTML = `
     <div class="usage-grid">${cells.map(c => `
-      <div class="usage-cell"><div class="usage-val">${escHtml(String(c.v))}</div><div class="usage-label">${c.l}</div></div>`).join('')}
+      <div class="usage-cell"><div class="usage-val${c.small ? ' is-text' : ''}">${escHtml(String(c.v))}</div><div class="usage-label">${c.l}</div></div>`).join('')}
     </div>
     ${alerts.map(a => `<div class="maint-alert"><i class="ti ti-tool" aria-hidden="true"></i><span>${escHtml(a.text)}</span></div>`).join('')}`;
 }
@@ -380,7 +380,7 @@ function renderPrice(w) {
   const badge = document.createElement('div');
   badge.id = 'd-source-badge';
   const isReal = w._source === 'local_db' || w._source?.includes('watchbase') || w._source?.includes('ebay');
-  badge.style.cssText = `font-size:11px;color:${isReal ? '#4CAF50' : 'var(--gold)'};display:flex;align-items:center;gap:5px;padding:4px 0 10px;`;
+  badge.style.cssText = `font-size:11px;color:${isReal ? 'var(--ok)' : 'var(--gold-light)'};display:flex;align-items:center;gap:5px;padding:4px 0 10px;`;
   badge.innerHTML = isReal
     ? `<i class="ti ti-database"></i> ${w._source === 'local_db' ? 'Base de datos local' : 'Datos verificados'}`
     : `<i class="ti ti-alert-triangle"></i> ${w._warning || 'Revisa los datos'}`;
@@ -444,7 +444,7 @@ function openWearSheet(watchId, idx = null) {
           <input class="form-input" type="date" id="ws-to" value="${to}" max="${today}"></div>
       </div>
       <div class="modal-actions">
-        ${entry ? '<button class="modal-btn" id="ws-del" style="background:rgba(220,80,80,0.85);color:#fff;">Borrar</button>' : ''}
+        ${entry ? '<button class="modal-btn" id="ws-del" style="background:var(--danger-fill);color:#fff;">Borrar</button>' : ''}
         <button class="modal-btn modal-btn-cancel" id="ws-cancel">Cancelar</button>
         <button class="modal-btn modal-btn-save" id="ws-save">Guardar</button>
       </div>
@@ -508,7 +508,7 @@ function showConfirm(title, msg, onConfirm, { okLabel = 'Eliminar', danger = tru
       <div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:20px;">${escHtml(msg)}</div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" id="cc">Cancelar</button>
-        <button class="modal-btn${danger ? '' : ' modal-btn-save'}" id="co" style="${danger ? 'background:rgba(220,80,80,0.85);color:#fff;' : ''}flex:1;">${escHtml(okLabel)}</button>
+        <button class="modal-btn${danger ? '' : ' modal-btn-save'}" id="co" style="${danger ? 'background:var(--danger-fill);color:#fff;' : ''}flex:1;">${escHtml(okLabel)}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);

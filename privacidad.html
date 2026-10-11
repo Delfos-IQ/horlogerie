@@ -3,28 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0D0D0D">
+<meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
 <title>Privacidad · Rotor</title>
 <link rel="stylesheet" href="./css/fonts.css">
 <style>
-  :root { --dark:#0D0D0D; --dark2:#1A1A1A; --gold:#B8963E; --gold-light:#D4AF6A; --light:#E8E2D8; --mid:#9a958c; }
+  :root { --dark:#F3EEE3; --dark2:#FBF8F1; --dark3:#E8E1D2; --gold:#B8963E; --gold-light:#7E6118; --light:#1E1B16; --mid:#655D51;
+          --line:rgba(126,97,24,.24); color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --dark:#0B1220; --dark2:#141D30; --dark3:#1F2A42; --gold-light:#D4AF6A; --light:#E6E1D6; --mid:#97A0B1;
+            --line:rgba(184,150,62,.24); color-scheme: dark; }
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'DM Sans', system-ui, sans-serif;
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'Jost', system-ui, sans-serif;
          font-size: 16px; line-height: 1.65; }
   main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
-  h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+  h1 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
        letter-spacing: 1px; margin: 0 0 4px; }
-  h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+  h2 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
        margin: 36px 0 8px; }
   p, li { color: var(--light); }
   .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
-  .box { background: var(--dark2); border: 0.5px solid rgba(184,150,62,.3); border-radius: 12px; padding: 16px 18px; }
+  .box { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
   table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
-  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid rgba(184,150,62,.2); }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid var(--line); }
   th { color: var(--gold-light); font-weight: 500; }
   .scroll { overflow-x: auto; }
   a { color: var(--gold-light); }
-  code { font-size: 13px; background: #222; padding: 1px 5px; border-radius: 4px; }
+  code { font-size: 13px; background: var(--dark3); padding: 1px 5px; border-radius: 4px; }
 </style>
 </head>
 <body>

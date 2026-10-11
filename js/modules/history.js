@@ -27,7 +27,7 @@ function inferCategory(w) {
   for (const rule of CATEGORY_RULES) {
     if (rule.kw.some(k => text.includes(k))) return rule;
   }
-  return { cat: 'Otros', icon: 'ti-device-watch', color: 'var(--mid)' };
+  return { cat: 'Otros', icon: 'ti-device-watch', color: '#C9BFAE' };
 }
 
 /* ── Mode toggle ── */
@@ -215,7 +215,7 @@ function renderHistoryBody() {
         const dur = i.active ? elapsedSince(i.start) : `${days} ${days === 1 ? 'día' : 'días'}`;
         return `<div class="interval-row">
           <div class="interval-dates">${dates}</div>
-          <div class="interval-duration">${dur}${i.active ? ' <span style="color:#4CAF50">●</span>' : ''}</div>
+          <div class="interval-duration">${dur}${i.active ? ' <span style="color:var(--ok)">●</span>' : ''}</div>
           ${i.active ? '' : `<button class="interval-edit" data-idx="${i.idx}" aria-label="Editar o borrar este uso"><i class="ti ti-pencil" aria-hidden="true"></i></button>`}
         </div>`;
       }).join('')}

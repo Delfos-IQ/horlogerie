@@ -126,18 +126,18 @@ async function handleImportSession() {
   const input = document.getElementById('import-session-input').value.trim();
   const status = document.getElementById('import-session-status');
 
-  if (!input) { status.textContent = 'Introduce un ID de sesión'; status.style.color = 'rgba(220,80,80,0.8)'; return; }
+  if (!input) { status.textContent = 'Introduce un ID de sesión'; status.style.color = 'var(--danger)'; return; }
 
   // Basic UUID format validation
   const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRe.test(input)) {
     status.textContent = 'Formato de ID incorrecto. Debe ser: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
-    status.style.color = 'rgba(220,80,80,0.8)'; return;
+    status.style.color = 'var(--danger)'; return;
   }
 
   if (input === getSessionId()) {
     status.textContent = 'Este ya es tu ID actual';
-    status.style.color = 'var(--gold)'; return;
+    status.style.color = 'var(--gold-light)'; return;
   }
 
   const btn = document.querySelector('#import-session-modal .modal-btn-save');
@@ -156,7 +156,7 @@ async function handleImportSession() {
     renderSessionId();
   } else {
     status.textContent = 'No se encontró ninguna colección con ese ID.';
-    status.style.color = 'rgba(220,80,80,0.8)';
+    status.style.color = 'var(--danger)';
   }
 }
 

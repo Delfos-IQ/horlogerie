@@ -167,12 +167,12 @@ async function loadCloudSize() {
     textEl.textContent = `${kb}KB en la nube · ${data.count} relojes`;
 
     // Color the bar based on usage
-    const color = pct > 80 ? '#e57373' : pct > 50 ? '#D4AF6A' : 'var(--gold)';
+    const color = pct > 80 ? 'var(--danger)' : pct > 50 ? 'var(--gold-light)' : 'var(--gold)';
     fillEl.style.width      = pct + '%';
     fillEl.style.background = color;
 
     if (pct > 80) {
-      textEl.style.color = '#e57373';
+      textEl.style.color = 'var(--danger)';
       textEl.textContent += ' · ⚠️ cerca del límite';
     }
   } catch {
@@ -200,16 +200,16 @@ async function renderSystemStatus() {
       versionVal.textContent = isUpToDate
         ? `v${APP_VERSION} · Al día ✓`
         : `v${APP_VERSION} → v${serverVersion} disponible`;
-      versionVal.style.color = isUpToDate ? '#4CAF50' : '#D4AF6A';
+      versionVal.style.color = isUpToDate ? 'var(--ok)' : 'var(--gold-light)';
 
       if (versionIcon) {
-        versionIcon.style.color     = isUpToDate ? '#4CAF50' : '#D4AF6A';
+        versionIcon.style.color     = isUpToDate ? 'var(--ok)' : 'var(--gold-light)';
         versionIcon.style.background = isUpToDate
-          ? 'rgba(76,175,80,0.12)' : 'rgba(212,175,106,0.12)';
+          ? 'color-mix(in srgb, var(--ok) 12%, transparent)' : 'color-mix(in srgb, var(--gold-light) 12%, transparent)';
       }
       if (!isUpToDate && versionBtn) {
-        versionBtn.style.color       = '#D4AF6A';
-        versionBtn.style.borderColor = 'rgba(212,175,106,0.4)';
+        versionBtn.style.color       = 'var(--gold-light)';
+        versionBtn.style.borderColor = 'color-mix(in srgb, var(--gold-light) 40%, transparent)';
       }
     } catch {
       if (versionVal) {
@@ -235,15 +235,15 @@ async function renderSystemStatus() {
     const data = await res.json();
 
     if (sessionIcon) {
-      sessionIcon.style.color      = data.exists ? '#4CAF50' : 'var(--mid)';
+      sessionIcon.style.color      = data.exists ? 'var(--ok)' : 'var(--mid)';
       sessionIcon.style.background = data.exists
-        ? 'rgba(76,175,80,0.12)' : 'var(--dark3)';
+        ? 'color-mix(in srgb, var(--ok) 12%, transparent)' : 'var(--dark3)';
     }
     if (sessionSub) {
       sessionSub.textContent = data.exists
         ? `${data.count} relojes en la nube · Misma sesión en todos tus dispositivos`
         : 'Sin datos en la nube todavía — sincroniza para activar multi-dispositivo';
-      sessionSub.style.color = data.exists ? '#4CAF50' : 'var(--mid)';
+      sessionSub.style.color = data.exists ? 'var(--ok)' : 'var(--mid)';
     }
   } catch (e) {
     if (e !== 'off' && sessionSub) sessionSub.textContent = 'Sin conexión';
@@ -267,11 +267,11 @@ async function renderSystemStatus() {
         : mins < 1440 ? `hace ${Math.round(mins/60)}h`
         : `hace ${Math.round(mins/1440)} días`;
       syncVal.textContent = `Última sync: ${when}`;
-      syncVal.style.color = mins < 60 ? '#4CAF50' : mins < 1440 ? '#D4AF6A' : 'var(--mid)';
+      syncVal.style.color = mins < 60 ? 'var(--ok)' : mins < 1440 ? 'var(--gold-light)' : 'var(--mid)';
       if (syncIcon) {
-        syncIcon.style.color      = mins < 60 ? '#4CAF50' : '#D4AF6A';
+        syncIcon.style.color      = mins < 60 ? 'var(--ok)' : 'var(--gold-light)';
         syncIcon.style.background = mins < 60
-          ? 'rgba(76,175,80,0.12)' : 'rgba(212,175,106,0.12)';
+          ? 'color-mix(in srgb, var(--ok) 12%, transparent)' : 'color-mix(in srgb, var(--gold-light) 12%, transparent)';
       }
     }
   }

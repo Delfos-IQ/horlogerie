@@ -3,14 +3,16 @@ play-screenshots.py — genera las capturas de la ficha de Google Play (1080×19
 gráfico destacado (1024×500) con una colección de ejemplo ficticia.
 
 Uso (con la app servida en http://localhost:8080/horlogerie/):
-  python3 tools/play-screenshots.py
+  python3 tools/play-screenshots.py              → tema claro (el de Play)
+  THEME=dark OUT=/ruta python3 tools/play-screenshots.py   → tema oscuro, para revisar
 Salida: docs/play/capturas/
 """
 import asyncio, os, pathlib
 from playwright.async_api import async_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "docs" / "play" / "capturas"
+OUT = pathlib.Path(os.environ["OUT"]) if os.environ.get("OUT") else ROOT / "docs" / "play" / "capturas"
+THEME = os.environ.get("THEME", "light")
 APP = "http://localhost:8080/horlogerie/"
 CHROME = os.environ.get("CHROME")
 DAY = 86400000
@@ -20,7 +22,7 @@ DEMO = """async () => {
   function dial(bg, accent, hands = '#e8e2d8') {
     const c = document.createElement('canvas'); c.width = c.height = 600;
     const g = c.getContext('2d');
-    g.fillStyle = '#121212'; g.fillRect(0, 0, 600, 600);
+    g.fillStyle = '#E9E3D6'; g.fillRect(0, 0, 600, 600);
     g.fillStyle = '#3a3a3a'; g.beginPath(); g.arc(300, 300, 250, 0, 7); g.fill();
     const grad = g.createRadialGradient(260, 240, 30, 300, 300, 230);
     grad.addColorStop(0, bg[0]); grad.addColorStop(1, bg[1]);
@@ -66,7 +68,7 @@ async def main():
         b = await (p.chromium.launch(executable_path=CHROME) if CHROME else p.chromium.launch())
         # 412×732 CSS px × 2.625 = 1081×1921 → recortamos a 1080×1920
         ctx = await b.new_context(viewport={"width": 411, "height": 731}, device_scale_factor=2.6277,
-                                  service_workers="block")
+                                  service_workers="block", color_scheme=THEME)
         page = await ctx.new_page()
         await page.goto(APP)
         await page.wait_for_function("typeof wearStats === 'function'")
@@ -96,16 +98,18 @@ async def main():
         await page.wait_for_timeout(200)
         await shot("5-nube")
 
-        # Gráfico destacado 1024×500
+        # Gráfico destacado 1024×500 (solo con el tema claro)
+        if THEME != "light":
+            await b.close(); print("✓", ", ".join(shots), "→", OUT); return
         fg = await b.new_page(viewport={"width": 1024, "height": 500})
         tmp = ROOT / "docs" / "play" / "_grafico.html"
         tmp.write_text(f"""<html><head><meta charset="utf-8"><link rel="stylesheet" href="../../css/fonts.css"><style>
-          body{{margin:0;width:1024px;height:500px;background:radial-gradient(circle at 30% 40%,#2a2418,#0D0D0D 70%);
-               display:flex;align-items:center;gap:56px;padding:0 72px;box-sizing:border-box;color:#E8E2D8;font-family:'DM Sans',sans-serif}}
-          img{{width:250px;height:250px;border-radius:56px;box-shadow:0 20px 60px rgba(0,0,0,.6)}}
-          h1{{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:92px;letter-spacing:10px;margin:0;color:#D4AF6A}}
+          body{{margin:0;width:1024px;height:500px;background:radial-gradient(circle at 30% 40%,#FBF8F1,#E8E1D2 75%);
+               display:flex;align-items:center;gap:56px;padding:0 72px;box-sizing:border-box;color:#1E1B16;font-family:'Jost',sans-serif}}
+          img{{width:250px;height:250px;border-radius:56px;box-shadow:0 20px 50px rgba(30,27,22,.25)}}
+          h1{{font-family:'Bodoni Moda',serif;font-weight:400;font-size:88px;letter-spacing:8px;margin:0;color:#7E6118}}
           p{{font-size:30px;line-height:1.35;margin:14px 0 0;max-width:560px}}
-          small{{display:block;margin-top:22px;font-size:20px;color:#9a958c;letter-spacing:1px}}
+          small{{display:block;margin-top:22px;font-size:20px;color:#655D51;letter-spacing:1px}}
         </style></head><body><img src="../../icons/icon-512.png"><div><h1>Rotor</h1>
           <p>Qué reloj te pusiste, cuál toca hoy y cuánto te cuesta cada uso.</p>
           <small>Rotación de relojes · Sin cuentas · Sin conexión</small></div></body></html>""", encoding="utf-8")

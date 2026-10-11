@@ -102,8 +102,8 @@ function setSyncUI(state, msg) {
   if (!el) return;
   const cfg = {
     syncing: { icon: 'ti-refresh',     color: 'var(--mid)',            spin: true  },
-    ok:      { icon: 'ti-cloud-check', color: '#4CAF50',               spin: false },
-    error:   { icon: 'ti-cloud-x',     color: 'rgba(220,80,80,0.8)',   spin: false },
+    ok:      { icon: 'ti-cloud-check', color: 'var(--ok)',               spin: false },
+    error:   { icon: 'ti-cloud-x',     color: 'var(--danger)',   spin: false },
     idle:    { icon: 'ti-cloud',       color: 'var(--mid)',            spin: false },
     off:     { icon: 'ti-cloud-off',   color: 'var(--mid)',            spin: false },
   }[state] || { icon: 'ti-cloud', color: 'var(--mid)', spin: false };
