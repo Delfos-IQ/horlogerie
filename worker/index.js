@@ -87,9 +87,17 @@ export default {
 
     try {
       // Rate-limited endpoints (call external paid APIs)
-      const RATE_LIMITED = { '/import-url': RATE_LIMIT_MAX, '/pair/create': RATE_LIMIT_MAX, '/pair/claim': PAIR_CLAIM_MAX };
+      // Endpoints that only make sense from the app: refuse calls without its
+      // origin (stops casual use of the page reader as an open proxy; not a
+      // security boundary, a script can fake the header).
+      const APP_ONLY = ['/import-url', '/pair/create', '/pair/claim'];
+      if (APP_ONLY.includes(url.pathname) && request.method !== 'OPTIONS' && !isAllowedOrigin(origin)) {
+        return corsResponse({ error: 'Origin not allowed' }, 403, origin);
+      }
+      const RATE_LIMITED = { '/import-url': [RATE_LIMIT_MAX, false], '/pair/create': [RATE_LIMIT_MAX, false], '/pair/claim': [PAIR_CLAIM_MAX, true] };
       if (RATE_LIMITED[url.pathname] && request.method !== 'OPTIONS') {
-        const limited = await checkRateLimit(env, ip, url.pathname, RATE_LIMITED[url.pathname]);
+        const [max, durable] = RATE_LIMITED[url.pathname];
+        const limited = await checkRateLimit(env, ip, url.pathname, max, durable);
         if (limited) {
           return corsResponse({
             error: 'Demasiadas solicitudes. Inténtalo en una hora.',
@@ -168,15 +176,25 @@ function userKey(userId) {
 
 /* ══════════════════════════════════════════
    RATE LIMITING — per IP per endpoint
-   KV key: ratelimit:{ip_hash}:{endpoint}
-   Fails open if KV unavailable.
+   - In memory (per Worker instance) for cheap endpoints: no KV writes, which
+     matter because the free plan allows 1,000 KV writes a day in total.
+   - In KV only where a global count matters (linking-code guesses).
+   Fails open if KV is unavailable.
 ══════════════════════════════════════════ */
-async function checkRateLimit(env, ip, pathname, max = RATE_LIMIT_MAX) {
-  if (!env.HORLOGERIE_KV) return false;
+const _memHits = new Map();   // key → { n, reset }
+function memLimited(key, max, windowSec) {
+  const now = Date.now();
+  const e = _memHits.get(key);
+  if (!e || e.reset < now) { _memHits.set(key, { n: 1, reset: now + windowSec * 1000 }); return false; }
+  if (_memHits.size > 5000) _memHits.clear();   // bounded memory
+  e.n++;
+  return e.n > max;
+}
+async function checkRateLimit(env, ip, pathname, max = RATE_LIMIT_MAX, durable = false) {
   const endpoint = pathname.replace(/\//g, '_');
-  // Hash the IP for privacy (first 7 chars of hex)
   const ipHash   = await hashString(ip);
-  const key      = `rl:${ipHash}:${endpoint}`;
+  if (!durable || !env.HORLOGERIE_KV) return memLimited(`${ipHash}:${endpoint}`, max, RATE_LIMIT_WINDOW);
+  const key = `rl:${ipHash}:${endpoint}`;
   try {
     const raw   = await env.HORLOGERIE_KV.get(key);
     const count = raw ? parseInt(raw, 10) : 0;
@@ -271,7 +289,7 @@ async function handleSyncPush(request, env, origin) {
   }
 
   const finalWishlist = Array.isArray(wishlist) ? wishlist : (stored.wishlist || []);
-  const payload    = JSON.stringify({ watches: finalWatches, wishlist: finalWishlist, updatedAt: now, version: 3, userId, mode });
+  const payload    = JSON.stringify({ watches: finalWatches, wishlist: finalWishlist, updatedAt: now, version: 3, mode });
   const payloadLen = payload.length;
 
   if (payloadLen > MAX_SYNC_PAYLOAD) {
@@ -429,7 +447,7 @@ async function handleImportUrl(request, env, origin) {
     return corsResponse({ _blocked: true, _message: 'Se ha alcanzado el límite diario de lecturas. Pega el texto de la ficha o inténtalo mañana.' }, 200, origin);
   }
 
-  const page = await downloadPage(u);
+  const page = await downloadPage(u, env);
   if (page.blocked) {
     return corsResponse({ _blocked: true, _domain: hostname,
       _message: `${hostname} no deja leer la página automáticamente. Abre la ficha, copia el texto de las especificaciones y pégalo en «Pegar texto».` }, 200, origin);
@@ -465,10 +483,13 @@ function isPrivateHost(host, env) {
   const h = host.toLowerCase();
   if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h.endsWith('.internal')) return true;
   if (/^\[?[0-9a-f:]+\]?$/.test(h) && h.includes(':')) return true;          // IPv6 literal
+  if (/^(0x[0-9a-f]+|\d+)$/i.test(h)) return true;                         // integer IPs (2130706433)
+  if (/^[\d.]+$/.test(h) && /(^|\.)0\d/.test(h)) return true;               // octal-looking parts (0177.0.0.1)
   const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (!m) return false;
   const [a, b] = [Number(m[1]), Number(m[2])];
-  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+  return a === 10 || a === 127 || a === 0 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+         (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
 }
 
 function normalizeUrl(u) {
@@ -479,18 +500,26 @@ function normalizeUrl(u) {
   return keep.toString();
 }
 
-async function downloadPage(u) {
-  let res;
+async function downloadPage(u, env) {
+  let res, current = u;
   try {
-    res = await fetch(u.toString(), {
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'es-ES,es;q=0.9,pt;q=0.8,en;q=0.7',
-      },
-      signal: AbortSignal.timeout(12000),
-    });
+    // Follow redirects by hand so every hop is checked against private hosts
+    for (let hop = 0; ; hop++) {
+      res = await fetch(current.toString(), {
+        redirect: 'manual',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'es-ES,es;q=0.9,pt;q=0.8,en;q=0.7',
+        },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (res.status < 300 || res.status >= 400) break;
+      const loc = res.headers.get('location');
+      if (!loc || hop >= 3) return { blocked: true };
+      current = new URL(loc, current);
+      if (!['http:', 'https:'].includes(current.protocol) || isPrivateHost(current.hostname, env)) return { blocked: true };
+    }
   } catch { return { blocked: true }; }
   if (!res.ok) return { blocked: true, status: res.status };
   const type = res.headers.get('content-type') || '';
@@ -503,12 +532,24 @@ async function downloadPage(u) {
     size += value.length; chunks.push(value);
     if (size > MAX_PAGE_BYTES) { try { await reader.cancel(); } catch {} break; }
   }
-  const html = new TextDecoder().decode(concatBytes(chunks, Math.min(size, MAX_PAGE_BYTES)));
+  const bytes = concatBytes(chunks, Math.min(size, MAX_PAGE_BYTES));
+  const html = decodePage(bytes, type);
   if (/captcha|robot check|are you a robot|cf-chl|just a moment\.\.\.|access denied|perimeterx|datadome/i.test(html.slice(0, 20000)) &&
       !/application\/ld\+json/i.test(html)) {
     return { blocked: true };
   }
   return { html };
+}
+
+/** Decode with the page's own charset (header, then <meta>), UTF-8 by default */
+function decodePage(bytes, contentType) {
+  let cs = (contentType.match(/charset=["']?([\w-]+)/i) || [])[1];
+  if (!cs) {
+    const head = new TextDecoder('latin1').decode(bytes.slice(0, 4096));
+    cs = (head.match(/<meta[^>]+charset=["']?([\w-]+)/i) || [])[1];
+  }
+  try { return new TextDecoder(cs || 'utf-8').decode(bytes); }
+  catch { return new TextDecoder('utf-8').decode(bytes); }
 }
 
 function concatBytes(chunks, total) {

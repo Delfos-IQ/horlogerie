@@ -278,7 +278,6 @@ function renderUsage(w) {
 
 function renderSpecs(w) {
   const specs = w.specs || {};
-  const hasAnySpec = Object.values(specs).some(v => v);
   const defs = [
     {k:'calibre',l:'Calibre'},{k:'movimiento',l:'Movimiento'},{k:'cristal',l:'Cristal'},
     {k:'brazalete',l:'Brazalete'},{k:'esfera',l:'Esfera'},{k:'caja',l:'Caja'},

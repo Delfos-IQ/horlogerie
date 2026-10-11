@@ -89,7 +89,6 @@ function drawCover(doc, ws, W, H) {
   const totalDays     = ws.reduce((a, w) => a + wearStats(w).daysWorn, 0);
   const autoCount  = ws.filter(w => w.type === 'automatic').length;
   const quartzCount = ws.filter(w => w.type === 'quartz').length;
-  const manualCount = ws.filter(w => w.type === 'manual').length;
 
   const stats = [
     { label: 'Relojes',       value: String(ws.length) },

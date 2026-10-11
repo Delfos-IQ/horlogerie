@@ -9,26 +9,14 @@ function renderWishlist() {
   const items  = getWishlist();
   const list   = document.getElementById('wishlist-list');
   const empty  = document.getElementById('wishlist-empty');
-  const banner = document.getElementById('wishlist-export-banner');
 
   if (!items.length) {
     list.innerHTML = '';
     empty.style.display = 'flex';
-    if (banner) banner.style.display = 'none';
     return;
   }
 
   empty.style.display = 'none';
-
-  // Count items with enough specs to be useful in DB
-  const exportable = items.filter(i => i.brand && i.model &&
-    Object.values(i.specs || {}).some(v => v)).length;
-
-  if (banner) {
-    banner.style.display = FEATURES.devTools && exportable > 0 ? 'flex' : 'none';
-    const countEl = banner.querySelector('.wl-exportable-count');
-    if (countEl) countEl.textContent = exportable;
-  }
 
   // Sort by priority
   const order = { high: 0, medium: 1, low: 2 };
@@ -221,52 +209,10 @@ function handleWishlistDelete(id) {
   });
 }
 
-/* ── Export to DB JSON ── */
-function exportWishlistToDb() {
-  const items = getWishlist().filter(i =>
-    i.brand && i.model && Object.values(i.specs || {}).some(v => v)
-  );
-  if (!items.length) { showToast('No hay items con specs para exportar'); return; }
-
-  // Build DB-compatible JSON entries
-  const dbEntries = items.map((item, idx) => ({
-    id:    9000 + idx,  // high ID range to avoid conflicts with existing DB
-    brand: item.brand,
-    model: item.model,
-    ref:   item.ref || '',
-    type:  item.type,
-    specs: {
-      calibre:     item.specs.calibre     || '',
-      movimiento:  item.type === 'automatic' ? 'Automático' : item.type === 'quartz' ? 'Cuarzo' : 'Manual',
-      cristal:     item.specs.cristal     || '',
-      brazalete:   item.specs.brazalete   || '',
-      esfera:      item.specs.esfera      || '',
-      caja:        item.specs.caja        || '',
-      resistencia: item.specs.resistencia || '',
-      reserva:     item.specs.reserva     || '',
-      diametro:    item.specs.diametro    || '',
-      grosor:      item.specs.grosor      || '',
-    },
-    price: { value: item.precio || '', note: 'Lista de deseos' },
-    _source: 'wishlist_export',
-    notas:   item.notas || '',
-  }));
-
-  const blob = new Blob([JSON.stringify(dbEntries, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `horlogerie_wishlist_db_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast(`${dbEntries.length} relojes exportados a JSON`);
-}
-
 window.openWishlistAdd             = openWishlistAdd;
 window.openWishlistEdit            = openWishlistEdit;
 window.closeWishlistModal          = closeWishlistModal;
 window.closeWishlistModalIfOutside = closeWishlistModalIfOutside;
 window.saveWishlistItem            = saveWishlistItem;
-window.exportWishlistToDb          = exportWishlistToDb;
 window.renderWishlist              = renderWishlist;
 

@@ -1,5 +1,5 @@
 {
-  "version": "2.9.0",
+  "version": "2.10.0",
   "date": "2026-10-11",
-  "notes": "Rellenar desde un enlace sin IA: copia solo lo que dice la página y muestra de qué línea sale cada dato"
+  "notes": "Más robusta: tus datos no se pierden si algo se corrompe, el sistema no los borra por falta de espacio y la app arranca rápido con mala cobertura"
 }

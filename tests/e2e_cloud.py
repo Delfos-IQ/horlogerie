@@ -7,7 +7,7 @@ Usa el Worker real en Node (tests/worker-harness.mjs).
 Uso (con la app en :8080 y el harness en el puerto indicado):
   python3 tests/e2e_cloud.py 8711
 """
-import asyncio, json, os, re, sys, urllib.request
+import asyncio, json, os, re, sys, urllib.request, urllib.error
 from playwright.async_api import async_playwright
 
 PORT   = sys.argv[1] if len(sys.argv) > 1 else "8711"
@@ -190,6 +190,13 @@ async def main():
             pg = await ca.new_page(); await pg.goto(APP + page_name)
             check(f"{page_name} carga y tiene su contenido", needle in await pg.content())
             await pg.close()
+
+        # ── El lector de páginas no responde a llamadas de fuera de la app ──
+        req = urllib.request.Request(f"http://localhost:{PORT}/import-url", data=b'{"url":"https://example.com"}', method='POST',
+                                     headers={'Content-Type': 'application/json', 'X-Test-Origin': 'none'})
+        try: code_out = urllib.request.urlopen(req).status
+        except urllib.error.HTTPError as e: code_out = e.code
+        check("leer páginas solo desde la app (sin origen: 403)", code_out == 403, str(code_out))
 
         # ── Límite de intentos con códigos ──
         statuses = await bb.evaluate(f"""async () => {{ const out = [];

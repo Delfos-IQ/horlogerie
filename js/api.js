@@ -13,5 +13,4 @@ const CONFIG = {
  */
 const FEATURES = {
   urlImport: true,    // needs Worker v12+ (checked at runtime with /health)
-  devTools:  false,   // "Exportar a base de datos" in the wishlist (to curate watches_db.json)
 };

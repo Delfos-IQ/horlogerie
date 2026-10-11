@@ -22,7 +22,7 @@ const CLOUD_LIMIT   = 3 * 1024 * 1024;   // must match MAX_SYNC_PAYLOAD in the W
    META + SESSION ID
 ════════════════════════════════════════ */
 function getSyncMeta() {
-  try { return JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}'); } catch { return {}; }
+  return readJSON(SYNC_META_KEY, {}, v => v && typeof v === 'object' && !Array.isArray(v));
 }
 function setSyncMeta(d) {
   try {

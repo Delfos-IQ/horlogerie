@@ -27,6 +27,15 @@ function renderBackupInfo() {
 function renderBackupReminder() {
   const el = document.getElementById('backup-reminder');
   if (!el) return;
+  if (window.storageRecovered?.length && !window._recoveryDismissed) {
+    el.innerHTML = `<div class="backup-reminder" role="alert">
+        <i class="ti ti-shield-exclamation" aria-hidden="true"></i>
+        <span>Parte de los datos guardados en este móvil no se podía leer. Se ha apartado una copia sin tocarla. Recupera tu colección con tu clave (Ajustes → Usar una clave o código) o con una copia JSON.</span>
+        <button class="br-x" id="br-x" aria-label="Cerrar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>`;
+    el.querySelector('#br-x').addEventListener('click', () => { window._recoveryDismissed = true; renderBackupReminder(); });
+    return;
+  }
   const ws = getWatches();
   const oldest = ws.reduce((m, w) => Math.min(m, w.created || Date.now()), Date.now());
   let snoozed = 0; try { snoozed = Number(localStorage.getItem(BACKUP_KEY + '_snooze')) || 0; } catch {}
@@ -105,7 +114,10 @@ setTimeout(() => {
   setTimeout(() => document.getElementById('intro').style.display = 'none', 600);
 }, 1600);
 
-loadPhotos().then(() => { renderHome(); updateFab('home'); });
+loadPhotos().then(() => {
+  renderHome(); updateFab('home');
+  if (getWatches().length) requestPersistence();
+});
 // Check for updates silently on every launch
 window.addEventListener('load', () => setTimeout(initVersionCheck, 2000));
 
@@ -172,6 +184,20 @@ async function renderSystemStatus() {
       vVal.textContent = `v${APP_VERSION}`; vVal.style.color = 'var(--light)';
       if (vSub) vSub.textContent = 'Sin conexión para comprobar';
     }
+  }
+
+  // ── Data on this device ──
+  const lVal = document.getElementById('status-local-val');
+  const lSub = document.getElementById('status-local-sub');
+  if (lVal) {
+    const p = await isPersisted();
+    const n = getWatches().length;
+    lVal.textContent = `${n} ${n === 1 ? 'reloj' : 'relojes'} en este dispositivo`;
+    lVal.style.color = 'var(--light)';
+    lSub.textContent = p === true ? 'Protegidos: el sistema no los borrará para liberar espacio'
+      : p === false ? 'El sistema podría borrarlos si falta espacio: activa la nube o haz copias'
+      : 'Haz copias de vez en cuando';
+    paintStatusIcon(document.getElementById('status-local-icon'), p === true ? 'ok' : 'gold');
   }
 
   // ── Cloud ──

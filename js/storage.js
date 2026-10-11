@@ -51,16 +51,6 @@ async function idbSavePhoto(id, dataUrl) {
   } catch (e) { console.warn('IDB save failed:', e); }
 }
 
-async function idbGetPhoto(id) {
-  try {
-    const db = await openIDB();
-    return new Promise((res) => {
-      const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(id);
-      req.onsuccess = () => res(req.result?.photo || null);
-      req.onerror   = () => res(null);
-    });
-  } catch { return null; }
-}
 
 async function idbDeletePhoto(id) {
   try {
@@ -113,16 +103,51 @@ async function compressPhoto(dataUrl, maxDim = 600, quality = 0.72) {
 window.compressPhoto = compressPhoto;
 
 /* ─── Metadata (localStorage) ─── */
-function loadData() {
+/**
+ * Read JSON from localStorage without ever losing data: if the stored text
+ * can't be parsed (or has the wrong shape), it is copied untouched to
+ * `<key>_corrupt_<date>` before the app starts with the fallback, so the next
+ * save can't overwrite the only copy. The UI is told via `storageRecovered`.
+ */
+const storageRecovered = [];
+function readJSON(key, fallback, isValid = () => true) {
+  let raw = null;
+  try { raw = localStorage.getItem(key); } catch { return fallback; }
+  if (raw == null || raw === '') return fallback;
   try {
-    const raw = localStorage.getItem(DB_KEY);
-    // Also migrate old key
-    const old = !raw && localStorage.getItem('horlogerie_v2');
-    const source = raw || old;
-    watches = source ? JSON.parse(source) : [];
-    // Strip base64 photos from metadata (they live in IDB now)
-    watches.forEach(w => { if (w.photo && w.photo.startsWith('data:')) delete w.photo; });
-  } catch { watches = []; }
+    const v = JSON.parse(raw);
+    if (isValid(v)) return v;
+  } catch { /* fall through to quarantine */ }
+  try { localStorage.setItem(`${key}_corrupt_${new Date().toISOString().slice(0, 10)}`, raw); } catch {}
+  storageRecovered.push(key);
+  return fallback;
+}
+window.storageRecovered = storageRecovered;
+
+/**
+ * Ask the browser not to evict our data when the device runs low on space.
+ * Installed apps usually get it without a prompt. Returns true/false/null (unsupported).
+ */
+async function requestPersistence() {
+  try {
+    if (!navigator.storage?.persist) return null;
+    if (await navigator.storage.persisted()) return true;
+    return await navigator.storage.persist();
+  } catch { return null; }
+}
+async function isPersisted() {
+  try { return navigator.storage?.persisted ? await navigator.storage.persisted() : null; } catch { return null; }
+}
+window.requestPersistence = requestPersistence;
+window.isPersisted = isPersisted;
+
+function loadData() {
+  const isList = v => Array.isArray(v) && v.every(w => w && typeof w === 'object' && typeof w.id === 'string');
+  let list = readJSON(DB_KEY, null, isList);
+  if (list === null && !storageRecovered.includes(DB_KEY)) list = readJSON('horlogerie_v2', [], isList);   // old key
+  watches = list || [];
+  // Photos live in IndexedDB, never in the metadata
+  watches.forEach(w => { if (w.photo && String(w.photo).startsWith('data:')) delete w.photo; });
 }
 
 function saveMeta() {
@@ -173,6 +198,7 @@ async function addWatch(data) {
   }
   watches.push(w);
   save();
+  requestPersistence();
   return w;
 }
 window.addWatch = addWatch;
@@ -461,10 +487,8 @@ window.restoreFromCloud = restoreFromCloud;
 const TOMB_KEY = 'horlogerie_tombstones_v1';
 
 function getTombstones() {
-  try {
-    const t = JSON.parse(localStorage.getItem(TOMB_KEY) || '{}');
-    return { watches: t.watches || [], wishlist: t.wishlist || [] };
-  } catch { return { watches: [], wishlist: [] }; }
+  const t = readJSON(TOMB_KEY, {}, v => v && typeof v === 'object');
+  return { watches: t.watches || [], wishlist: t.wishlist || [] };
 }
 function setTombstones(t) {
   try { localStorage.setItem(TOMB_KEY, JSON.stringify(t)); } catch {}
@@ -693,7 +717,7 @@ loadData();
 const WL_KEY = 'horlogerie_wishlist_v1';
 
 function getWishlist() {
-  try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]'); } catch { return []; }
+  return readJSON(WL_KEY, [], v => Array.isArray(v));
 }
 
 /* Write without triggering a cloud push (used when applying merges) */

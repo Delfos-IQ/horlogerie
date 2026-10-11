@@ -103,11 +103,7 @@ cd worker
 npx wrangler deploy
 ```
 
-Secretos (Cloudflare → Workers → horlogerie → Settings → Variables and Secrets):
-
-| Variable | Uso | Obligatoria |
-|---|---|---|
-| `EBAY_APP_ID`, `EBAY_CERT_ID` | Precios de eBay | No |
+No necesita secretos. Variables opcionales en Cloudflare → Workers → horlogerie → Settings → Variables:
 
 Versión actual: **v13**: claves cortas de recuperación, vinculación con código de 6 caracteres (`/pair/create`, `/pair/claim`) y `/import-url` **sin IA**: descarga la página que indica el usuario y devuelve el texto con la ficha (JSON-LD, tablas, líneas); la app la lee con `js/spec-parser.js` (pruebas: `node tests/spec-parser.test.mjs`). El texto pegado se lee en el dispositivo. `GROQ_API_KEY` ya no se usa: puedes borrarla de Cloudflare. Variable opcional: `IMPORT_DAILY_CAP` (lecturas de página al día, 300 por defecto).
 

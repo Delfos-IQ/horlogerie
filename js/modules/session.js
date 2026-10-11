@@ -96,7 +96,7 @@ function openSaveKeySheet() {
 
 /* ─── Link another device: temporary 6-character code ─── */
 async function openPairSheet() {
-  const { $, close } = openSheet(`
+  const { $ } = openSheet(`
     <div class="modal-title">Vincular otro dispositivo</div>
     <div id="pair-body" class="sheet-text">Generando código…</div>
     <button class="modal-btn modal-btn-cancel" style="width:100%;margin-top:12px;" data-close>Cerrar</button>`,

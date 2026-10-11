@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.9.0';
+const CACHE   = 'horlogerie-v2.10.0';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
@@ -18,10 +18,10 @@ const SHELL = [
   `${BASE}/ayuda.html`,
   `${BASE}/licencias.html`,
   `${BASE}/privacidad.html`,
-  `${BASE}/css/app.css?v=2.9.0`,
-  `${BASE}/css/fonts.css?v=2.9.0`,
-  `${BASE}/css/icons.css?v=2.9.0`,
-  `${BASE}/css/icons/tabler-icons-4f9f1ecf.woff2`,
+  `${BASE}/css/app.css?v=2.10.0`,
+  `${BASE}/css/fonts.css?v=2.10.0`,
+  `${BASE}/css/icons.css?v=2.10.0`,
+  `${BASE}/css/icons/tabler-icons-2a4af5f0.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-600-normal.woff2`,
@@ -31,21 +31,21 @@ const SHELL = [
   `${BASE}/css/fonts/jost-latin-600-normal.woff2`,
   `${BASE}/css/fonts/jost-latin-400-italic.woff2`,
   `${BASE}/js/vendor/jspdf-2.5.1.umd.min.js`,
-  `${BASE}/js/db.js?v=2.9.0`,
-  `${BASE}/js/storage.js?v=2.9.0`,
-  `${BASE}/js/api.js?v=2.9.0`,
-  `${BASE}/js/sync.js?v=2.9.0`,
-  `${BASE}/js/export.js?v=2.9.0`,
-  `${BASE}/js/modules/core.js?v=2.9.0`,
-  `${BASE}/js/modules/home-detail.js?v=2.9.0`,
-  `${BASE}/js/modules/modals.js?v=2.9.0`,
-  `${BASE}/js/modules/history.js?v=2.9.0`,
-  `${BASE}/js/modules/settings.js?v=2.9.0`,
-  `${BASE}/js/modules/wishlist.js?v=2.9.0`,
-  `${BASE}/js/modules/session.js?v=2.9.0`,
-  `${BASE}/js/modules/updates.js?v=2.9.0`,
-  `${BASE}/js/spec-parser.js?v=2.9.0`,
-  `${BASE}/js/modules/url-import.js?v=2.9.0`,
+  `${BASE}/js/db.js?v=2.10.0`,
+  `${BASE}/js/storage.js?v=2.10.0`,
+  `${BASE}/js/api.js?v=2.10.0`,
+  `${BASE}/js/sync.js?v=2.10.0`,
+  `${BASE}/js/export.js?v=2.10.0`,
+  `${BASE}/js/modules/core.js?v=2.10.0`,
+  `${BASE}/js/modules/home-detail.js?v=2.10.0`,
+  `${BASE}/js/modules/modals.js?v=2.10.0`,
+  `${BASE}/js/modules/history.js?v=2.10.0`,
+  `${BASE}/js/modules/settings.js?v=2.10.0`,
+  `${BASE}/js/modules/wishlist.js?v=2.10.0`,
+  `${BASE}/js/modules/session.js?v=2.10.0`,
+  `${BASE}/js/modules/updates.js?v=2.10.0`,
+  `${BASE}/js/spec-parser.js?v=2.10.0`,
+  `${BASE}/js/modules/url-import.js?v=2.10.0`,
   `${BASE}/js/vendor/qrcode-generator-1.4.4.js`,
   `${BASE}/brand/rotor-symbol.svg`,
   `${BASE}/manifest.json`,
@@ -98,7 +98,6 @@ self.addEventListener('fetch', e => {
 
   // 1. API calls + version.json — always network, never cache
   if (url.hostname.includes('workers.dev') ||
-      url.hostname.includes('api.ebay.com') ||
       url.pathname.endsWith('/version.json')) {
     e.respondWith(fetch(e.request).catch(() =>
       new Response(JSON.stringify({ error: 'Offline' }), {
@@ -123,21 +122,28 @@ self.addEventListener('fetch', e => {
   e.respondWith(networkFirst(e.request));
 });
 
-/* ── Network-first: try network, update cache, fallback to cache ── */
+/* ── Network-first with a time limit: fresh files when the connection is
+   good; after 2.5 s on a bad connection, the cached copy is served while the
+   download carries on and refreshes the cache for next time. ── */
+const NET_TIMEOUT_MS = 2500;
 async function networkFirst(request) {
   const cache = await caches.open(CACHE);
-  try {
-    const fresh = await fetch(request, { cache: 'no-cache' });
-    if (fresh.ok) {
-      // Update cache with fresh response
-      cache.put(request, fresh.clone());
-    }
+  const network = fetch(request, { cache: 'no-cache' }).then(fresh => {
+    if (fresh.ok) cache.put(request, fresh.clone());
     return fresh;
+  });
+  network.catch(() => {});   // a late failure after serving the cache is fine
+  const cached = await cache.match(request);
+  if (!cached) {
+    try { return await network; }
+    catch { return (await cache.match(`${BASE}/index.html`)) || new Response('Sin conexión', { status: 503 }); }
+  }
+  const timeout = new Promise(resolve => setTimeout(() => resolve(null), NET_TIMEOUT_MS));
+  try {
+    const first = await Promise.race([network, timeout]);
+    return first || cached;
   } catch {
-    // Offline — serve from cache
-    const cached = await cache.match(request);
-    return cached || cache.match(`${BASE}/index.html`) ||
-      new Response('Sin conexión', { status: 503 });
+    return cached;
   }
 }
 

@@ -27,6 +27,15 @@ jobs:
       - name: Sintaxis de JavaScript
         run: for f in js/*.js js/modules/*.js sw.js worker/index.js; do node --check "$f"; done
 
+      - name: Linter (sin avisos)
+        run: npx --yes eslint@8.57.0 js worker tests tools --max-warnings 0
+
+      - name: CSS sin clases huérfanas
+        run: python tools/check-css.py
+
+      - name: Lógica de datos (unitarias)
+        run: TZ=Europe/Lisbon node tests/storage.test.mjs
+
       - name: Instalar Playwright
         run: |
           pip install playwright==1.48.0

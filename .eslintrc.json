@@ -1,0 +1,61 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "script"
+  },
+  "rules": {
+    "no-unused-vars": [
+      "warn",
+      {
+        "vars": "local",
+        "args": "none",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "no-unreachable": "error",
+    "no-dupe-keys": "error",
+    "no-self-assign": "error",
+    "no-constant-condition": [
+      "warn",
+      {
+        "checkLoops": false
+      }
+    ],
+    "no-empty": "off",
+    "no-fallthrough": "warn",
+    "no-redeclare": "error",
+    "no-shadow": "off",
+    "no-unsafe-finally": "error",
+    "no-async-promise-executor": "warn",
+    "no-prototype-builtins": "off",
+    "no-cond-assign": "warn",
+    "no-useless-escape": "warn",
+    "no-inner-declarations": "off",
+    "require-atomic-updates": "off"
+  },
+  "ignorePatterns": [
+    "js/vendor/**",
+    "node_modules/**"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "worker/**/*.js",
+        "tests/**/*.mjs",
+        "tools/**/*.mjs"
+      ],
+      "parserOptions": {
+        "sourceType": "module"
+      },
+      "env": {
+        "node": true,
+        "browser": false
+      }
+    }
+  ]
+}

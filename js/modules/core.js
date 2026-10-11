@@ -30,18 +30,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-/* ─── Keyboard: Escape closes any open modal ─── */
-document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape') return;
-  const modals = ['wishlist-modal', 'add-modal', 'photo-sheet', 'import-session-modal', 'qr-modal'];
-  for (const id of modals) {
+/* ─── Keyboard: Escape closes the top sheet or modal, like the back gesture ─── */
+const STATIC_MODALS = ['photo-sheet', 'wishlist-modal', 'add-modal'];   // topmost first
+function closeTopOverlay() {
+  const dyn = [...document.querySelectorAll('body > .modal-overlay:not([id])')].pop();
+  if (dyn) { if (typeof dyn._close === 'function') dyn._close(); else dyn.remove(); return true; }
+  for (const id of STATIC_MODALS) {
     const el = document.getElementById(id);
-    if (el && el.style.display !== 'none') {
-      el.style.display = 'none';
-      const fab = document.querySelector('.fab');
-      if (fab) fab.focus();
-      break;
-    }
+    if (el && el.style.display !== 'none') { el.style.display = 'none'; return true; }
+  }
+  return false;
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && closeTopOverlay()) {
+    e.preventDefault();
+    document.querySelector('.fab')?.focus();
   }
 });
 
@@ -60,23 +63,10 @@ window.navPush = navPush; window.navReplace = navReplace;
 window.addEventListener('popstate', e => {
   const targetView = e.state?.view || 'home';
 
-  // Sheets created on the fly (confirm, day, wear…): close the top one first
-  const dyn = [...document.querySelectorAll('body > .modal-overlay:not([id])')].pop();
-  if (dyn) {
-    if (typeof dyn._close === 'function') dyn._close(); else dyn.remove();
+  // An open sheet or modal closes first instead of navigating away
+  if (closeTopOverlay()) {
     navPush(_navState || { view: targetView });
     return;
-  }
-
-  // If a modal is open, close it instead of navigating away
-  const modals = ['wishlist-modal', 'add-modal', 'photo-sheet', 'import-session-modal', 'qr-modal'];
-  for (const id of modals) {
-    const el = document.getElementById(id);
-    if (el && el.style.display !== 'none') {
-      el.style.display = 'none';
-      navPush(_navState || { view: targetView });
-      return;
-    }
   }
 
   _navState = e.state || { view: 'home' };
@@ -119,9 +109,6 @@ function showToast(msg, dur = 2600) {
   t._timer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function daysSince(ts) {
-  return Math.floor((Date.now() - ts) / 86400000);
-}
 
 /**
  * Format elapsed time since a timestamp with smart granularity:
@@ -170,7 +157,7 @@ function typeLabel(type) {
   return type === 'automatic' ? 'Auto' : type === 'quartz' ? 'Quartz' : 'Manual';
 }
 function escHtml(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 /* ─── Navigation ─── */
