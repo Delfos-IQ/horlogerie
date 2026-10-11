@@ -16,7 +16,7 @@ function openAddModal() {
 
   // URL import section
   const urlSec = document.getElementById('url-import-section');
-  if (urlSec) urlSec.style.display = 'block';
+  if (urlSec) urlSec.style.display = FEATURES.urlImport ? 'block' : 'none';
   const urlInput = document.getElementById('f-url-input');
   if (urlInput) urlInput.value = '';
   const urlStatus = document.getElementById('f-url-status');
@@ -165,7 +165,10 @@ async function saveWatch() {
 
   try {
     if (editingWatchId) {
-      await updateWatch(editingWatchId, { brand, model, ref, type, notes, photo: editingPhotoData });
+      // Only send the photo if it changed: updateWatch recompresses whatever it gets
+      const changes = { brand, model, ref, type, notes };
+      if (editingPhotoData !== (getWatch(editingWatchId)?.photo || null)) changes.photo = editingPhotoData;
+      await updateWatch(editingWatchId, changes);
       if (window._pendingDbSpecs) {
         await updateWatch(editingWatchId, { specs: window._pendingDbSpecs, price: window._pendingDbPrice || {value:'',note:''}, _source:'local_db' });
       }

@@ -87,6 +87,8 @@ function openWishlistAdd() {
   document.getElementById('wl-modal-title').textContent = 'Añadir a lista de deseos';
   document.getElementById('wl-save-btn').textContent    = 'Guardar';
   clearWishlistForm();
+  const urlSec = document.getElementById('wl-url-section');
+  if (urlSec) urlSec.style.display = FEATURES.urlImport ? '' : 'none';
   document.getElementById('wishlist-modal').style.display = 'flex';
 }
 
@@ -104,6 +106,8 @@ function openWishlistEdit(id) {
   document.getElementById('wl-priority').value   = item.priority;
   document.getElementById('wl-precio').value     = item.precio || '';
   document.getElementById('wl-notas').value      = item.notas  || '';
+  const urlSec = document.getElementById('wl-url-section');
+  if (urlSec) urlSec.style.display = FEATURES.urlImport ? '' : 'none';
   // Specs
   const s = item.specs || {};
   ['calibre','cristal','diametro','grosor','resistencia','reserva','caja','brazalete','esfera'].forEach(k => {

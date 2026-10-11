@@ -28,8 +28,8 @@ function renderHome() {
     return `
       <div class="watch-card${locked ? ' locked' : ''}${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}" role="button" tabindex="0" aria-label="${escHtml(w.brand)} ${escHtml(w.model)}${isActive ? ' — actualmente puesto' : ''}">
         <div class="watch-img-wrap">
-          ${w.photo
-            ? `<img src="${w.photo}" alt="${escHtml(w.brand)} ${escHtml(w.model)}" loading="lazy">`
+          ${isSafePhoto(w.photo)
+            ? `<img src="${w.photo}" alt=""${escHtml(w.brand)} ${escHtml(w.model)}" loading="lazy">`
             : `<div class="watch-img-placeholder">${watchEmoji(w.type)}</div>`}
           <div class="watch-type-badge">${typeLabel(w.type)}</div>
           ${isActive ? `<div class="active-badge">Puesto</div>` : ''}
@@ -114,7 +114,7 @@ function openDetail(id) {
 
   const img = document.getElementById('d-img');
   const ph  = document.getElementById('d-img-placeholder');
-  if (w.photo) {
+  if (isSafePhoto(w.photo)) {
     img.src = w.photo; img.style.display = 'block'; ph.style.display = 'none';
   } else {
     img.style.display = 'none'; ph.style.display = 'flex'; ph.textContent = watchEmoji(w.type);
@@ -285,6 +285,7 @@ function renderSpecsImportBtn(w) {
   // Remove previous import section if present
   const prev = document.getElementById('d-specs-import');
   if (prev) prev.remove();
+  if (!FEATURES.urlImport) return;
 
   const div = document.createElement('div');
   div.id = 'd-specs-import';
@@ -298,7 +299,6 @@ function renderSpecsImportBtn(w) {
         style="flex:1;font-size:13px;padding:9px 12px;">
       <button id="d-url-btn"
         aria-label="Importar especificaciones desde URL"
-        onclick="importSpecsFromUrl('${w.id}')"
         style="width:40px;height:40px;border-radius:10px;border:0.5px solid var(--glass-border);
           background:var(--dark3);color:var(--gold-light);cursor:pointer;font-size:18px;
           display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -308,6 +308,7 @@ function renderSpecsImportBtn(w) {
     <div id="d-url-status" style="font-size:11px;color:var(--mid);min-height:14px;"></div>`;
 
   specsEl.insertAdjacentElement('afterend', div);
+  div.querySelector('#d-url-btn').addEventListener('click', () => importSpecsFromUrl(w.id));
 }
 
 function renderPrice(w) {
@@ -353,7 +354,7 @@ function handleDeleteWatch(id) {
 }
 window.handleDeleteWatch = handleDeleteWatch;
 
-function showConfirm(title, msg, onConfirm) {
+function showConfirm(title, msg, onConfirm, { okLabel = 'Eliminar', danger = true } = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = 'display:flex;z-index:400;';
@@ -364,7 +365,7 @@ function showConfirm(title, msg, onConfirm) {
       <div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:20px;">${escHtml(msg)}</div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" id="cc">Cancelar</button>
-        <button class="modal-btn" id="co" style="background:rgba(220,80,80,0.85);color:#fff;flex:1;">Eliminar</button>
+        <button class="modal-btn${danger ? '' : ' modal-btn-save'}" id="co" style="${danger ? 'background:rgba(220,80,80,0.85);color:#fff;' : ''}flex:1;">${escHtml(okLabel)}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
