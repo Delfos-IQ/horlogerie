@@ -1,135 +1,93 @@
-# Horlogerie — Gestión de Colección de Relojes
+# Horlogerie
 
-PWA móvil para gestionar tu colección de relojes, con identificación por foto e información de internet.
+PWA para gestionar una colección de relojes: qué relojes tienes, cuándo te pusiste cada uno, cuál toca ahora y su ficha técnica. Pensada para coleccionistas de homenajes y microbrands (Berny, Pagani Design, San Martin, Steeldive…).
+
+- **App:** https://delfos-iq.github.io/horlogerie/
+- **API:** Cloudflare Worker `https://horlogerie.pedicode-app.workers.dev`
+
+## Estructura
 
 ```
 horlogerie/
-├── pwa/                  ← La app (se despliega en GitHub Pages)
-│   ├── index.html
-│   ├── manifest.json
-│   ├── sw.js
-│   ├── css/app.css
-│   ├── js/
-│   │   ├── storage.js
-│   │   ├── api.js        ← Apunta a tu Worker
-│   │   └── app.js
-│   └── icons/            ← Añade icon-192.png e icon-512.png
-└── worker/               ← Cloudflare Worker (backend)
-    ├── index.js
-    └── wrangler.toml
+├── index.html              Única página de la app (vistas, modales, registro del SW)
+├── manifest.json           Manifest PWA (scope /horlogerie/)
+├── sw.js                   Service worker: red primero para la app, caché para fuentes/iconos
+├── version.json            ÚNICA fuente de la versión (ver "Publicar una versión")
+├── watches_db.json         Base local de modelos que usa el autocompletado
+├── css/app.css
+├── icons/                  Iconos PWA y favicons
+├── js/
+│   ├── db.js               Carga y búsqueda en watches_db.json
+│   ├── storage.js          Datos: metadatos en localStorage, fotos en IndexedDB, lista de deseos
+│   ├── api.js              URL del Worker
+│   ├── sync.js             Sincronización por usuario (UUID) con envío diferencial
+│   ├── export.js           Exportación a PDF (jsPDF)
+│   └── modules/
+│       ├── core.js         Estado, utilidades, navegación y gesto atrás de Android
+│       ├── home-detail.js  Colección, recomendación y ficha del reloj
+│       ├── modals.js       Alta/edición de relojes y búsqueda en la base
+│       ├── history.js      Ranking por categorías e historial por reloj
+│       ├── settings.js     Estadísticas, copias JSON, tamaño en la nube, inicio de la app
+│       ├── wishlist.js     Lista de deseos
+│       ├── session.js      ID de sesión, QR e importación de sesión
+│       ├── updates.js      Aviso de nueva versión (APP_VERSION)
+│       └── url-import.js   Importar especificaciones desde una URL (vía Worker)
+├── worker/
+│   ├── index.js            Cloudflare Worker: /sync/*, /import-url, /health
+│   └── wrangler.toml
+├── data/                   Fuente de la base de modelos (Excel y su exportación JSON)
+└── tools/
+    └── bump-version.mjs    Propaga la versión de version.json al resto de archivos
 ```
 
----
+Los scripts se cargan en orden desde `index.html` (sin bundler ni build). El orden importa: `db → storage → api → sync → export → modules/*`.
 
-## Paso 1 — Crear el repositorio en GitHub
+## Desarrollo local
 
-1. Crea un repositorio nuevo en GitHub, por ejemplo `horlogerie`
-2. Sube todos los archivos de este proyecto:
+Cualquier servidor estático sirve, pero la app espera estar bajo `/horlogerie/`:
+
 ```bash
-git init
-git add .
-git commit -m "init: horlogerie app"
-git remote add origin https://github.com/TU_USUARIO/horlogerie.git
-git push -u origin main
+mkdir -p /tmp/srv && ln -sfn "$PWD" /tmp/srv/horlogerie
+python3 -m http.server 8080 -d /tmp/srv
+# → http://localhost:8080/horlogerie/
 ```
 
----
+Desde `localhost` el Worker rechaza las peticiones de sincronización (CORS limitado a `delfos-iq.github.io`); la app funciona en local sin nube.
 
-## Paso 2 — Activar GitHub Pages
+## Publicar una versión
 
-1. Ve a tu repositorio → **Settings → Pages**
-2. En **Source**, selecciona **GitHub Actions**
-3. El workflow `.github/workflows/deploy.yml` se ejecutará automáticamente en cada push
-4. Tu app estará en: `https://TU_USUARIO.github.io/horlogerie/`
+1. Fijar la versión y las notas (se muestran en el aviso de actualización):
+   ```bash
+   node tools/bump-version.mjs 2.1.4 "Qué cambia en una frase"
+   ```
+   Actualiza `version.json`, `APP_VERSION` en `updates.js`, los `?v=` de `index.html` y la caché y la lista `SHELL` de `sw.js`.
+2. Comprobar que todo coincide: `node tools/bump-version.mjs --check`
+3. Commit con mensaje descriptivo y `git push`. GitHub Pages publica la rama `main`.
 
-> ⚠️ Si GitHub Pages usa subdirectorio, edita `manifest.json` y cambia `"start_url": "/horlogerie/"`.
+Si añades un archivo JS o CSS nuevo, inclúyelo también en la lista `SHELL` de `sw.js` para que funcione sin conexión.
 
----
+## Worker (Cloudflare)
 
-## Paso 3 — Añadir iconos PWA
-
-Crea dos imágenes PNG con fondo oscuro (`#0D0D0D`) y el texto "H" en dorado:
-- `pwa/icons/icon-192.png` (192×192 px)
-- `pwa/icons/icon-512.png` (512×512 px)
-
-Puedes generarlos en [favicon.io](https://favicon.io/favicon-generator/) o similar.
-
----
-
-## Paso 4 — Desplegar el Cloudflare Worker
-
-### 4a. Instalar Wrangler
-```bash
-npm install -g wrangler
-wrangler login
-```
-
-### 4b. Desplegar
 ```bash
 cd worker
-wrangler deploy
+npx wrangler deploy
 ```
 
-Esto te dará una URL del tipo:
-`https://horlogerie-api.TU_SUBDOMINIO.workers.dev`
+Secretos (Cloudflare → Workers → horlogerie → Settings → Variables and Secrets):
 
-### 4c. Añadir secrets en el dashboard de Cloudflare
+| Variable | Uso | Obligatoria |
+|---|---|---|
+| `GROQ_API_KEY` | `/import-url` | Sí (hoy el Worker no arranca sin ella) |
+| `EBAY_APP_ID`, `EBAY_CERT_ID` | Precios de eBay | No |
 
-Ve a **Workers & Pages → horlogerie-api → Settings → Variables and Secrets**:
+Enlace KV: variable `HORLOGERIE_KV` → namespace `HORLOGERIE`. El `id` del namespace en `wrangler.toml` sigue siendo un marcador; cópialo desde el panel de Cloudflare antes de desplegar con Wrangler.
 
-| Variable | Valor |
-|---|---|
-| `GROQ_API_KEY` | Tu clave de [console.groq.com](https://console.groq.com) |
-| `ALLOWED_ORIGIN` | `https://TU_USUARIO.github.io` |
+## Datos del usuario
 
-> Marca `GROQ_API_KEY` como **Secret** (cifrado).
+- **En el dispositivo:** relojes en `localStorage` (`horlogerie_v3`), fotos en IndexedDB (`horlogerie_photos`), lista de deseos en `localStorage` (`horlogerie_wishlist_v1`).
+- **En la nube (opcional):** KV con clave `user:{uuid}:watches`. El UUID de Ajustes es la única llave: quien lo tenga puede leer y borrar la colección.
+- **Copia de seguridad:** Ajustes → Copia de seguridad (JSON). Hoy no incluye la lista de deseos.
 
----
+## Estado y plan
 
-## Paso 5 — Conectar la PWA con el Worker
-
-Edita `pwa/js/api.js` y cambia la URL:
-
-```js
-const CONFIG = {
-  WORKER_URL: 'https://horlogerie-api.TU_SUBDOMINIO.workers.dev'
-};
-```
-
-Haz commit y push — GitHub Actions desplegará automáticamente.
-
----
-
-## Paso 6 — Instalar la app en el móvil
-
-### iPhone (Safari)
-1. Abre `https://TU_USUARIO.github.io/horlogerie/` en Safari
-2. Pulsa el botón **Compartir** → **Añadir a pantalla de inicio**
-
-### Android (Chrome)
-1. Abre la URL en Chrome
-2. Chrome mostrará automáticamente el banner de instalación
-3. O pulsa el menú → **Instalar app**
-
----
-
-## API Groq gratuita
-
-El plan gratuito de Groq incluye:
-- **14.400 requests/día** con LLaMA 4 Scout
-- **30 requests/minuto**
-- Sin tarjeta de crédito necesaria
-
-Regístrate en [console.groq.com](https://console.groq.com).
-
----
-
-## Funcionalidades
-
-- 📸 **Identificación por foto** — Groq LLaMA 4 Scout Vision identifica marca, modelo y referencia
-- 🔍 **Specs completas** — Calibre, cristal, brazalete, esfera, caja, resistencia al agua, reserva de marcha, diámetro
-- 💶 **Precio de mercado** — Estimación nuevo/segundamano con contexto
-- ⌚ **Gestión de uso** — Registra cuándo te pones cada reloj
-- 📅 **Historial completo** — Intervalos por mes y año
-- 📱 **PWA offline** — Funciona sin internet después de la primera carga
-- 💾 **Datos locales** — Todo en el dispositivo, sin servidor propio
+Auditoría y plan de mejoras hacia Google Play: fases F0–F5. F0 (orden del repositorio) completada en v2.1.3.
