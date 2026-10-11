@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0D0D0D">
+<title>Privacidad · Horlogerie</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --dark:#0D0D0D; --dark2:#1A1A1A; --gold:#B8963E; --gold-light:#D4AF6A; --light:#E8E2D8; --mid:#9a958c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'DM Sans', system-ui, sans-serif;
+         font-size: 16px; line-height: 1.65; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+       letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+       margin: 36px 0 8px; }
+  p, li { color: var(--light); }
+  .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+  .box { background: var(--dark2); border: 0.5px solid rgba(184,150,62,.3); border-radius: 12px; padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid rgba(184,150,62,.2); }
+  th { color: var(--gold-light); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--gold-light); }
+  code { font-size: 13px; background: #222; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacidad</h1>
+  <div class="meta">Horlogerie · Última actualización: 11 de octubre de 2026</div>
+
+  <div class="box">
+    <p><strong>En resumen:</strong> tu colección se guarda en tu dispositivo. Solo sale de él si activas la «Copia en la nube», y en ese caso se guarda cifrada en tránsito en Cloudflare para que puedas usarla en otros dispositivos. No hay cuentas, ni publicidad, ni analítica, ni venta de datos. Puedes borrar tus datos de la nube desde la propia app.</p>
+  </div>
+
+  <h2>Quién es el responsable</h2>
+  <p>Horlogerie es una aplicación de Delfos-IQ. Contacto para cualquier cuestión de privacidad: <strong>[EMAIL DE CONTACTO]</strong>.</p>
+
+  <h2>Qué datos maneja la app</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>Dato</th><th>Dónde se guarda</th><th>Para qué</th></tr>
+    <tr><td>Relojes (marca, modelo, especificaciones, notas, precio y fechas que introduces)</td><td>En tu dispositivo. En la nube solo si la activas.</td><td>Mostrar tu colección.</td></tr>
+    <tr><td>Fotos de tus relojes</td><td>En tu dispositivo (comprimidas). En la nube solo si la activas.</td><td>Mostrar tu colección.</td></tr>
+    <tr><td>Historial de uso (qué días llevaste cada reloj)</td><td>En tu dispositivo. En la nube solo si la activas.</td><td>Estadísticas y recomendación.</td></tr>
+    <tr><td>Lista de deseos</td><td>En tu dispositivo. En la nube solo si la activas.</td><td>Apuntar relojes que te interesan.</td></tr>
+    <tr><td>ID de sesión (código aleatorio)</td><td>En tu dispositivo, y como nombre de tu copia en la nube.</td><td>Identificar tu copia en la nube sin cuentas ni email.</td></tr>
+  </table>
+  </div>
+  <p>La app no pide ni recoge tu nombre, email, ubicación, contactos ni identificadores publicitarios.</p>
+
+  <h2>Copia en la nube (opcional)</h2>
+  <p>Viene desactivada en las instalaciones nuevas. Si la activas en Ajustes, tu colección, fotos, historial y lista de deseos se envían por HTTPS a un servicio propio alojado en Cloudflare Workers (Cloudflare, Inc., como encargado del tratamiento) y se guardan asociados a tu ID de sesión.</p>
+  <ul>
+    <li><strong>Tu ID de sesión funciona como una contraseña:</strong> quien lo tenga puede ver y borrar tu copia. No lo compartas. Desde Ajustes puedes cambiarlo («Cambiar llave»).</li>
+    <li><strong>Borrado:</strong> en Ajustes → «Borrar de la nube» se elimina tu copia de inmediato. Si desactivas la copia sin borrarla, sigue guardada hasta que la borres.</li>
+    <li><strong>Registros técnicos:</strong> para limitar abusos, el servicio guarda durante 1 hora un contador asociado a un resumen cifrado (hash) de tu dirección IP, y durante 24 horas los errores técnicos con ese mismo resumen. Nunca la IP en claro.</li>
+    <li><strong>Transferencias internacionales:</strong> Cloudflare puede tratar datos fuera del Espacio Económico Europeo con las garantías de sus cláusulas contractuales tipo.</li>
+  </ul>
+
+  <h2>Terceros</h2>
+  <p>La app no carga nada de servicios externos: fuentes, iconos y librerías van incluidos en la propia app. El código QR de tu ID se genera en tu dispositivo. No hay SDK de publicidad ni de analítica.</p>
+
+  <h2>Copias de seguridad</h2>
+  <p>«Copia de seguridad (JSON)» crea un archivo en tu dispositivo con tus datos y fotos. Ese archivo queda bajo tu control: la app no lo envía a ningún sitio.</p>
+
+  <h2>Tus derechos</h2>
+  <p>Puedes acceder a tus datos (están en la app y en la copia JSON), rectificarlos y borrarlos desde la propia app. Para cualquier otra solicitud (RGPD: acceso, rectificación, supresión, oposición, limitación, portabilidad) escribe a la dirección de contacto. También puedes reclamar ante la autoridad de protección de datos de tu país (en Portugal, la CNPD; en España, la AEPD).</p>
+
+  <h2>Menores</h2>
+  <p>La app no está dirigida a menores de 16 años y no recoge datos a sabiendas de ellos.</p>
+
+  <h2>Cambios</h2>
+  <p>Si esta política cambia, se actualizará esta página y la fecha de arriba.</p>
+
+  <p style="margin-top:40px;"><a href="./">← Volver a Horlogerie</a></p>
+</main>
+</body>
+</html>
