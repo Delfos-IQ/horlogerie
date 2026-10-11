@@ -7,6 +7,7 @@ import { compressPhoto, idbDeletePhoto, idbGetAllPhotos, idbSavePhoto } from './
 
 export const DB_KEY   = 'horlogerie_v3';     // localStorage key for metadata
 
+/** @type {Watch[]} */
 export let watches = [];
 export function loadData() {
   const isList = v => Array.isArray(v) && v.every(w => w && typeof w === 'object' && typeof w.id === 'string');
@@ -44,8 +45,10 @@ export async function loadPhotos() {
 }
 /* ─── CRUD ─── */
 export function getWatches() { return watches; }
+/** @param {string} id @returns {Watch | null} */
 export function getWatch(id) { return watches.find(w => w.id === id) || null; }
 
+/** @param {Partial<Watch> & { brand: string, model: string }} data @returns {Promise<Watch>} */
 export async function addWatch(data) {
   const id = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
   const photo = data.photo || null;
@@ -66,6 +69,7 @@ export async function addWatch(data) {
   requestPersistence();
   return w;
 }
+/** @param {string} id @param {Partial<Watch>} changes @returns {Promise<Watch | null>} */
 export async function updateWatch(id, changes) {
   const w = getWatch(id);
   if (!w) return null;
@@ -94,6 +98,7 @@ export function deleteWatch(id) {
   save();
 }
 
+/** @returns {Watch | null} */
 export function getActiveWatch() { return watches.find(w => w.wearStart) || null; }
 
 export function startWearing(id) {

@@ -10,7 +10,7 @@ import { readJSON } from './persist.js';
 export const TOMB_KEY = 'horlogerie_tombstones_v1';
 
 export function getTombstones() {
-  const t = readJSON(TOMB_KEY, {}, v => v && typeof v === 'object');
+  const t = readJSON(TOMB_KEY, /** @type {{ watches?: string[], wishlist?: string[] }} */ ({}), v => v && typeof v === 'object');
   return { watches: t.watches || [], wishlist: t.wishlist || [] };
 }
 export function setTombstones(t) {
@@ -97,6 +97,7 @@ export function isSafeUrl(u) {
 export const _str = (v, max = 500) => (typeof v === 'string' ? v : v == null ? '' : String(v)).slice(0, max);
 export const _num = v => (typeof v === 'number' && isFinite(v) && v > 0 ? v : null);
 
+/** Anything from outside (cloud, backups) goes through here @param {any} raw @returns {Watch | null} */
 export function sanitizeWatch(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const brand = _str(raw.brand, 80).trim(), model = _str(raw.model, 120).trim();
@@ -132,6 +133,7 @@ export function sanitizeWatch(raw) {
   if (isSafePhoto(raw.photo)) w.photo = raw.photo;
   return w;
 }
+/** @param {any} raw @returns {WishlistItem | null} */
 export function sanitizeWishlistItem(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const brand = _str(raw.brand, 80).trim(), model = _str(raw.model, 120).trim();

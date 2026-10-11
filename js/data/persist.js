@@ -4,8 +4,11 @@
 
 /* The data layer has no UI dependencies (it also runs in the Node tests): the
    app plugs in its toast with setNotifier() and the cloud upload with setOnChange(). */
+/** @type {(msg: string) => void} */
 let _notify = () => {};
+/** @param {(msg: string) => void} fn */
 export function setNotifier(fn) { _notify = typeof fn === 'function' ? fn : () => {}; }
+/** @param {string} msg */
 export function notify(msg) { _notify(msg); }
 let _onChange = () => {};
 export function setOnChange(fn) { _onChange = typeof fn === 'function' ? fn : () => {}; }
@@ -19,6 +22,13 @@ export function changed() { _onChange(); }
  * save can't overwrite the only copy. The UI is told via `storageRecovered`.
  */
 export const storageRecovered = [];
+/**
+ * @template T
+ * @param {string} key
+ * @param {T} fallback
+ * @param {(v: any) => boolean} [isValid]
+ * @returns {T}
+ */
 export function readJSON(key, fallback, isValid = () => true) {
   let raw = null;
   try { raw = localStorage.getItem(key); } catch { return fallback; }

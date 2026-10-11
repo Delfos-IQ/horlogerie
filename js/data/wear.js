@@ -11,10 +11,12 @@ import { getActiveWatch, getWatch, save, startWearing, stopWearing } from './wat
 ═══════════════════════════════════════ */
 export const DAY_MS = 86400000;
 
+/** Local calendar day "YYYY-MM-DD" @param {number} ts @returns {string} */
 export function dayKey(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+/** @param {number} ts @returns {number} */
 export function startOfDay(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
 /** Whole calendar days between two timestamps (0 = same day) */
 export function calendarDaysBetween(a, b) {
@@ -29,6 +31,7 @@ export function wearIntervals(w, now = Date.now()) {
 }
 
 /** Set of local day keys on which the watch was worn */
+/** Distinct calendar days worn @param {Watch} w @param {number} [now] @returns {Set<string>} */
 export function wornDayKeys(w, now = Date.now()) {
   const keys = new Set();
   for (const iv of wearIntervals(w, now)) {
@@ -52,6 +55,7 @@ export function wornDayKeys(w, now = Date.now()) {
  *   daysSinceLast     calendar days since lastWorn (0 = today)
  *   costPerWear       purchasePrice / daysWorn (null if unknown)
  */
+/** @param {Watch} w @param {number} [now] @returns {WearStats} */
 export function wearStats(w, now = Date.now()) {
   const ivs  = wearIntervals(w, now);
   const keys = wornDayKeys(w, now);
@@ -97,6 +101,7 @@ export function maintenanceAlerts(w, now = Date.now()) {
 /* ── Wear actions ── */
 
 /** Mark a day (or a range of days) as worn, without live tracking */
+/** Log the days from fromTs to toTs (inclusive) @param {string} id @param {number} fromTs @param {number} [toTs] @returns {boolean} */
 export function addWearDays(id, fromTs, toTs = fromTs) {
   const w = getWatch(id);
   if (!w) return false;
@@ -161,6 +166,7 @@ export function deleteHistoryEntry(id, idx) {
  * days are trimmed or split, so the other days stay. Returns 'active' if that
  * day belongs to the session in progress (it must be stopped first).
  */
+/** @param {string} id @param {number} dayTs @returns {boolean | "active"} */
 export function removeWearDay(id, dayTs) {
   const w = getWatch(id);
   if (!w) return false;

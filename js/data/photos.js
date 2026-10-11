@@ -12,10 +12,10 @@ export function openIDB() {
   if (_idb) return Promise.resolve(_idb);
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(IDB_NAME, IDB_VER);
-    req.onupgradeneeded = e => {
-      e.target.result.createObjectStore(IDB_STORE, { keyPath: 'id' });
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(IDB_STORE, { keyPath: 'id' });
     };
-    req.onsuccess = e => { _idb = e.target.result; resolve(_idb); };
+    req.onsuccess = () => { _idb = req.result; resolve(_idb); };
     req.onerror   = () => reject(req.error);
   });
 }

@@ -27,6 +27,9 @@ jobs:
       - name: Sintaxis y linter (sin avisos; módulos ES con importaciones comprobadas)
         run: npx --yes eslint@8.57.0 js worker tests tools sw.js --max-warnings 0
 
+      - name: Tipos de la capa de datos (JSDoc + tsc)
+        run: npx --yes -p typescript@5.6.3 tsc -p jsconfig.json
+
       - name: CSS sin clases huérfanas
         run: python tools/check-css.py
 

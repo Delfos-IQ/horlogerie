@@ -10,6 +10,7 @@ import { changed, notify, readJSON } from './persist.js';
 ═══════════════════════════════════════ */
 export const WL_KEY = 'horlogerie_wishlist_v1';
 
+/** @returns {WishlistItem[]} */
 export function getWishlist() {
   return readJSON(WL_KEY, [], v => Array.isArray(v));
 }
