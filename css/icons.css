@@ -1,0 +1,76 @@
+/*!
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (53 iconos)
+ * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
+ * No editar a mano: vuelve a ejecutar el script.
+ */
+@font-face {
+  font-family: "tabler-icons";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("./icons/tabler-icons-6559ca38.woff2") format("woff2");
+}
+.ti {
+  font-family: "tabler-icons" !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.ti-alert-triangle:before { content: "\ea06"; }
+.ti-arrow-bar-to-down:before { content: "\ec88"; }
+.ti-arrow-left:before { content: "\ea19"; }
+.ti-ban:before { content: "\ea2e"; }
+.ti-calendar-plus:before { content: "\ebba"; }
+.ti-calendar-stats:before { content: "\ee20"; }
+.ti-calendar-x:before { content: "\f832"; }
+.ti-camera:before { content: "\ea54"; }
+.ti-chart-bar:before { content: "\ea59"; }
+.ti-check:before { content: "\ea5e"; }
+.ti-chevron-right:before { content: "\ea61"; }
+.ti-clock:before { content: "\ea70"; }
+.ti-cloud:before { content: "\ea76"; }
+.ti-cloud-check:before { content: "\f84d"; }
+.ti-cloud-off:before { content: "\ed3e"; }
+.ti-cloud-x:before { content: "\f85d"; }
+.ti-copy:before { content: "\ea7a"; }
+.ti-database:before { content: "\ea88"; }
+.ti-database-export:before { content: "\ee6e"; }
+.ti-database-import:before { content: "\ee6f"; }
+.ti-device-mobile:before { content: "\ea8a"; }
+.ti-device-watch:before { content: "\ebf9"; }
+.ti-devices:before { content: "\eb87"; }
+.ti-download:before { content: "\ea96"; }
+.ti-edit:before { content: "\ea98"; }
+.ti-eye:before { content: "\ea9a"; }
+.ti-file-type-pdf:before { content: "\fb10"; }
+.ti-heart:before { content: "\eabe"; }
+.ti-info-circle:before { content: "\eac5"; }
+.ti-key:before { content: "\eac7"; }
+.ti-layout-grid:before { content: "\edba"; }
+.ti-link:before { content: "\eade"; }
+.ti-list-details:before { content: "\ef40"; }
+.ti-pencil:before { content: "\eb04"; }
+.ti-photo:before { content: "\eb0a"; }
+.ti-plane:before { content: "\eb6f"; }
+.ti-player-play:before { content: "\ed46"; }
+.ti-player-stop:before { content: "\ed4a"; }
+.ti-plus:before { content: "\eb0b"; }
+.ti-qrcode:before { content: "\eb11"; }
+.ti-refresh:before { content: "\eb13"; }
+.ti-ripple:before { content: "\ed82"; }
+.ti-run:before { content: "\ec82"; }
+.ti-settings:before { content: "\eb20"; }
+.ti-star:before { content: "\eb2e"; }
+.ti-stopwatch:before { content: "\ff9b"; }
+.ti-switch-horizontal:before { content: "\eb31"; }
+.ti-tag:before { content: "\10096"; }
+.ti-tie:before { content: "\f07e"; }
+.ti-tool:before { content: "\eb40"; }
+.ti-trash:before { content: "\eb41"; }
+.ti-versions:before { content: "\ed52"; }
+.ti-world:before { content: "\eb54"; }

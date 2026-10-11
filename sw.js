@@ -3,7 +3,7 @@
  *
  * Strategy:
  *  - HTML/JS/CSS: network-first → always get latest version
- *  - Fonts/icons: cache-first → fast loading, rarely change
+ *  - Fonts, icons, vendor libs (bundled, versioned): cache-first
  *  - API calls:   always network
  *  - On new SW detected: force reload so user always gets latest app
  */
@@ -16,6 +16,18 @@ const SHELL = [
   `${BASE}/`,
   `${BASE}/index.html`,
   `${BASE}/css/app.css?v=2.2.0`,
+  `${BASE}/css/fonts.css?v=2.2.0`,
+  `${BASE}/css/icons.css?v=2.2.0`,
+  `${BASE}/css/icons/tabler-icons-6559ca38.woff2`,
+  `${BASE}/css/fonts/cormorant-garamond-latin-300-normal.woff2`,
+  `${BASE}/css/fonts/cormorant-garamond-latin-400-normal.woff2`,
+  `${BASE}/css/fonts/cormorant-garamond-latin-500-normal.woff2`,
+  `${BASE}/css/fonts/cormorant-garamond-latin-300-italic.woff2`,
+  `${BASE}/css/fonts/cormorant-garamond-latin-400-italic.woff2`,
+  `${BASE}/css/fonts/dm-sans-latin-300-normal.woff2`,
+  `${BASE}/css/fonts/dm-sans-latin-400-normal.woff2`,
+  `${BASE}/css/fonts/dm-sans-latin-500-normal.woff2`,
+  `${BASE}/js/vendor/jspdf-2.5.1.umd.min.js`,
   `${BASE}/js/db.js?v=2.2.0`,
   `${BASE}/js/storage.js?v=2.2.0`,
   `${BASE}/js/api.js?v=2.2.0`,
@@ -34,6 +46,8 @@ const SHELL = [
   `${BASE}/manifest.json`,
   `${BASE}/watches_db.json`,  `${BASE}/icons/icon-192.png`,
   `${BASE}/icons/icon-512.png`,
+  `${BASE}/icons/icon-maskable-192.png`,
+  `${BASE}/icons/icon-maskable-512.png`,
   `${BASE}/icons/apple-touch-icon.png`,
   `${BASE}/favicon.ico`,
 ];
@@ -91,10 +105,10 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // 2. External fonts & icons — cache-first (they never change)
-  if (url.hostname === 'fonts.gstatic.com' ||
-      url.hostname.includes('jsdelivr.net') ||
-      url.hostname === 'fonts.googleapis.com') {
+  // 2. Fonts, icon font and third-party libraries bundled with the app —
+  //    cache-first (versioned file names, they never change)
+  if (url.origin === self.location.origin &&
+      /\/(css\/fonts|css\/icons|js\/vendor)\//.test(url.pathname)) {
     e.respondWith(cacheFirst(e.request));
     return;
   }
