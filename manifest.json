@@ -1,7 +1,7 @@
 {
-  "name": "Horlogerie",
+  "name": "Horlogerie — tu colección de relojes",
   "short_name": "Horlogerie",
-  "description": "Gestión de colección de relojes",
+  "description": "Lleva la cuenta de tu colección de relojes: cuál te pusiste y cuándo, cuál toca ahora, fichas técnicas, coste por uso y avisos de pila y revisión.",
   "start_url": "/horlogerie/",
   "scope": "/horlogerie/",
   "display": "standalone",
@@ -16,30 +16,30 @@
       "purpose": "any"
     },
     {
-      "src": "/horlogerie/icons/icon-192.png",
+      "src": "/horlogerie/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/horlogerie/icons/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/horlogerie/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/horlogerie/icons/icon-512.png",
+      "src": "/horlogerie/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/horlogerie/icons/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
     }
   ],
-  "categories": ["lifestyle", "utilities"],
-  "lang": "es"
+  "categories": [
+    "lifestyle",
+    "utilities"
+  ],
+  "lang": "es",
+  "id": "/horlogerie/",
+  "dir": "ltr",
+  "prefer_related_applications": false
 }
