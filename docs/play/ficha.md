@@ -1,4 +1,6 @@
-# Ficha de Google Play
+# Ficha de Google Play — Rotor
+
+Nombre de marca: **Rotor** (el rotor es la pieza que da cuerda a un reloj automático, y la app gira en torno a la rotación de tu colección). Antes se llamaba Horlogerie.
 
 Límites de Play: título ≤ 30 caracteres, descripción breve ≤ 80, descripción completa ≤ 4.000. Los recuentos de abajo están comprobados (descripciones completas: unos 1.450 caracteres).
 
@@ -8,14 +10,14 @@ No uses nombres de marcas de terceros (Rolex, Submariner, Royal Oak…) ni en lo
 
 ## Español (es-ES) — idioma predeterminado
 
-**Título** (29): `Horlogerie: colección relojes`
+**Título** (26): `Rotor: rotación de relojes`
 
 **Descripción breve** (77): `Qué reloj te pusiste, cuál toca hoy y cuánto te cuesta cada uso. Sin cuentas.`
 
 **Descripción completa:**
 
 ```
-Horlogerie es el cuaderno de tu colección de relojes. Apunta los que tienes, registra cuándo te pones cada uno y deja que la app te diga cuál lleva más tiempo en la caja.
+Rotor es el cuaderno de tu colección de relojes. Apunta los que tienes, registra cuándo te pones cada uno y deja que la app te diga cuál lleva más tiempo en la caja.
 
 QUÉ PUEDES HACER
 • Tu colección de un vistazo: foto, tipo de movimiento y cuándo lo llevaste por última vez.
@@ -38,14 +40,14 @@ TUS DATOS SON TUYOS
 
 ## Portugués (pt-PT)
 
-**Título** (28): `Horlogerie: coleção relógios`
+**Título** (26): `Rotor: rotação de relógios`
 
 **Descripción breve** (71): `Que relógio usaste, qual usar hoje e quanto custa cada uso. Sem contas.`
 
 **Descripción completa:**
 
 ```
-Horlogerie é o caderno da tua coleção de relógios. Regista os que tens, anota quando usas cada um e deixa a app dizer-te qual está há mais tempo na caixa.
+Rotor é o caderno da tua coleção de relógios. Regista os que tens, anota quando usas cada um e deixa a app dizer-te qual está há mais tempo na caixa.
 
 O QUE PODES FAZER
 • A tua coleção num relance: foto, tipo de movimento e quando o usaste pela última vez.

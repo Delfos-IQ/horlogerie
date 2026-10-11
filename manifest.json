@@ -1,6 +1,6 @@
 {
-  "name": "Horlogerie — tu colección de relojes",
-  "short_name": "Horlogerie",
+  "name": "Rotor — rotación de relojes",
+  "short_name": "Rotor",
   "description": "Lleva la cuenta de tu colección de relojes: cuál te pusiste y cuándo, cuál toca ahora, fichas técnicas, coste por uso y avisos de pila y revisión.",
   "start_url": "/horlogerie/",
   "scope": "/horlogerie/",

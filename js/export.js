@@ -52,7 +52,7 @@ async function generateCollectionPDF() {
   drawSummaryPage(doc, ws, W, H);
 
   /* ── Download ── */
-  const filename = `horlogerie-coleccion-${new Date().toISOString().slice(0,10)}.pdf`;
+  const filename = `rotor-coleccion-${new Date().toISOString().slice(0,10)}.pdf`;
   doc.save(filename);
   showToast('PDF descargado');
 }
@@ -73,7 +73,7 @@ function drawCover(doc, ws, W, H) {
   doc.setTextColor(...PDF_GOLD_L);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(42);
-  doc.text('HORLOGERIE', W / 2, 80, { align: 'center', charSpace: 5 });
+  doc.text('ROTOR', W / 2, 80, { align: 'center', charSpace: 5 });
 
   doc.setFillColor(...PDF_GOLD);
   doc.rect(W / 2 - 30, 88, 60, 0.5, 'F');
@@ -412,7 +412,7 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
   doc.setTextColor(...PDF_MID);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.text('Horlogerie · Colección Personal', W / 2, H - 5, { align: 'center' });
+  doc.text('Rotor · Colección personal', W / 2, H - 5, { align: 'center' });
 }
 
 /* ════════════════════════════════════════
@@ -505,7 +505,7 @@ function drawSummaryPage(doc, ws, W, H) {
   doc.setTextColor(...PDF_MID);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.text(`Horlogerie · ${new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' })}`, W / 2, H - 5, { align: 'center' });
+  doc.text(`Rotor · ${new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' })}`, W / 2, H - 5, { align: 'center' });
 }
 
 /* ════════════════════════════════════════

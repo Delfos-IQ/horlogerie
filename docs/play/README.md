@@ -1,6 +1,6 @@
-# Publicar Horlogerie en Google Play
+# Publicar Rotor en Google Play
 
-Guía paso a paso para empaquetar la PWA como app Android (TWA, *Trusted Web Activity*) y publicarla. La app sigue viviendo en `https://delfos-iq.github.io/horlogerie/`: la TWA es un envoltorio que la abre a pantalla completa, sin barra del navegador. Cada `git push` actualiza también la app de Play, sin volver a subir nada (salvo cambios del envoltorio).
+Guía paso a paso para empaquetar la PWA (nombre visible: **Rotor**; la URL sigue siendo `/horlogerie/`) como app Android (TWA, *Trusted Web Activity*) y publicarla. La app sigue viviendo en `https://delfos-iq.github.io/horlogerie/`: la TWA es un envoltorio que la abre a pantalla completa, sin barra del navegador. Cada `git push` actualiza también la app de Play, sin volver a subir nada (salvo cambios del envoltorio).
 
 Material listo en esta carpeta:
 
@@ -20,7 +20,7 @@ Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app ser
 ## 0. Antes de empezar (pendiente)
 
 - [ ] Poner un email de contacto en `privacidad.html` (busca `[EMAIL DE CONTACTO]`). Es obligatorio.
-- [ ] Decidir el nombre del paquete. Propuesta: `com.delfosiq.horlogerie`. **No se puede cambiar después de publicar.**
+- [ ] Decidir el nombre del paquete. Propuesta: `com.delfosiq.rotor`. **No se puede cambiar después de publicar.**
 
 ## 1. Generar el paquete Android (AAB)
 
@@ -28,8 +28,8 @@ Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app ser
 
 1. Abre https://www.pwabuilder.com e introduce `https://delfos-iq.github.io/horlogerie/`.
 2. *Package for stores* → **Android** → *Generate package* → *Options*:
-   - Package ID: `com.delfosiq.horlogerie`
-   - App name: `Horlogerie` · Short name: `Horlogerie`
+   - Package ID: `com.delfosiq.rotor`
+   - App name: `Rotor` · Short name: `Rotor`
    - Display mode: `standalone` · Status bar y nav bar color: `#0D0D0D`
    - Signing key: **Create new** y guarda el `.keystore` y sus contraseñas en un sitio seguro (gestor de contraseñas + copia). Si los pierdes, no podrás actualizar la app. Con *Play App Signing* (paso 3) Google guarda la clave de firma final y la tuya queda como clave de subida.
 3. Descarga el ZIP. Contiene el `.aab` para Play, un `.apk` para probar en tu móvil y un `assetlinks.json`.
@@ -39,7 +39,7 @@ Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app ser
 
 ```bash
 npm i -g @bubblewrap/cli
-mkdir horlogerie-twa && cd horlogerie-twa
+mkdir rotor-twa && cd rotor-twa
 cp ../docs/play/twa-manifest.json .
 bubblewrap build      # pide crear la clave de firma la primera vez
 ```
@@ -58,7 +58,7 @@ Android solo abre la app a pantalla completa si la web declara que la app es suy
 
 ## 3. Play Console
 
-1. Crea la app: nombre `Horlogerie`, idioma predeterminado español (España), **App**, **Gratuita**.
+1. Crea la app: nombre `Rotor: rotación de relojes`, idioma predeterminado español (España), **App**, **Gratuita**.
 2. Acepta *Play App Signing* al subir el primer AAB.
 3. **Ficha de Play Store**: textos de `ficha.md`, icono `icons/icon-512.png`, gráfico destacado y capturas de `capturas/`.
 4. **Contenido de la aplicación**:

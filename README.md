@@ -1,6 +1,8 @@
-# Horlogerie
+# Rotor (antes Horlogerie)
 
-PWA para gestionar una colección de relojes: qué relojes tienes, cuándo te pusiste cada uno, cuál toca ahora, su ficha técnica, el coste por uso y los avisos de pila y revisión. Pensada para coleccionistas de homenajes y microbrands (Berny, Pagani Design, San Martin, Steeldive…). Funciona sin conexión y no carga nada de terceros.
+PWA para gestionar una colección de relojes. El nombre visible es **Rotor**; la URL (`/horlogerie/`), las claves de datos, el repositorio y el Worker conservan el nombre original para no romper instalaciones ni datos.
+
+ qué relojes tienes, cuándo te pusiste cada uno, cuál toca ahora, su ficha técnica, el coste por uso y los avisos de pila y revisión. Pensada para coleccionistas de homenajes y microbrands (Berny, Pagani Design, San Martin, Steeldive…). Funciona sin conexión y no carga nada de terceros.
 
 - **App:** https://delfos-iq.github.io/horlogerie/
 - **API:** Cloudflare Worker `https://horlogerie.pedicode-app.workers.dev`
@@ -11,6 +13,7 @@ PWA para gestionar una colección de relojes: qué relojes tienes, cuándo te pu
 horlogerie/
 ├── index.html              Única página de la app (vistas, modales, registro del SW)
 ├── privacidad.html         Política de privacidad pública (enlazada en Ajustes y en Play)
+├── brand/                  Logo maestro (rotor-icon.svg) y símbolo sin fondo (rotor-symbol.svg)
 ├── manifest.json           Manifest PWA (scope /horlogerie/)
 ├── sw.js                   Service worker: red primero para la app, caché para fuentes/iconos
 ├── version.json            ÚNICA fuente de la versión (ver "Publicar una versión")
@@ -51,6 +54,7 @@ horlogerie/
 └── tools/
     ├── bump-version.mjs    Propaga la versión de version.json al resto de archivos
     ├── build-icons.py      Regenera el subconjunto de iconos (ejecutar al usar un icono nuevo)
+    ├── build-brand.py      Genera iconos PNG y favicon desde brand/rotor-icon.svg
     └── play-screenshots.py Capturas de la ficha de Play con una colección de ejemplo
 ```
 

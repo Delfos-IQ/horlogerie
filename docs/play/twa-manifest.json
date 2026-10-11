@@ -1,8 +1,8 @@
 {
-  "packageId": "com.delfosiq.horlogerie",
+  "packageId": "com.delfosiq.rotor",
   "host": "delfos-iq.github.io",
-  "name": "Horlogerie",
-  "launcherName": "Horlogerie",
+  "name": "Rotor",
+  "launcherName": "Rotor",
   "display": "standalone",
   "orientation": "portrait",
   "themeColor": "#0D0D0D",
@@ -20,15 +20,17 @@
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
-    "alias": "horlogerie"
+    "alias": "rotor"
   },
-  "appVersionName": "2.3.0",
+  "appVersionName": "2.4.0",
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "fallbackType": "customtabs",
   "features": {},
-  "alphaDependencies": { "enabled": false },
+  "alphaDependencies": {
+    "enabled": false
+  },
   "enableSiteSettingsShortcut": false,
   "isChromeOSOnly": false,
   "isMetaQuest": false,

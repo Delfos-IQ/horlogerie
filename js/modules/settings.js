@@ -65,7 +65,7 @@ async function handleExportJSON() {
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = `horlogerie-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.href = url; a.download = `rotor-copia-${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   showToast(`Copia descargada · ${backup.watches.length} relojes, ${backup.wishlist.length} deseos`);

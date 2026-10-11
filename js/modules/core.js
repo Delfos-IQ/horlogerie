@@ -1,5 +1,5 @@
 /**
- * app.js — Horlogerie UI
+ * core.js — Rotor (antes Horlogerie) UI
  * Depends on: db.js, storage.js, api.js, sync.js, export.js
  *
  * Features:

@@ -103,12 +103,12 @@ async def main():
           body{{margin:0;width:1024px;height:500px;background:radial-gradient(circle at 30% 40%,#2a2418,#0D0D0D 70%);
                display:flex;align-items:center;gap:56px;padding:0 72px;box-sizing:border-box;color:#E8E2D8;font-family:'DM Sans',sans-serif}}
           img{{width:250px;height:250px;border-radius:56px;box-shadow:0 20px 60px rgba(0,0,0,.6)}}
-          h1{{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:76px;letter-spacing:6px;margin:0;color:#D4AF6A}}
+          h1{{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:92px;letter-spacing:10px;margin:0;color:#D4AF6A}}
           p{{font-size:30px;line-height:1.35;margin:14px 0 0;max-width:560px}}
           small{{display:block;margin-top:22px;font-size:20px;color:#9a958c;letter-spacing:1px}}
-        </style></head><body><img src="../../icons/icon-512.png"><div><h1>Horlogerie</h1>
+        </style></head><body><img src="../../icons/icon-512.png"><div><h1>Rotor</h1>
           <p>Qué reloj te pusiste, cuál toca hoy y cuánto te cuesta cada uso.</p>
-          <small>Sin cuentas · Funciona sin conexión</small></div></body></html>""", encoding="utf-8")
+          <small>Rotación de relojes · Sin cuentas · Sin conexión</small></div></body></html>""", encoding="utf-8")
         await fg.goto("http://localhost:8080/horlogerie/docs/play/_grafico.html")
         await fg.evaluate("document.fonts.ready")
         await fg.wait_for_timeout(400)
