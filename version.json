@@ -1,5 +1,5 @@
 {
   "version": "2.1.3",
   "date": "2026-10-11",
-  "notes": "Limpieza interna: app disponible sin conexión, sin recargas dobles y versión unificada"
+  "notes": "Mejoras internas: caché sin conexión más fiable y sin recarga al abrir la app por primera vez"
 }
