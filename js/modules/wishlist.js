@@ -4,6 +4,8 @@ const PRIORITY_CFG = {
   low:    { label: '💭 Baja',  color: 'var(--mid)' },
 };
 
+let _wlEditingId = null;   // item being edited in the wishlist modal (null = new)
+
 /* ── Render wishlist view ── */
 function renderWishlist() {
   const items  = getWishlist();

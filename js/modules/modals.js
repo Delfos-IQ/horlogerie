@@ -1,7 +1,7 @@
 /* ─── ADD / EDIT MODAL ─── */
 function openAddModal() {
-  editingWatchId = null;
-  editingPhotoData = null;
+  ui.editingWatchId = null;
+  ui.editingPhotoData = null;
   window._pendingDbSpecs = null;
   window._pendingDbPrice = null;
   window._pendingSource  = null;
@@ -52,8 +52,8 @@ function resetDbHint() {
 function openEditModal(id) {
   const w = getWatch(id);
   if (!w) return;
-  editingWatchId   = id;
-  editingPhotoData = w.photo || null;
+  ui.editingWatchId   = id;
+  ui.editingPhotoData = w.photo || null;
   window._pendingDbSpecs = null;
   window._pendingDbPrice = null;
   document.getElementById('modal-title-text').textContent = 'Editar Reloj';
@@ -107,7 +107,7 @@ function handlePhotoUpload(e) {
   const reader = new FileReader();
   reader.onload = ev => {
     compressPhoto(ev.target.result, 900).then(resized => {
-      editingPhotoData = resized;
+      ui.editingPhotoData = resized;
       const prev = document.getElementById('photo-preview');
       prev.src = resized; prev.style.display = 'block';
     });
@@ -170,17 +170,17 @@ async function saveWatch() {
   btn.disabled = true; btn.textContent = 'Guardando…';
 
   try {
-    if (editingWatchId) {
+    if (ui.editingWatchId) {
       // Only send the photo if it changed: updateWatch recompresses whatever it gets
       const changes = { brand, model, ref, type, notes, ...maint };
-      if (editingPhotoData !== (getWatch(editingWatchId)?.photo || null)) changes.photo = editingPhotoData;
-      await updateWatch(editingWatchId, changes);
-      if (window._pendingDbSpecs) await updateWatch(editingWatchId, pendingSpecChanges(getWatch(editingWatchId)));
+      if (ui.editingPhotoData !== (getWatch(ui.editingWatchId)?.photo || null)) changes.photo = ui.editingPhotoData;
+      await updateWatch(ui.editingWatchId, changes);
+      if (window._pendingDbSpecs) await updateWatch(ui.editingWatchId, pendingSpecChanges(getWatch(ui.editingWatchId)));
       closeAddModal();
       showToast('Reloj actualizado');
-      openDetail(editingWatchId);
+      openDetail(ui.editingWatchId);
     } else {
-      const newW = await addWatch({ brand, model, ref, type, notes, photo: editingPhotoData });
+      const newW = await addWatch({ brand, model, ref, type, notes, photo: ui.editingPhotoData });
       if (newW && Object.values(maint).some(v => v !== null)) await updateWatch(newW.id, maint);
       // No specs chosen: try the local model database automatically
       let autoFilled = false;
@@ -202,7 +202,7 @@ async function saveWatch() {
     }
   } finally {
     btn.disabled = false;
-    btn.textContent = editingWatchId ? 'Actualizar' : 'Guardar';
+    btn.textContent = ui.editingWatchId ? 'Actualizar' : 'Guardar';
   }
 }
 

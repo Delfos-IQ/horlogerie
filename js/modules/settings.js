@@ -142,11 +142,6 @@ window.processImportJSON   = processImportJSON;
 window.handleDbSearch      = handleDbSearch;
 window.renderSettings      = renderSettings;
 
-/* ══════════════════════════════════════════════════════
-   WISHLIST
-══════════════════════════════════════════════════════ */
-
-let _wlEditingId = null;
 
 
 /* ─── System status panel ─── */

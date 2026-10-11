@@ -164,7 +164,7 @@ function renderHistoryDetail() {
   const body = document.getElementById('history-body');
   if (!body) return;
   const hw = history.state?.hw;
-  if (hw && getWatch(hw)) { historySelectedWatch = hw; renderHistoryBody(); return; }
+  if (hw && getWatch(hw)) { ui.historySelectedWatch = hw; renderHistoryBody(); return; }
   const ws = getWatches();
   if (!ws.length) { body.innerHTML = EMPTY_HISTORY; return; }
   const data = ws.map(w => ({ w, days: daysIn(w) }))
@@ -185,7 +185,7 @@ function renderHistoryDetail() {
 }
 
 function renderHistoryBody() {
-  const w    = getWatch(historySelectedWatch);
+  const w    = getWatch(ui.historySelectedWatch);
   const body = document.getElementById('history-body');
   if (!body || !w) return;
   const year = _histYear;

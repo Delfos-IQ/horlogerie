@@ -132,7 +132,7 @@ function shortLastWorn(w) {
 
 /* ─── DETAIL ─── */
 function openDetail(id) {
-  currentWatchId = id;
+  ui.currentWatchId = id;
   const w = getWatch(id);
   if (!w) return;
 
@@ -198,7 +198,7 @@ function startActiveTimer(id) {
   const w = getWatch(id);
   if (!w?.wearStart) return;
   // Update every 60 seconds — fine enough for h/min display
-  _activeTimer = setInterval(() => {
+  ui.activeTimer = setInterval(() => {
     const c = getWatch(id);
     if (!c?.wearStart) { stopActiveTimer(); return; }
     updateDayCounter(c);
@@ -208,7 +208,7 @@ function startActiveTimer(id) {
   }, 60000);
 }
 function stopActiveTimer() {
-  if (_activeTimer) { clearInterval(_activeTimer); _activeTimer = null; }
+  if (ui.activeTimer) { clearInterval(ui.activeTimer); ui.activeTimer = null; }
 }
 
 function renderDetailActions(w) {
@@ -305,7 +305,7 @@ function renderSpecs(w) {
     }).join('')}`;
 
   document.getElementById('d-specs').querySelectorAll('.spec-card').forEach(card => {
-    const activate = () => editSpecInline(card.dataset.key, getWatch(currentWatchId));
+    const activate = () => editSpecInline(card.dataset.key, getWatch(ui.currentWatchId));
     card.addEventListener('click', activate);
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }});
   });
@@ -488,7 +488,7 @@ window.openWearSheet = openWearSheet;
 
 function refreshAfterWearChange(watchId) {
   const active = document.querySelector('.view.active')?.id;
-  if (active === 'view-detail' && currentWatchId === watchId) openDetail(watchId);
+  if (active === 'view-detail' && ui.currentWatchId === watchId) openDetail(watchId);
   else if (active === 'view-history') renderHistory();
   else renderHome();
 }

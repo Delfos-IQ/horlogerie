@@ -355,17 +355,29 @@ function addWearDays(id, fromTs, toTs = fromTs) {
   const w = getWatch(id);
   if (!w) return false;
   const now = Date.now();
-  let start = startOfDay(Math.min(fromTs, toTs)) + 9 * 3600000;          // 09:00
-  let end   = startOfDay(Math.max(fromTs, toTs)) + 21 * 3600000;         // 21:00
-  if (start > now) return false;                                          // no future days
-  if (end > now) end = Math.max(start, now);
-  if (start > end) start = end;
+  const r = dayRange(fromTs, toTs, now);
+  if (!r) return false;                                                   // no future days
   if (!w.history) w.history = [];
-  w.history.push({ start, end });
+  w.history.push(r);
   w.history.sort((a, b) => a.start - b.start);
   w.updatedAt = now;
   save();
   return true;
+}
+
+/**
+ * A logged day runs 09:00–21:00 so it never spills into the next date. Today
+ * is clamped to "now", so logging early in the morning (00:00–08:59) still
+ * counts today. Days after today are refused.
+ */
+function dayRange(fromTs, toTs, now = Date.now()) {
+  if (startOfDay(Math.min(fromTs, toTs)) > startOfDay(now)) return null;   // future day
+  let start = startOfDay(Math.min(fromTs, toTs)) + 9 * 3600000;
+  let end   = startOfDay(Math.max(fromTs, toTs)) + 21 * 3600000;
+  if (start > now) start = now;
+  if (end > now) end = now;
+  if (start > end) start = end;
+  return { start, end };
 }
 
 /** "Lo llevé hoy" — idempotent: does nothing if it already counts for today */
@@ -380,11 +392,9 @@ function updateHistoryEntry(id, idx, fromTs, toTs) {
   const w = getWatch(id);
   if (!w || !w.history?.[idx]) return false;
   const now = Date.now();
-  const start = startOfDay(Math.min(fromTs, toTs)) + 9 * 3600000;
-  let end     = startOfDay(Math.max(fromTs, toTs)) + 21 * 3600000;
-  if (start > now) return false;
-  if (end > now) end = Math.max(start, now);
-  w.history[idx] = { start, end };
+  const r = dayRange(fromTs, toTs, now);
+  if (!r) return false;
+  w.history[idx] = r;
   w.history.sort((a, b) => a.start - b.start);
   w.updatedAt = now;
   save();

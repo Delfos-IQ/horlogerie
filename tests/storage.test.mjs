@@ -3,14 +3,18 @@
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-function load(initial = {}) {
+function load(initial = {}, nowTs = null) {
   const store = new Map(Object.entries(initial));
   const localStorage = {
     getItem: k => (store.has(k) ? store.get(k) : null),
     setItem: (k, v) => store.set(k, String(v)),
     removeItem: k => store.delete(k),
   };
-  const ctx = { console, localStorage, navigator: {}, Date, Math, JSON, Map, Set, Promise, setTimeout, clearTimeout };
+  const FakeDate = nowTs === null ? Date : class extends Date {
+    constructor(...a) { super(...(a.length ? a : [nowTs])); }
+    static now() { return nowTs; }
+  };
+  const ctx = { console, localStorage, navigator: {}, Date: FakeDate, Math, JSON, Map, Set, Promise, setTimeout, clearTimeout };
   ctx.window = ctx; ctx.globalThis = ctx;
   vm.createContext(ctx);
   vm.runInContext(readFileSync(new URL('../js/storage.js', import.meta.url), 'utf8'), ctx, { filename: 'storage.js' });
@@ -65,6 +69,16 @@ const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime();
   t('no se pueden apuntar días futuros', ctx.addWearDays('a', Date.now() + 2 * D) === false);
   ctx.getWatch('a').wearStart = Date.now() - D;
   t('no se puede quitar un día de la sesión en curso', ctx.removeWearDay('a', Date.now()) === 'active');
+}
+
+// ── «Lo llevé hoy» de madrugada ──
+{
+  const { ctx } = load({}, at(2026, 10, 12, 0) + 3 * 60000);   // 00:03
+  ctx.getWatches().push({ id: 'n', brand: 'N', model: 'N', history: [] });
+  const r = ctx.markWornToday('n');
+  t('a las 00:03 «Lo llevé hoy» cuenta hoy', r === true && ctx.wornDayKeys(ctx.getWatch('n')).has('2026-10-12'),
+    JSON.stringify(ctx.getWatch('n').history));
+  t('y no se puede apuntar mañana', ctx.addWearDays('n', at(2026, 10, 13)) === false);
 }
 
 // ── Fusión con la nube ──

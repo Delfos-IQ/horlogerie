@@ -12,11 +12,14 @@
  */
 
 /* ─── State ─── */
-let currentWatchId   = null;
-let editingPhotoData = null;
-let editingWatchId   = null;
-let historySelectedWatch = null;
-let _activeTimer = null;
+/** UI state shared between modules (one object, so every module sees changes) */
+const ui = {
+  currentWatchId: null,        // watch open in the detail view
+  editingPhotoData: null,      // photo chosen in the add/edit modal
+  editingWatchId: null,        // watch being edited in the modal (null = new)
+  historySelectedWatch: null,  // watch open in Historial → Por reloj
+  activeTimer: null,           // interval updating the live wear time
+};
 
 /* ─── Keyboard: nav items respond to Enter/Space ─── */
 document.addEventListener('DOMContentLoaded', () => {

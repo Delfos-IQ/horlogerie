@@ -289,7 +289,7 @@ function refreshImportButtons() {
   const on = importEnabled();
   ['url-import-section', 'wl-url-section'].forEach(id => {
     const el = document.getElementById(id);
-    if (el && !(id === 'url-import-section' && editingWatchId)) el.hidden = !on;
+    if (el && !(id === 'url-import-section' && ui.editingWatchId)) el.hidden = !on;
   });
 }
 window.refreshImportButtons = refreshImportButtons;
