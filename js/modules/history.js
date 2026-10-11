@@ -1,6 +1,7 @@
 /* ─────────────────── HISTORY ─────────────────── */
 
-let _historyMode   = 'ranking';  // 'ranking' | 'detail'
+let _historyMode   = 'calendar'; // 'calendar' | 'ranking' | 'detail'
+let _calMonth      = null;       // Date set to the 1st of the month shown
 let _rankingMetric = 'days';     // 'days' | 'sessions'
 
 /* ── Category inference from brand/model name ── */
@@ -38,12 +39,14 @@ function watchStats(w) {
 /* ── Mode toggle ── */
 function setHistoryMode(mode) {
   _historyMode = mode;
-  document.getElementById('history-ranking-view').style.display = mode === 'ranking' ? 'block' : 'none';
-  document.getElementById('history-detail-view').style.display  = mode === 'detail'  ? 'block' : 'none';
-  document.getElementById('btn-mode-ranking').classList.toggle('active', mode === 'ranking');
-  document.getElementById('btn-mode-detail').classList.toggle('active', mode === 'detail');
-  if (mode === 'ranking') renderRanking();
-  if (mode === 'detail')  renderHistoryDetail();
+  document.getElementById('history-calendar-view').style.display = mode === 'calendar' ? 'block' : 'none';
+  document.getElementById('history-ranking-view').style.display  = mode === 'ranking'  ? 'block' : 'none';
+  document.getElementById('history-detail-view').style.display   = mode === 'detail'   ? 'block' : 'none';
+  ['calendar', 'ranking', 'detail'].forEach(m =>
+    document.getElementById('btn-mode-' + m)?.classList.toggle('active', m === mode));
+  if (mode === 'calendar') renderCalendar();
+  if (mode === 'ranking')  renderRanking();
+  if (mode === 'detail')   renderHistoryDetail();
 }
 window.setHistoryMode = setHistoryMode;
 
@@ -250,3 +253,165 @@ function renderHistoryBody() {
     });
   });
 }
+
+/* ══════════════════════════════════════════════
+   CALENDAR VIEW — one month, what was worn each day
+══════════════════════════════════════════════ */
+const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+/** Map dayKey → [watch, …] for every worn day */
+function wornByDay(ws = getWatches()) {
+  const map = new Map();
+  ws.forEach(w => wornDayKeys(w).forEach(k => {
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(w);
+  }));
+  return map;
+}
+window.wornByDay = wornByDay;
+
+function watchInitials(w) {
+  return (w.brand || '?').trim().slice(0, 1).toUpperCase() + (w.model || '').trim().slice(0, 1).toUpperCase();
+}
+function watchChip(w, size = 26) {
+  const cat = inferCategory(w);
+  return isSafePhoto(w.photo)
+    ? `<img class="cal-chip" src="${w.photo}" alt="" width="${size}" height="${size}">`
+    : `<span class="cal-chip cal-chip-txt" style="--chip:${cat.color}">${escHtml(watchInitials(w))}</span>`;
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  if (!grid) return;
+  const now = new Date();
+  if (!_calMonth) _calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const y = _calMonth.getFullYear(), m = _calMonth.getMonth();
+  const prefix = `${y}-${String(m + 1).padStart(2, '0')}-`;
+  const byDay = wornByDay();
+  const todayKey = dayKey(Date.now());
+
+  document.getElementById('cal-title').textContent = `${MONTHS_ES[m]} ${y}`;
+  document.getElementById('cal-next').disabled = (y > now.getFullYear()) || (y === now.getFullYear() && m >= now.getMonth());
+
+  // Summary of the month
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const elapsed = (y === now.getFullYear() && m === now.getMonth()) ? now.getDate() : daysInMonth;
+  let logged = 0; const count = new Map();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const list = byDay.get(prefix + String(d).padStart(2, '0'));
+    if (!list) continue;
+    logged++;
+    list.forEach(w => count.set(w.id, (count.get(w.id) || 0) + 1));
+  }
+  const top = [...count.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topW = top ? getWatch(top[0]) : null;
+  document.getElementById('cal-summary').innerHTML = logged
+    ? `<div><b>${logged}</b><span>de ${elapsed} días con reloj</span></div>
+       <div><b>${count.size}</b><span>${count.size === 1 ? 'reloj distinto' : 'relojes distintos'}</span></div>
+       <div><b>${topW ? escHtml(topW.brand) : '—'}</b><span>más usado${top ? ` · ${top[1]} d` : ''}</span></div>`
+    : `<div class="cal-empty">Sin usos apuntados en ${MONTHS_ES[m]}. Toca un día para añadir el reloj que llevaste.</div>`;
+
+  // Grid (weeks start on Monday)
+  const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+  let html = '';
+  for (let i = 0; i < lead; i++) html += '<div class="cal-cell cal-pad" aria-hidden="true"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = prefix + String(d).padStart(2, '0');
+    const list = byDay.get(key) || [];
+    const future = key > todayKey;
+    const label = `${d} de ${MONTHS_ES[m]}: ${list.length ? list.map(w => `${w.brand} ${w.model}`).join(', ') : 'sin reloj'}`;
+    html += `<button class="cal-cell${list.length ? ' worn' : ''}${key === todayKey ? ' today' : ''}" data-day="${key}"
+               ${future ? 'disabled' : ''} role="gridcell" aria-label="${escHtml(label)}">
+      <span class="cal-num">${d}</span>
+      ${list.length ? `<span class="cal-marks">${watchChip(list[0], 24)}${list.length > 1 ? `<span class="cal-more">+${list.length - 1}</span>` : ''}</span>` : ''}
+    </button>`;
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll('.cal-cell[data-day]').forEach(c => c.addEventListener('click', () => openDaySheet(c.dataset.day)));
+
+  // Day-by-day list for the month (newest first)
+  const days = [];
+  for (let d = daysInMonth; d >= 1; d--) {
+    const key = prefix + String(d).padStart(2, '0');
+    if (byDay.has(key)) days.push([key, byDay.get(key)]);
+  }
+  document.getElementById('cal-days').innerHTML = days.map(([key, list]) => {
+    const dt = new Date(key + 'T12:00');
+    return `<button class="cal-day-row" data-day="${key}">
+      <span class="cal-day-date"><b>${dt.getDate()}</b>${dt.toLocaleDateString('es-ES', { weekday: 'short' })}</span>
+      <span class="cal-day-watches">${list.map(w => `<span class="cal-day-watch">${watchChip(w, 22)}${escHtml(w.brand)} ${escHtml(w.model)}${w.wearStart && key === todayKey ? ' <span class="cal-live">● ahora</span>' : ''}</span>`).join('')}</span>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('#cal-days .cal-day-row').forEach(r => r.addEventListener('click', () => openDaySheet(r.dataset.day)));
+}
+window.renderCalendar = renderCalendar;
+
+function shiftCalendarMonth(delta) {
+  const base = _calMonth || new Date();
+  _calMonth = new Date(base.getFullYear(), base.getMonth() + delta, 1);
+  renderCalendar();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('cal-prev')?.addEventListener('click', () => shiftCalendarMonth(-1));
+  document.getElementById('cal-next')?.addEventListener('click', () => shiftCalendarMonth(1));
+  // Swipe left/right on the grid to change month
+  const g = document.getElementById('cal-grid');
+  let x0 = null;
+  g?.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  g?.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 60) shiftCalendarMonth(dx < 0 ? 1 : -1);
+  });
+});
+
+/* ── Day sheet: what was worn that day; add or remove watches ── */
+function openDaySheet(key) {
+  const dt = new Date(key + 'T12:00');
+  const raw = dt.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  const title = raw.charAt(0).toUpperCase() + raw.slice(1);
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;z-index:400;';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', title);
+  document.body.appendChild(overlay);
+  const close = () => { overlay.remove(); renderCalendar(); };
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  function paint() {
+    const worn = (wornByDay().get(key) || []);
+    const wornIds = new Set(worn.map(w => w.id));
+    const others = getWatches().filter(w => !wornIds.has(w.id));
+    overlay.innerHTML = `
+      <div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
+        <div class="modal-handle"></div>
+        <div class="modal-title">${escHtml(title)}</div>
+        <div class="day-section">${worn.length ? 'Llevaste' : 'Ningún reloj apuntado este día'}</div>
+        ${worn.map(w => `
+          <div class="day-row">
+            ${watchChip(w, 34)}
+            <span class="day-name"><b>${escHtml(w.brand)}</b> ${escHtml(w.model)}</span>
+            <button class="day-btn day-remove" data-remove="${escHtml(w.id)}" aria-label="Quitar ${escHtml(w.brand)} ${escHtml(w.model)} de este día">
+              <i class="ti ti-x" aria-hidden="true"></i></button>
+          </div>`).join('')}
+        ${others.length ? `<div class="day-section">Añadir un reloj a este día</div>
+        <div class="day-add">${others.map(w => `
+          <button class="day-pick" data-add="${escHtml(w.id)}">${watchChip(w, 28)}<span>${escHtml(w.brand)} ${escHtml(w.model)}</span></button>`).join('')}</div>` : ''}
+        <button class="modal-btn modal-btn-cancel" style="width:100%;margin-top:14px;" data-close>Hecho</button>
+      </div>`;
+    overlay.querySelector('[data-close]').addEventListener('click', close);
+    overlay.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+      if (addWearDays(b.dataset.add, dt.getTime())) { showToast('Apuntado'); paint(); }
+      else showToast('No se pueden apuntar días futuros');
+    }));
+    overlay.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => {
+      const r = removeWearDay(b.dataset.remove, dt.getTime());
+      if (r === 'active') showToast('Es la sesión en curso: quítate el reloj desde su ficha');
+      else { showToast('Quitado de este día'); paint(); }
+    }));
+  }
+  paint();
+}
+window.openDaySheet = openDaySheet;
