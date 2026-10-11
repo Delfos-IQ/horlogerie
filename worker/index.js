@@ -1,5 +1,12 @@
 /**
- * Cloudflare Worker — Horlogerie API v10
+ * Cloudflare Worker — Horlogerie API v11
+ *
+ * v11 (oct 2026):
+ *   - The session id can travel in the X-Horlogerie-User header (preferred,
+ *     keeps it out of URLs and logs). ?userId= still works for older apps.
+ *   - The wishlist is stored next to the collection (optional field).
+ *   - GROQ_API_KEY is only required by /import-url: sync works without it.
+ *   - /health reports capabilities so the app can pick the safest protocol.
  *
  * Secrets (Cloudflare dashboard → Settings → Variables):
  *   GROQ_API_KEY   — required
@@ -53,10 +60,6 @@ export default {
       return corsResponse({ error: 'Origin not allowed' }, 403, origin);
     }
 
-    if (!env.GROQ_API_KEY) {
-      return corsResponse({ error: 'Server misconfigured' }, 500, origin);
-    }
-
     const url = new URL(request.url);
     const ip  = request.headers.get('CF-Connecting-IP') || 'unknown';
 
@@ -81,7 +84,10 @@ export default {
       if (pathname === '/sync/clear'  && method === 'DELETE') return await handleSyncClear(request, env, origin);
       if (pathname === '/sync/size'   && method === 'GET')    return await handleSyncSize(request, env, origin);
       if (pathname === '/import-url'  && method === 'POST')   return await handleImportUrl(request, env, origin);
-      if (pathname === '/health'      || pathname === '/')    return corsResponse({ status: 'ok', version: '10.0', kv: !!env.HORLOGERIE_KV }, 200, origin);
+      if (pathname === '/health'      || pathname === '/')    return corsResponse({
+        status: 'ok', version: '11.0', kv: !!env.HORLOGERIE_KV,
+        caps: { userHeader: true, wishlist: true, importUrl: !!env.GROQ_API_KEY },
+      }, 200, origin);
 
       return corsResponse({ error: 'Not found' }, 404, origin);
 
@@ -103,13 +109,13 @@ function isAllowedOrigin(origin) {
 function corsResponse(data, status = 200, origin = '') {
   // Only echo back origin if it's in the allowlist
   const allowOrigin = isAllowedOrigin(origin) ? origin : ALLOWED_ORIGINS[0];
-  return new Response(data === null ? '' : JSON.stringify(data), {
+  return new Response(data === null ? null : JSON.stringify(data), {
     status,
     headers: {
       'Content-Type':                'application/json',
       'Access-Control-Allow-Origin': allowOrigin,
       'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Horlogerie-User',
       'Access-Control-Max-Age':       '86400',
       'X-Content-Type-Options':       'nosniff',
     }
@@ -121,6 +127,13 @@ function corsResponse(data, status = 200, origin = '') {
 ══════════════════════════════════════════ */
 function isValidUUID(id) {
   return typeof id === 'string' && UUID_RE.test(id);
+}
+
+/* Session id: header first (v11 apps), then body (POST), then query (older apps) */
+function getUserId(request, body = null) {
+  return request.headers.get('X-Horlogerie-User')
+    || (body && body.userId)
+    || new URL(request.url).searchParams.get('userId');
 }
 
 function userKey(userId) {
@@ -190,11 +203,14 @@ async function handleSyncPush(request, env, origin) {
   let body;
   try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
 
-  const { userId, watches, mode = 'full', deletedIds = [] } = body;
+  const userId = getUserId(request, body);
+  const { watches, mode = 'full', deletedIds = [], wishlist } = body;
 
   if (!isValidUUID(userId))        return corsResponse({ error: 'userId inválido (UUID v4 requerido)' }, 400, origin);
   if (!Array.isArray(watches))     return corsResponse({ error: 'watches debe ser un array' }, 400, origin);
   if (watches.length > 500)        return corsResponse({ error: 'Demasiados relojes (máx 500)' }, 400, origin);
+  if (wishlist !== undefined && (!Array.isArray(wishlist) || wishlist.length > 500))
+                                   return corsResponse({ error: 'wishlist debe ser un array (máx 500)' }, 400, origin);
 
   const key  = userKey(userId);
   const opts = USER_DATA_TTL ? { expirationTtl: USER_DATA_TTL } : {};
@@ -202,13 +218,17 @@ async function handleSyncPush(request, env, origin) {
 
   let finalWatches;
 
+  // Current stored value (needed for diff merges and to keep the wishlist
+  // when an older app pushes without one)
+  let stored = {};
+  try {
+    const raw = await env.HORLOGERIE_KV.get(key);
+    if (raw) stored = JSON.parse(raw) || {};
+  } catch {}
+
   if (mode === 'diff') {
-    // ── Differential push: read existing, merge changes, delete removed ──
-    let existing = [];
-    try {
-      const raw = await env.HORLOGERIE_KV.get(key);
-      if (raw) existing = JSON.parse(raw).watches || [];
-    } catch {}
+    // ── Differential push: merge changes, delete removed ──
+    const existing = stored.watches || [];
 
     // Build map of existing watches
     const existingMap = {};
@@ -225,7 +245,8 @@ async function handleSyncPush(request, env, origin) {
     finalWatches = watches;
   }
 
-  const payload    = JSON.stringify({ watches: finalWatches, updatedAt: now, version: 2, userId, mode });
+  const finalWishlist = Array.isArray(wishlist) ? wishlist : (stored.wishlist || []);
+  const payload    = JSON.stringify({ watches: finalWatches, wishlist: finalWishlist, updatedAt: now, version: 3, userId, mode });
   const payloadLen = payload.length;
 
   if (payloadLen > MAX_SYNC_PAYLOAD) {
@@ -249,7 +270,7 @@ async function handleSyncPush(request, env, origin) {
 
 async function handleSyncPull(request, env, origin) {
   if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
-  const userId = new URL(request.url).searchParams.get('userId');
+  const userId = getUserId(request);
   if (!isValidUUID(userId)) {
     // Graceful: return empty instead of error on first launch
     return corsResponse({ watches: [], updatedAt: null, exists: false }, 200, origin);
@@ -265,7 +286,7 @@ async function handleSyncPull(request, env, origin) {
 
 async function handleSyncExists(request, env, origin) {
   if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
-  const userId = new URL(request.url).searchParams.get('userId');
+  const userId = getUserId(request);
   if (!isValidUUID(userId)) return corsResponse({ exists: false }, 200, origin);
   try {
     const raw = await env.HORLOGERIE_KV.get(userKey(userId));
@@ -279,7 +300,7 @@ async function handleSyncExists(request, env, origin) {
 
 async function handleSyncClear(request, env, origin) {
   if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
-  const userId = new URL(request.url).searchParams.get('userId');
+  const userId = getUserId(request);
   if (!isValidUUID(userId)) return corsResponse({ error: 'userId inválido' }, 400, origin);
   await env.HORLOGERIE_KV.delete(userKey(userId));
   return corsResponse({ ok: true }, 200, origin);
@@ -290,7 +311,7 @@ async function handleSyncClear(request, env, origin) {
 ══════════════════════════════════════════ */
 async function handleSyncSize(request, env, origin) {
   if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
-  const userId = new URL(request.url).searchParams.get('userId');
+  const userId = getUserId(request);
   if (!isValidUUID(userId)) return corsResponse({ sizeBytes: 0, exists: false }, 200, origin);
   try {
     const raw = await env.HORLOGERIE_KV.get(userKey(userId));
@@ -315,6 +336,7 @@ async function handleSyncSize(request, env, origin) {
    other site directly — no separate scraping branch needed.
 ══════════════════════════════════════════ */
 async function handleImportUrl(request, env, origin) {
+  if (!env.GROQ_API_KEY) return corsResponse({ error: 'Importación desde URL no disponible' }, 503, origin);
   let body;
   try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
 
