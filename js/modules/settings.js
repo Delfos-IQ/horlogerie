@@ -45,8 +45,9 @@ function renderSettings() {
       <div class="interval-duration" style="color:var(--light);font-weight:500;">${r.v}</div>
     </div>`).join('');
 
-  // Render session ID in settings
+  // Render session ID and cloud controls
   renderSessionId();
+  renderCloudControls();
   renderSystemStatus();   // fills version + session + sync status panel
   loadCloudSize();         // async — updates cloud size bar
 }
@@ -56,15 +57,16 @@ async function handleExportPDF() {
   try { await generateCollectionPDF(); } catch(e) { showToast('Error PDF: '+e.message); }
 }
 
-function handleExportJSON() {
-  const ws = getWatches();
-  if (!ws.length) { showToast('No hay datos'); return; }
-  const blob = new Blob([JSON.stringify({version:2,exported:Date.now(),watches:ws},null,2)],{type:'application/json'});
+async function handleExportJSON() {
+  if (!getWatches().length && !getWishlist().length) { showToast('No hay datos'); return; }
+  const backup = await buildBackup();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href=url; a.download=`horlogerie-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
-  URL.revokeObjectURL(url);
-  showToast('Copia de seguridad descargada');
+  a.href = url; a.download = `horlogerie-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`Copia descargada · ${backup.watches.length} relojes, ${backup.wishlist.length} deseos`);
 }
 
 function handleImportJSON() { document.getElementById('import-json-input').click(); }
@@ -74,22 +76,26 @@ function processImportJSON(e) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      const incoming = data.watches || (Array.isArray(data) ? data : null);
-      if (!incoming) throw new Error('Formato no reconocido');
-      showConfirm('Restaurar copia de seguridad',
-        `Se importarán ${incoming.length} relojes. Los datos actuales se conservarán.`, async () => {
-          const existingIds = new Set(getWatches().map(w=>w.id));
-          let added = 0;
-          for (const w of incoming) {
-            if (!existingIds.has(w.id)) { watches.push(w); added++; }
-          }
-          save();
-          showToast(`${added} relojes importados`);
+    let data;
+    try { data = JSON.parse(ev.target.result); }
+    catch { showToast('El archivo no es un JSON válido'); e.target.value = ''; return; }
+    const nW  = Array.isArray(data) ? data.length : (data?.watches?.length || 0);
+    const nWl = Array.isArray(data?.wishlist) ? data.wishlist.length : 0;
+    if (!nW && !nWl) { showToast('No encuentro relojes en ese archivo'); e.target.value = ''; return; }
+    showConfirm('Restaurar copia de seguridad',
+      `El archivo tiene ${nW} relojes${nWl ? ` y ${nWl} deseos` : ''}. Se combinarán con lo que ya tienes: si un reloj está en los dos sitios, se queda la versión modificada más recientemente. No se borra nada.`,
+      async () => {
+        try {
+          const r = await importBackup(data);
+          const msg = `Restaurado · ${r.total} relojes revisados` +
+            (r.totalWishlist ? `, ${r.totalWishlist} deseos` : '') +
+            (r.rejected ? ` · ${r.rejected} entradas no válidas ignoradas` : '');
+          showToast(msg, 4000);
           renderHome(); renderSettings();
-        });
-    } catch(err) { showToast('Error: '+err.message); }
+          if (typeof renderWishlist === 'function') renderWishlist();
+        } catch (err) { showToast('Error al restaurar: ' + err.message); }
+      },
+      { okLabel: 'Restaurar', danger: false });
     e.target.value = '';
   };
   reader.readAsText(file);
@@ -140,8 +146,8 @@ async function loadCloudSize() {
   if (!textEl || !fillEl) return;
 
   try {
-    const userId = getSessionId();
-    const res    = await fetch(`${CONFIG.WORKER_URL}/sync/size?userId=${encodeURIComponent(userId)}`);
+    if (!isCloudEnabled()) { textEl.textContent = 'Copia en la nube desactivada'; fillEl.style.width = '0%'; return; }
+    const res    = await syncApi('/sync/size');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
@@ -218,7 +224,12 @@ async function renderSystemStatus() {
 
   // Check if cloud has data for this session
   try {
-    const res  = await fetch(`${CONFIG.WORKER_URL}/sync/exists?userId=${encodeURIComponent(sessionId)}`);
+    if (!isCloudEnabled()) {
+      if (sessionSub) { sessionSub.textContent = 'Copia en la nube desactivada · tus datos solo están en este dispositivo'; sessionSub.style.color = 'var(--mid)'; }
+      if (sessionIcon) { sessionIcon.style.color = 'var(--mid)'; sessionIcon.style.background = 'var(--dark3)'; }
+      throw 'off';
+    }
+    const res  = await syncApi('/sync/exists');
     const data = await res.json();
 
     if (sessionIcon) {
@@ -232,8 +243,8 @@ async function renderSystemStatus() {
         : 'Sin datos en la nube todavía — sincroniza para activar multi-dispositivo';
       sessionSub.style.color = data.exists ? '#4CAF50' : 'var(--mid)';
     }
-  } catch {
-    if (sessionSub) sessionSub.textContent = 'Sin conexión';
+  } catch (e) {
+    if (e !== 'off' && sessionSub) sessionSub.textContent = 'Sin conexión';
   }
 
   // ── Sync row ──
@@ -263,8 +274,26 @@ async function renderSystemStatus() {
     }
   }
   if (syncSub) {
-    syncSub.textContent = 'Toca ↻ para sincronizar ahora';
+    syncSub.textContent = isCloudEnabled() ? 'Toca ↻ para sincronizar ahora' : 'Actívala en «Copia en la nube»';
   }
 }
 
 window.renderSystemStatus = renderSystemStatus;
+
+/* ─── Cloud controls ─── */
+function renderCloudControls() {
+  const on     = isCloudEnabled();
+  const toggle = document.getElementById('cloud-toggle');
+  const sub    = document.getElementById('cloud-toggle-sub');
+  if (toggle) toggle.checked = on;
+  if (sub) sub.textContent = on
+    ? 'Activada: tu colección y tu lista de deseos se guardan en Cloudflare y se sincronizan entre tus dispositivos'
+    : 'Desactivada: tus datos solo están en este dispositivo. Haz copias JSON de vez en cuando.';
+  const hadCloud = !!getSyncMeta().lastPush;
+  const show = (id, v) => { const el = document.getElementById(id); if (el) el.hidden = !v; };
+  show('btn-rotate-key', on);
+  show('btn-delete-cloud', on || hadCloud);
+  const qrBtn = document.querySelector('#cloud-actions [onclick="showQR()"]');
+  if (qrBtn) qrBtn.hidden = !on;
+}
+window.renderCloudControls = renderCloudControls;

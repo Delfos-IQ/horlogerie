@@ -1466,3 +1466,68 @@ button:focus-visible,
   font-weight: 500;
   word-break: break-word;
 }
+
+/* ── Copia en la nube (v2.2) ── */
+.cloud-card {
+  background: var(--dark2);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cloud-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+.cloud-toggle-title { font-size: 14px; color: var(--light); font-weight: 500; }
+.cloud-toggle-sub   { font-size: 12px; color: var(--mid); margin-top: 2px; line-height: 1.5; }
+.cloud-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 46px; height: 28px;
+  border-radius: 14px;
+  background: var(--dark3);
+  border: 0.5px solid var(--glass-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cloud-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--mid);
+  transition: transform 0.2s, background 0.2s;
+}
+.cloud-switch:checked { background: rgba(184, 150, 62, 0.35); }
+.cloud-switch:checked::after { transform: translateX(18px); background: var(--gold-light); }
+.cloud-switch:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+.cloud-switch:disabled { opacity: 0.5; }
+.cloud-warning {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--mid);
+  background: rgba(184, 150, 62, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.cloud-warning i { color: var(--gold-light); font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.cloud-warning strong { color: var(--light); font-weight: 500; }
+.cloud-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.session-btn-danger { color: #e57373; }
+.session-btn:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+.session-btn[hidden] { display: none; }

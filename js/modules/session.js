@@ -35,15 +35,73 @@ function showQR() {
   if (!modal) return;
   document.getElementById('qr-session-id').textContent = id;
 
-  // Generate QR using a free QR API (no key needed)
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(id)}&bgcolor=1A1A1A&color=D4AF6A`;
+  // Generated on the device: the id is a secret and must never reach a third party
   const container = document.getElementById('qr-container');
   if (container) {
-    container.innerHTML = `<img src="${qrUrl}" alt="Código QR de sesión" width="200" height="200" style="border-radius:10px;">`;
+    try {
+      const qr = qrcode(0, 'M');
+      qr.addData(id);
+      qr.make();
+      container.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 12, scalable: true,
+        alt: 'Código QR con tu ID de sesión' });
+      const svg = container.querySelector('svg');
+      if (svg) { svg.setAttribute('width', '200'); svg.setAttribute('height', '200'); svg.style.borderRadius = '10px'; }
+    } catch {
+      container.textContent = 'No se pudo generar el QR. Copia el ID con el botón de copiar.';
+    }
   }
 
   modal.style.display = 'flex';
 }
+
+/* ─── Cloud copy controls (Ajustes) ─── */
+async function handleCloudToggle(on) {
+  const input = document.getElementById('cloud-toggle');
+  if (input) input.disabled = true;
+  try {
+    await setCloudEnabled(on);
+    showToast(on ? 'Copia en la nube activada' : 'Copia en la nube desactivada. Lo que ya estaba en la nube sigue ahí.');
+    renderHome();
+    if (typeof renderWishlist === 'function') renderWishlist();
+  } finally {
+    if (input) input.disabled = false;
+    renderSettings();
+  }
+}
+
+function handleRotateKey() {
+  showConfirm(
+    '¿Cambiar la llave?',
+    'Se creará un ID de sesión nuevo y se borrará la copia guardada con el ID actual. En tus otros dispositivos tendrás que volver a importar la sesión con el ID nuevo.',
+    async () => {
+      try {
+        await rotateSessionKey();
+        showToast('Llave cambiada. Usa el ID nuevo en tus otros dispositivos.');
+      } catch (e) { showToast('No se pudo cambiar la llave: ' + e.message); }
+      renderSettings();
+    },
+    { okLabel: 'Cambiar llave', danger: false }
+  );
+}
+
+function handleDeleteCloud() {
+  showConfirm(
+    '¿Borrar tus datos de la nube?',
+    'Se borrará la copia de tu colección y tu lista de deseos guardada en la nube, y la copia en la nube quedará desactivada. Lo que hay en este dispositivo no se toca.',
+    async () => {
+      try {
+        await deleteCloudData();
+        showToast('Datos borrados de la nube');
+      } catch (e) { showToast('No se pudo borrar: ' + e.message); }
+      renderSettings();
+    },
+    { okLabel: 'Borrar de la nube' }
+  );
+}
+
+window.handleCloudToggle = handleCloudToggle;
+window.handleRotateKey   = handleRotateKey;
+window.handleDeleteCloud = handleDeleteCloud;
 
 function closeQR() {
   const modal = document.getElementById('qr-modal');

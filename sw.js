@@ -30,6 +30,7 @@ const SHELL = [
   `${BASE}/js/modules/session.js?v=2.1.3`,
   `${BASE}/js/modules/updates.js?v=2.1.3`,
   `${BASE}/js/modules/url-import.js?v=2.1.3`,
+  `${BASE}/js/vendor/qrcode-generator-1.4.4.js`,
   `${BASE}/manifest.json`,
   `${BASE}/watches_db.json`,  `${BASE}/icons/icon-192.png`,
   `${BASE}/icons/icon-512.png`,
