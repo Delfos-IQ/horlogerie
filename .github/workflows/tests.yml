@@ -30,6 +30,9 @@ jobs:
       - name: CSS sin clases huérfanas
         run: python tools/check-css.py
 
+      - name: Todos los módulos disponibles sin conexión
+        run: node tools/check-sw.mjs
+
       - name: Lógica de datos (unitarias)
         run: TZ=Europe/Lisbon node tests/storage.test.mjs
 

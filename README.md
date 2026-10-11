@@ -29,14 +29,16 @@ horlogerie/
 │   ├── main.js             Entrada (módulo ES): importa todo, delegación de eventos y arranque
 │   ├── spec-parser.js      Lector de fichas sin IA (también se prueba en Node)
 │   ├── db.js               Carga y búsqueda en watches_db.json
-│   ├── storage.js          Datos: relojes, fotos (IndexedDB), lista de deseos, registro de uso
-│   │                       por días (wearStats), avisos de mantenimiento, fusión y copias
+│   ├── storage.js          Capa de datos (reexporta js/data/*)
+│   ├── data/               persist (lecturas seguras y persistencia), photos (IndexedDB), watches,
+│   │                       wear (días de uso, avisos), merge (saneado y fusión), backup, wishlist
 │   ├── api.js              URL del Worker y FEATURES (interruptores de funciones)
 │   ├── sync.js             Copia en la nube opcional: fusión por elemento, envío diferencial
 │   ├── export.js           Exportación a PDF (jsPDF)
 │   ├── vendor/             qrcode-generator 1.4.4 y jsPDF 2.5.1 (MIT)
 │   └── modules/
 │       ├── core.js         Estado, utilidades, navegación y gesto atrás de Android
+│       ├── sheet.js        Hoja común para todos los diálogos (foco, Escape, atrás)
 │       ├── home-detail.js  Colección, recomendación y ficha del reloj
 │       ├── modals.js       Alta/edición de relojes y búsqueda en la base
 │       ├── history.js      Calendario, ranking top 10 y detalle por reloj (filtro por año)

@@ -1,7 +1,11 @@
 // Pruebas unitarias de la lógica de datos (js/storage.js) en Node, sin navegador.
 // Uso: node tests/storage.test.mjs
+// Cada caso corre en su propio proceso: así cada uno carga los módulos de
+// datos desde cero (los módulos ES no se pueden recargar en el mismo proceso).
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+const cases = [];
 const RealDate = Date;
-let instance = 0;
 /** Fresh copy of js/storage.js (ES module) with an in-memory localStorage and an optional fixed clock */
 async function load(initial = {}, nowTs = null) {
   const store = new Map(Object.entries(initial));
@@ -15,7 +19,7 @@ async function load(initial = {}, nowTs = null) {
     constructor(...a) { super(...(a.length ? a : [nowTs])); }
     static now() { return nowTs; }
   };
-  const ctx = await import(`../js/storage.js?i=${++instance}`);
+  const ctx = await import('../js/storage.js');
   return { ctx, store };
 }
 
@@ -27,26 +31,26 @@ const D = 86400000;
 const at = (y, m, d, h = 12) => new RealDate(y, m - 1, d, h).getTime();
 
 // ── Carga segura ──
-{
+cases.push(async () => {
   const { ctx, store } = await load({ horlogerie_v3: '{esto no es json' });
   t('JSON local dañado: arranca vacío sin perder el original',
     ctx.getWatches().length === 0 && [...store.keys()].some(k => k.startsWith('horlogerie_v3_corrupt_')) &&
     ctx.storageRecovered.includes('horlogerie_v3'));
   const copy = [...store.entries()].find(([k]) => k.startsWith('horlogerie_v3_corrupt_'))[1];
   t('la copia apartada es idéntica al original', copy === '{esto no es json');
-}
-{
+});
+cases.push(async () => {
   const { ctx } = await load({ horlogerie_v3: JSON.stringify({ no: 'es una lista' }) });
   t('forma incorrecta también se aparta', ctx.storageRecovered.includes('horlogerie_v3'));
-}
-{
+});
+cases.push(async () => {
   const list = [{ id: 'w1', brand: 'A', model: 'B', history: [] }];
   const { ctx } = await load({ horlogerie_v3: JSON.stringify(list) });
   t('datos correctos se cargan', ctx.getWatches().length === 1 && !ctx.storageRecovered.length);
-}
+});
 
 // ── Días de uso ──
-{
+cases.push(async () => {
   const { ctx } = await load();
   const w = { id: 'w', history: [{ start: at(2026, 10, 23, 9), end: at(2026, 10, 28, 21) }] };
   const keys = [...ctx.wornDayKeys(w)];
@@ -54,10 +58,10 @@ const at = (y, m, d, h = 12) => new RealDate(y, m - 1, d, h).getTime();
   const w2 = { id: 'w2', history: [{ start: at(2026, 3, 1, 9), end: at(2026, 3, 1, 11) }, { start: at(2026, 3, 1, 18), end: at(2026, 3, 1, 20) }] };
   t('dos usos el mismo día cuentan como uno', ctx.wornDayKeys(w2).size === 1);
   t('días entre fechas en el cambio de hora de marzo', ctx.calendarDaysBetween(at(2026, 3, 28), at(2026, 3, 30)) === 2);
-}
+});
 
 // ── Añadir y quitar días ──
-{
+cases.push(async () => {
   const { ctx } = await load();
   ctx.getWatches().push({ id: 'a', brand: 'A', model: 'A', history: [] });
   ctx.addWearDays('a', Date.now() - 9 * D, Date.now() - 7 * D);
@@ -67,20 +71,20 @@ const at = (y, m, d, h = 12) => new RealDate(y, m - 1, d, h).getTime();
   t('no se pueden apuntar días futuros', ctx.addWearDays('a', Date.now() + 2 * D) === false);
   ctx.getWatch('a').wearStart = Date.now() - D;
   t('no se puede quitar un día de la sesión en curso', ctx.removeWearDay('a', Date.now()) === 'active');
-}
+});
 
 // ── «Lo llevé hoy» de madrugada ──
-{
+cases.push(async () => {
   const { ctx } = await load({}, at(2026, 10, 12, 0) + 3 * 60000);   // 00:03
   ctx.getWatches().push({ id: 'n', brand: 'N', model: 'N', history: [] });
   const r = ctx.markWornToday('n');
   t('a las 00:03 «Lo llevé hoy» cuenta hoy', r === true && ctx.wornDayKeys(ctx.getWatch('n')).has('2026-10-12'),
     JSON.stringify(ctx.getWatch('n').history));
   t('y no se puede apuntar mañana', ctx.addWearDays('n', at(2026, 10, 13)) === false);
-}
+});
 
 // ── Fusión con la nube ──
-{
+cases.push(async () => {
   const { ctx } = await load();
   const local = [{ id: '1', updatedAt: 200, model: 'local' }, { id: '2', updatedAt: 100 }, { id: '3', updatedAt: 100 }];
   const cloud = [{ id: '1', updatedAt: 100, model: 'cloud' }, { id: '4', updatedAt: 100 }];
@@ -91,15 +95,30 @@ const at = (y, m, d, h = 12) => new RealDate(y, m - 1, d, h).getTime();
     r.items.find(x => x.id === '1').model === 'local', ids);
   const r2 = ctx.mergeById([], [{ id: '9', updatedAt: 1 }], [], ['9']);
   t('fusión: lo borrado aquí no vuelve desde la nube', r2.items.length === 0);
-}
+});
 
 // ── Saneado ──
-{
+cases.push(async () => {
   const { ctx } = await load();
   const w = ctx.sanitizeWatch({ id: 'x', brand: '<img src=x onerror=alert(1)>', model: 'M', photo: 'javascript:alert(1)', sourceUrl: 'javascript:alert(1)' });
   t('saneado: foto y enlace peligrosos se descartan', w && !w.photo && !w.sourceUrl);
   t('saneado: sin id no entra', ctx.sanitizeWatch({ brand: 'A' }) === null);
-}
+});
 
-console.log(`--- ${ok}/${ok + ko} OK`);
-process.exit(ko ? 1 : 0);
+if (process.env.CASE !== undefined) {
+  await cases[Number(process.env.CASE)]();
+  console.log(`#RESULT ${ok} ${ko}`);
+  process.exit(ko ? 1 : 0);
+} else {
+  let total = 0, bad = 0;
+  for (let i = 0; i < cases.length; i++) {
+    let out;
+    try { out = execFileSync(process.execPath, [fileURLToPath(import.meta.url)], { env: { ...process.env, CASE: String(i) }, encoding: 'utf8' }); }
+    catch (e) { out = e.stdout || ''; if (!/#RESULT/.test(out)) { console.log(`  ✗ caso ${i} falló al cargar\n${e.stderr || e.message}`); bad++; total++; continue; } }
+    process.stdout.write(out.replace(/#RESULT.*\n?/, ''));
+    const [, o, k] = out.match(/#RESULT (\d+) (\d+)/);
+    total += +o + +k; bad += +k;
+  }
+  console.log(`--- ${total - bad}/${total} OK`);
+  process.exit(bad ? 1 : 0);
+}
