@@ -36,14 +36,14 @@
 <body>
 <main>
   <h1>Privacidad</h1>
-  <div class="meta">Rotor (antes Horlogerie) · Última actualización: 11 de octubre de 2026 (v2.5)</div>
+  <div class="meta">Rotor (antes Horlogerie) · Última actualización: 11 de octubre de 2026 (v2.8)</div>
 
   <div class="box">
     <p><strong>En resumen:</strong> tu colección se guarda en tu dispositivo. Solo sale de él si activas la «Copia en la nube», y en ese caso se guarda cifrada en tránsito en Cloudflare para que puedas usarla en otros dispositivos. No hay cuentas, ni publicidad, ni analítica, ni venta de datos. Puedes borrar tus datos de la nube desde la propia app.</p>
   </div>
 
   <h2>Quién es el responsable</h2>
-  <p>Rotor es una aplicación de Delfos-IQ. Contacto para cualquier cuestión de privacidad: <strong>[EMAIL DE CONTACTO]</strong>.</p>
+  <p>Rotor es una aplicación de Delfos-IQ. Contacto para cualquier cuestión de privacidad: <a href="mailto:pedicode.app@gmail.com">pedicode.app@gmail.com</a>.</p>
 
   <h2>Qué datos maneja la app</h2>
   <div class="scroll">
@@ -53,22 +53,24 @@
     <tr><td>Fotos de tus relojes</td><td>En tu dispositivo (comprimidas). En la nube solo si la activas.</td><td>Mostrar tu colección.</td></tr>
     <tr><td>Historial de uso (qué días llevaste cada reloj)</td><td>En tu dispositivo. En la nube solo si la activas.</td><td>Estadísticas y recomendación.</td></tr>
     <tr><td>Lista de deseos</td><td>En tu dispositivo. En la nube solo si la activas.</td><td>Apuntar relojes que te interesan.</td></tr>
-    <tr><td>ID de sesión (código aleatorio)</td><td>En tu dispositivo, y como nombre de tu copia en la nube.</td><td>Identificar tu copia en la nube sin cuentas ni email.</td></tr>
+    <tr><td>Clave de recuperación (código aleatorio)</td><td>En tu dispositivo, y como nombre de tu copia en la nube.</td><td>Identificar tu copia en la nube sin cuentas ni email.</td></tr>
+    <tr><td>Código de vinculación (6 caracteres)</td><td>En la nube, durante 10 minutos como máximo; se borra al usarse.</td><td>Pasar tu clave a otro dispositivo tuyo sin teclearla.</td></tr>
   </table>
   </div>
   <p>La app no pide ni recoge tu nombre, email, ubicación, contactos ni identificadores publicitarios.</p>
 
   <h2>Copia en la nube (opcional)</h2>
-  <p>Viene desactivada en las instalaciones nuevas. Si la activas en Ajustes, tu colección, fotos, historial y lista de deseos se envían por HTTPS a un servicio propio alojado en Cloudflare Workers (Cloudflare, Inc., como encargado del tratamiento) y se guardan asociados a tu ID de sesión.</p>
+  <p>Viene desactivada en las instalaciones nuevas. Si la activas en Ajustes, tu colección, fotos, historial y lista de deseos se envían por HTTPS a un servicio propio alojado en Cloudflare Workers (Cloudflare, Inc., como encargado del tratamiento) y se guardan asociados a tu clave de recuperación.</p>
   <ul>
-    <li><strong>Tu ID de sesión funciona como una contraseña:</strong> quien lo tenga puede ver y borrar tu copia. No lo compartas. Desde Ajustes puedes cambiarlo («Cambiar llave»).</li>
+    <li><strong>Tu clave de recuperación funciona como una contraseña:</strong> quien la tenga puede ver y borrar tu copia. No la compartas. Desde Ajustes puedes cambiarla («Cambiar llave»). Como no hay cuentas ni email, si la pierdes no podemos recuperarla por ti.</li>
+    <li><strong>Vincular otro dispositivo:</strong> crea un código de un solo uso que apunta a tu copia y caduca a los 10 minutos.</li>
     <li><strong>Borrado:</strong> en Ajustes → «Borrar de la nube» se elimina tu copia de inmediato. Si desactivas la copia sin borrarla, sigue guardada hasta que la borres.</li>
     <li><strong>Registros técnicos:</strong> para limitar abusos, el servicio guarda durante 1 hora un contador asociado a un resumen cifrado (hash) de tu dirección IP, y durante 24 horas los errores técnicos con ese mismo resumen. Nunca la IP en claro.</li>
     <li><strong>Transferencias internacionales:</strong> Cloudflare puede tratar datos fuera del Espacio Económico Europeo con las garantías de sus cláusulas contractuales tipo.</li>
   </ul>
 
   <h2>Rellenar desde un enlace</h2>
-  <p>Si usas «Rellenar desde un enlace», el enlace que pegas (o el texto de la ficha que pegas) se envía a nuestro servicio en Cloudflare, que descarga esa página pública y manda su texto a <strong>Groq, Inc.</strong> (EE. UU.), un servicio de inteligencia artificial que extrae las especificaciones técnicas. No se envía nada de tu colección, tus fotos ni tu ID. El resultado de cada enlace se guarda 30 días en caché para no repetir la consulta. Si no usas esta función, no se envía nada.</p>
+  <p>Si usas «Rellenar desde un enlace», el enlace que pegas (o el texto de la ficha que pegas) se envía a nuestro servicio en Cloudflare, que descarga esa página pública y manda su texto a <strong>Groq, Inc.</strong> (EE. UU.), un servicio de inteligencia artificial que extrae las especificaciones técnicas. No se envía nada de tu colección, tus fotos ni tu clave. El resultado de cada enlace se guarda 30 días en caché para no repetir la consulta. Si no usas esta función, no se envía nada.</p>
 
   <h2>Terceros</h2>
   <p>Fuera de las dos funciones opcionales descritas (copia en la nube y rellenar desde un enlace), la app no se comunica con servicios externos: fuentes, iconos y librerías van incluidos en la propia app. El código QR de tu ID se genera en tu dispositivo. No hay SDK de publicidad ni de analítica.</p>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<title>Ayuda · Rotor</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --dark:#F3EEE3; --dark2:#FBF8F1; --dark3:#E8E1D2; --gold:#B8963E; --gold-light:#7E6118; --light:#1E1B16; --mid:#655D51;
+          --line:rgba(126,97,24,.24); color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --dark:#0B1220; --dark2:#141D30; --dark3:#1F2A42; --gold-light:#D4AF6A; --light:#E6E1D6; --mid:#97A0B1;
+            --line:rgba(184,150,62,.24); color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'Jost', system-ui, sans-serif;
+         font-size: 16px; line-height: 1.65; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+       letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+       margin: 36px 0 8px; }
+  p, li { color: var(--light); }
+  .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+  .box { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid var(--line); }
+  th { color: var(--gold-light); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--gold-light); }
+  code { font-size: 13px; background: var(--dark3); padding: 1px 5px; border-radius: 4px; }
+  details { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 12px 16px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 500; color: var(--light); }
+  details[open] summary { margin-bottom: 6px; }
+  .key { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--dark3); padding: 1px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ayuda</h1>
+  <div class="meta">Rotor · Copia en la nube, clave de recuperación y otros dispositivos</div>
+
+  <div class="box"><p><strong>Lo esencial:</strong> tus relojes viven en tu móvil. Si activas la copia en la nube, se guardan también en un servidor y puedes recuperarlos con tu <strong>clave de recuperación</strong>. Rotor no te pide email ni cuenta: la clave es lo único que identifica tu copia, así que guárdala bien.</p></div>
+
+  <h2>La copia en la nube</h2>
+  <details open><summary>¿Qué se guarda y cuándo?</summary>
+    <p>Tus relojes (con fotos e historial de uso) y tu lista de deseos. Se guardan solos unos segundos después de cada cambio, al abrir la app y al recuperar la conexión. No hace falta pulsar nada; en Ajustes → Estado del sistema ves cuándo fue la última vez.</p></details>
+  <details><summary>¿Qué pasa si la desactivo?</summary>
+    <p>Dejan de subirse cambios. Lo que ya estaba en la nube sigue allí hasta que pulses «Borrar de la nube».</p></details>
+
+  <h2>Tu clave de recuperación</h2>
+  <details open><summary>¿Qué es?</summary>
+    <p>Un código de 16 caracteres, por ejemplo <span class="key">7KQ2-M4XR-9TBW-2HNF</span>, que se crea al activar la nube. Funciona como una contraseña: quien la tenga puede ver y borrar tu copia. Las claves creadas antes de la versión 2.8 son más largas y siguen funcionando; con «Cambiar llave» obtienes una corta.</p></details>
+  <details><summary>¿Dónde la guardo?</summary>
+    <p>En tu gestor de contraseñas, o envíatela a ti mismo con el botón «Guardar…». Está en Ajustes → Copia en la nube.</p></details>
+  <details><summary>Creo que alguien la ha visto</summary>
+    <p>Pulsa «Cambiar llave»: se crea una clave nueva y se borra la copia guardada con la antigua. Después vuelve a vincular tus otros dispositivos.</p></details>
+
+  <h2>Usar Rotor en otro dispositivo</h2>
+  <details open><summary>Con un código de 6 caracteres (lo más rápido)</summary>
+    <p>En el dispositivo que ya tiene tus relojes: Ajustes → <strong>Vincular otro dispositivo</strong>. Aparece un código como <span class="key">K7Q-M4X</span> y un QR.</p>
+    <p>En el nuevo: Ajustes → <strong>Usar una clave o código</strong> y escribe el código, o escanea el QR con la cámara. El código sirve una sola vez y caduca a los 10 minutos.</p></details>
+  <details><summary>Con tu clave de recuperación</summary>
+    <p>En el nuevo dispositivo: Ajustes → <strong>Usar una clave o código</strong> y escribe la clave. Lo que ya hubiera allí se combina con la copia; no se borra nada.</p></details>
+
+  <h2>Cambié de móvil o reinstalé la app</h2>
+  <details open><summary>¿Cómo recupero mis relojes?</summary>
+    <p>Al desinstalar, el móvil borra los datos de la app. Para recuperarlos:</p>
+    <ul>
+      <li><strong>Si tenías la nube activada:</strong> abre Rotor y pulsa «Ya tengo Rotor: recuperar mis relojes» (o Ajustes → Usar una clave o código) y escribe tu clave. Si aún tienes otro dispositivo con Rotor, también vale un código de vinculación.</li>
+      <li><strong>Si no usabas la nube:</strong> necesitas una copia de seguridad (Ajustes → Copia de seguridad JSON). Restáurala en Ajustes → Restaurar copia.</li>
+    </ul>
+    <p>Si tenías la nube activada pero perdiste la clave y no te queda ningún dispositivo con Rotor, no hay forma de recuperar la copia: no sabemos de quién es.</p></details>
+
+  <h2>Copias de seguridad (JSON)</h2>
+  <details><summary>¿Para qué sirven si ya uso la nube?</summary>
+    <p>Son un archivo que guardas tú, independiente del servidor. Si no usas la nube, son la única forma de no perder tu colección. La app te recuerda hacer una si llevas un mes sin copia.</p></details>
+
+  <h2>Rellenar desde un enlace</h2>
+  <details><summary>¿Cómo funciona?</summary>
+    <p>Pegas el enlace de la tienda o de la web oficial y el servidor descarga esa página pública. Un modelo de IA (Groq) extrae las especificaciones, y cada dato se compara con el texto de la página; si no aparece allí, se descarta. Tú eliges qué datos aplicar. Algunas tiendas bloquean la descarga automática: en ese caso puedes pegar el texto de la ficha.</p></details>
+
+  <h2>Contacto</h2>
+  <p>Escribe a <a href="mailto:pedicode.app@gmail.com?subject=Rotor">pedicode.app@gmail.com</a>.</p>
+  <p style="margin-top:40px;"><a href="./">← Volver a Rotor</a></p>
+</main>
+</body>
+</html>

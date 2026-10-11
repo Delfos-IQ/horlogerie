@@ -1,58 +1,52 @@
 /* ─── SETTINGS ─── */
 function renderSettings() {
-  const ws   = getWatches();
-  const grid = document.getElementById('settings-stats');
-  if (!grid) return;
-  const autoCount = ws.filter(w=>w.type==='automatic').length;
-  const qtzCount  = ws.filter(w=>w.type==='quartz').length;
-  const manCount  = ws.filter(w=>w.type==='manual').length;
-  const now = Date.now();
-  let totalDays = 0, totalSess = 0, mostUsedWatch = null, mostUsedDays = 0, used30 = 0;
-  const gapDays = [];
-  const cut30 = dayKey(now - 29 * 86400000);
-  ws.forEach(w => {
-    const st = wearStats(w, now);
-    totalDays += st.daysWorn;
-    totalSess += st.sessions;
-    if (st.daysWorn > mostUsedDays) { mostUsedDays = st.daysWorn; mostUsedWatch = w; }
-    const keys = [...wornDayKeys(w, now)].sort();
-    if (keys.length && keys[keys.length - 1] >= cut30) used30++;
-    for (let i = 1; i < keys.length; i++) {
-      const g = calendarDaysBetween(new Date(keys[i - 1] + 'T12:00').getTime(), new Date(keys[i] + 'T12:00').getTime());
-      if (g > 1) gapDays.push(g - 1);   // days in the box between two wears
-    }
-  });
-  const avgGap = gapDays.length ? Math.round(gapDays.reduce((a,b)=>a+b,0)/gapDays.length) : null;
-  const stats = [
-    {v:ws.length,l:'Relojes'},{v:autoCount,l:'Automáticos'},{v:qtzCount,l:'Cuarzo'},
-    {v:manCount,l:'Manual'},{v:totalSess,l:'Sesiones'},{v:totalDays,l:'Días uso'},
-  ];
-  grid.innerHTML = stats.map(s=>`
-    <div class="settings-stat-card">
-      <div class="settings-stat-val">${s.v}</div>
-      <div class="settings-stat-label">${s.l}</div>
-    </div>`).join('');
-  const advEl = document.getElementById('settings-advanced-stats');
-  if (!advEl) return;
-  const rows=[];
-  if (mostUsedWatch) rows.push({l:'Reloj más usado',v:`${mostUsedWatch.brand} ${mostUsedWatch.model} · ${mostUsedDays}d`});
-  if (avgGap!==null) rows.push({l:'Media de días en la caja entre usos',v:`${avgGap} días`});
-  if (ws.length) rows.push({l:'Media días por reloj',v:`${Math.round(totalDays/ws.length)}d`});
-  if (ws.length) rows.push({l:'Rotación (últimos 30 días)',v:`${used30} de ${ws.length} relojes`});
-  const alerts = ws.flatMap(w => maintenanceAlerts(w, now).map(a => `${w.brand} ${w.model}`));
-  if (alerts.length) rows.push({l:'Mantenimiento pendiente',v:`${alerts.length}: ${alerts.slice(0,2).join(', ')}${alerts.length > 2 ? '…' : ''}`});
-  advEl.innerHTML = rows.map(r=>`
-    <div class="interval-row" style="margin-bottom:6px;">
-      <div class="interval-dates" style="color:var(--mid);font-size:12px;">${r.l}</div>
-      <div class="interval-duration" style="color:var(--light);font-weight:500;">${escHtml(r.v)}</div>
-    </div>`).join('');
-
-  // Render session ID and cloud controls
-  renderSessionId();
   renderCloudControls();
-  renderSystemStatus();   // fills version + session + sync status panel
-  loadCloudSize();         // async — updates cloud size bar
+  renderSystemStatus();
+  renderBackupInfo();
 }
+
+/* ─── JSON backup: when was the last one ─── */
+const BACKUP_KEY = 'horlogerie_last_backup';
+function lastBackupAt() { try { return Number(localStorage.getItem(BACKUP_KEY)) || 0; } catch { return 0; } }
+function daysAgoLabel(ts) {
+  const d = Math.floor((Date.now() - ts) / 86400000);
+  return d <= 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`;
+}
+function renderBackupInfo() {
+  const el = document.getElementById('backup-card-sub');
+  if (!el) return;
+  const t = lastBackupAt();
+  el.textContent = t ? `Última copia: ${daysAgoLabel(t)} · relojes, fotos, historial y deseos`
+                     : 'Relojes, fotos, historial y lista de deseos en un archivo';
+}
+
+/**
+ * Discreet reminder on Colección when the cloud is off and there is no recent
+ * JSON copy (30 days). Not shown during the first week or if dismissed.
+ */
+function renderBackupReminder() {
+  const el = document.getElementById('backup-reminder');
+  if (!el) return;
+  const ws = getWatches();
+  const oldest = ws.reduce((m, w) => Math.min(m, w.created || Date.now()), Date.now());
+  let snoozed = 0; try { snoozed = Number(localStorage.getItem(BACKUP_KEY + '_snooze')) || 0; } catch {}
+  const DAY = 86400000, last = lastBackupAt();
+  const due = !isCloudEnabled() && ws.length > 0 && Date.now() - oldest > 7 * DAY
+    && Date.now() - last > 30 * DAY && Date.now() - snoozed > 30 * DAY;
+  if (!due) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="backup-reminder" role="status">
+      <i class="ti ti-shield-exclamation" aria-hidden="true"></i>
+      <span>${last ? `Tu última copia es de ${daysAgoLabel(last)}.` : 'Aún no tienes copia de tu colección.'} Si cambias de móvil, la necesitarás.</span>
+      <button class="br-do" id="br-do">Hacer copia</button>
+      <button class="br-x" id="br-x" aria-label="Recordármelo dentro de un mes"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>`;
+  el.querySelector('#br-do').addEventListener('click', () => handleExportJSON());
+  el.querySelector('#br-x').addEventListener('click', () => {
+    try { localStorage.setItem(BACKUP_KEY + '_snooze', String(Date.now())); } catch {}
+    el.innerHTML = '';
+  });
+}
+window.renderBackupReminder = renderBackupReminder;
 
 async function handleExportPDF() {
   if (!getWatches().length) { showToast('No hay relojes'); return; }
@@ -69,6 +63,8 @@ async function handleExportJSON() {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   showToast(`Copia descargada · ${backup.watches.length} relojes, ${backup.wishlist.length} deseos`);
+  try { localStorage.setItem(BACKUP_KEY, String(Date.now())); } catch {}
+  renderBackupInfo(); renderBackupReminder();
 }
 
 function handleImportJSON() { document.getElementById('import-json-input').click(); }
@@ -141,161 +137,105 @@ window.renderSettings      = renderSettings;
 let _wlEditingId = null;
 
 
-/* ─── Cloud storage size indicator ─── */
-async function loadCloudSize() {
-  const textEl = document.getElementById('cloud-size-text');
-  const fillEl = document.getElementById('cloud-size-fill');
-  if (!textEl || !fillEl) return;
-
-  try {
-    if (!isCloudEnabled()) { textEl.textContent = 'Copia en la nube desactivada'; fillEl.style.width = '0%'; return; }
-    const res    = await syncApi('/sync/size');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-
-    if (!data.exists || !data.sizeBytes) {
-      textEl.textContent = 'Sin datos en la nube todavía';
-      fillEl.style.width = '0%';
-      return;
-    }
-
-    const kb      = (data.sizeBytes / 1024).toFixed(0);
-    const mb      = (data.sizeBytes / 1024 / 1024).toFixed(2);
-    const maxMB   = 3;  // MAX_SYNC_PAYLOAD in worker
-    const pct     = Math.min(100, (data.sizeBytes / (maxMB * 1024 * 1024)) * 100);
-
-    textEl.textContent = `${kb}KB en la nube · ${data.count} relojes`;
-
-    // Color the bar based on usage
-    const color = pct > 80 ? 'var(--danger)' : pct > 50 ? 'var(--gold-light)' : 'var(--gold)';
-    fillEl.style.width      = pct + '%';
-    fillEl.style.background = color;
-
-    if (pct > 80) {
-      textEl.style.color = 'var(--danger)';
-      textEl.textContent += ' · ⚠️ cerca del límite';
-    }
-  } catch {
-    const textEl2 = document.getElementById('cloud-size-text');
-    if (textEl2) textEl2.textContent = 'Sin conexión';
-  }
+/* ─── System status panel ─── */
+function agoLabel(ts) {
+  const mins = Math.round((Date.now() - ts) / 60000);
+  return mins < 1 ? 'hace un momento' : mins < 60 ? `hace ${mins} min`
+    : mins < 1440 ? `hace ${Math.round(mins / 60)} h` : `hace ${Math.round(mins / 1440)} días`;
+}
+function fmtDateEs(iso) {
+  const d = new Date(iso + 'T12:00');
+  return isNaN(d) ? iso : d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function paintStatusIcon(el, tone) {
+  if (!el) return;
+  const c = { ok: 'var(--ok)', gold: 'var(--gold-light)', warn: 'var(--danger)', off: 'var(--mid)' }[tone];
+  el.style.color = c;
+  el.style.background = tone === 'off' ? 'var(--dark3)' : `color-mix(in srgb, ${c} 12%, transparent)`;
 }
 
-window.loadCloudSize = loadCloudSize;
-
-/* ─── System status panel ─── */
 async function renderSystemStatus() {
-  // ── Version row ──
-  const versionVal  = document.getElementById('status-version-val');
-  const versionIcon = document.getElementById('status-version-icon');
-  const versionBtn  = document.getElementById('update-top-btn');
-
-  if (versionVal) {
+  // ── Version ──
+  const vVal = document.getElementById('status-version-val');
+  const vSub = document.getElementById('status-version-sub');
+  if (vVal && !vVal.dataset.busy) {
     try {
       const res  = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
       const data = await res.json();
-      const serverVersion = data.version || APP_VERSION;
-      const isUpToDate    = serverVersion === APP_VERSION;
-
-      versionVal.textContent = isUpToDate
-        ? `v${APP_VERSION} · Al día ✓`
-        : `v${APP_VERSION} → v${serverVersion} disponible`;
-      versionVal.style.color = isUpToDate ? 'var(--ok)' : 'var(--gold-light)';
-
-      if (versionIcon) {
-        versionIcon.style.color     = isUpToDate ? 'var(--ok)' : 'var(--gold-light)';
-        versionIcon.style.background = isUpToDate
-          ? 'color-mix(in srgb, var(--ok) 12%, transparent)' : 'color-mix(in srgb, var(--gold-light) 12%, transparent)';
-      }
-      if (!isUpToDate && versionBtn) {
-        versionBtn.style.color       = 'var(--gold-light)';
-        versionBtn.style.borderColor = 'color-mix(in srgb, var(--gold-light) 40%, transparent)';
-      }
+      const upToDate = (data.version || APP_VERSION) === APP_VERSION;
+      vVal.textContent = upToDate ? `v${APP_VERSION} · al día` : `v${APP_VERSION} → v${data.version} disponible`;
+      vVal.style.color = upToDate ? 'var(--ok)' : 'var(--gold-light)';
+      if (vSub) vSub.textContent = data.date
+        ? (upToDate ? `Publicada el ${fmtDateEs(data.date)}` : `Nueva del ${fmtDateEs(data.date)}${data.notes ? ': ' + data.notes : ''}`) : '';
+      paintStatusIcon(document.getElementById('status-version-icon'), upToDate ? 'ok' : 'gold');
     } catch {
-      if (versionVal) {
-        versionVal.textContent = `v${APP_VERSION}`;
-        versionVal.style.color = 'var(--light)';
-      }
+      vVal.textContent = `v${APP_VERSION}`; vVal.style.color = 'var(--light)';
+      if (vSub) vSub.textContent = 'Sin conexión para comprobar';
     }
   }
 
-  // ── Session row ──
-  const sessionSub  = document.getElementById('status-session-sub');
-  const sessionIcon = document.getElementById('status-session-icon');
-  const sessionId   = getSessionId();
-
-  // Check if cloud has data for this session
+  // ── Cloud ──
+  const on   = isCloudEnabled();
+  const meta = getSyncMeta();
+  const val  = document.getElementById('status-sync-val');
+  const sub  = document.getElementById('status-sync-sub');
+  const btn  = document.getElementById('status-sync-btn');
+  const icon = document.getElementById('status-sync-icon');
+  if (!val) return;
+  if (btn) btn.hidden = !on;
+  if (!on) {
+    val.textContent = 'Desactivada'; val.style.color = 'var(--mid)';
+    sub.textContent = 'Tus datos solo están en este dispositivo';
+    paintStatusIcon(icon, 'off'); return;
+  }
+  if (meta.lastState === 'error') {
+    val.textContent = 'No se pudo sincronizar'; val.style.color = 'var(--danger)';
+    sub.textContent = meta.lastStateMsg || 'Revisa la conexión y toca ↻';
+    paintStatusIcon(icon, 'warn');
+  } else {
+    val.textContent = meta.lastSyncAt ? `Sincronizada ${agoLabel(meta.lastSyncAt)}` : 'Pendiente de la primera subida';
+    val.style.color = meta.lastSyncAt ? 'var(--ok)' : 'var(--mid)';
+    sub.textContent = 'Se guarda sola tras cada cambio';
+    paintStatusIcon(icon, meta.lastSyncAt ? 'ok' : 'off');
+  }
+  // Size in the cloud (async, best effort)
   try {
-    if (!isCloudEnabled()) {
-      if (sessionSub) { sessionSub.textContent = 'Copia en la nube desactivada · tus datos solo están en este dispositivo'; sessionSub.style.color = 'var(--mid)'; }
-      if (sessionIcon) { sessionIcon.style.color = 'var(--mid)'; sessionIcon.style.background = 'var(--dark3)'; }
-      throw 'off';
+    const res = await syncApi('/sync/size');
+    const d = res.ok ? await res.json() : null;
+    if (d?.exists && d.sizeBytes && meta.lastState !== 'error') {
+      const kb = Math.round(d.sizeBytes / 1024);
+      const pct = Math.round(d.sizeBytes / (3 * 1024 * 1024) * 100);
+      sub.textContent = `${d.count} ${d.count === 1 ? 'reloj' : 'relojes'} · ${kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB'} de 3 MB${pct > 80 ? ' · cerca del límite' : ''} · se guarda sola`;
+      if (pct > 80) sub.style.color = 'var(--danger)';
     }
-    const res  = await syncApi('/sync/exists');
-    const data = await res.json();
-
-    if (sessionIcon) {
-      sessionIcon.style.color      = data.exists ? 'var(--ok)' : 'var(--mid)';
-      sessionIcon.style.background = data.exists
-        ? 'color-mix(in srgb, var(--ok) 12%, transparent)' : 'var(--dark3)';
-    }
-    if (sessionSub) {
-      sessionSub.textContent = data.exists
-        ? `${data.count} relojes en la nube · Misma sesión en todos tus dispositivos`
-        : 'Sin datos en la nube todavía — sincroniza para activar multi-dispositivo';
-      sessionSub.style.color = data.exists ? 'var(--ok)' : 'var(--mid)';
-    }
-  } catch (e) {
-    if (e !== 'off' && sessionSub) sessionSub.textContent = 'Sin conexión';
-  }
-
-  // ── Sync row ──
-  const syncVal  = document.getElementById('status-sync-val');
-  const syncSub  = document.getElementById('status-sync-sub');
-  const syncIcon = document.getElementById('status-sync-icon');
-  const meta     = getSyncMeta ? getSyncMeta() : {};
-  const lastPush = meta.lastPush;
-
-  if (syncVal) {
-    if (!lastPush) {
-      syncVal.textContent  = 'Nunca sincronizado';
-      syncVal.style.color  = 'var(--mid)';
-    } else {
-      const mins = Math.round((Date.now() - lastPush) / 60000);
-      const when = mins < 1 ? 'hace un momento'
-        : mins < 60 ? `hace ${mins} min`
-        : mins < 1440 ? `hace ${Math.round(mins/60)}h`
-        : `hace ${Math.round(mins/1440)} días`;
-      syncVal.textContent = `Última sync: ${when}`;
-      syncVal.style.color = mins < 60 ? 'var(--ok)' : mins < 1440 ? 'var(--gold-light)' : 'var(--mid)';
-      if (syncIcon) {
-        syncIcon.style.color      = mins < 60 ? 'var(--ok)' : 'var(--gold-light)';
-        syncIcon.style.background = mins < 60
-          ? 'color-mix(in srgb, var(--ok) 12%, transparent)' : 'color-mix(in srgb, var(--gold-light) 12%, transparent)';
-      }
-    }
-  }
-  if (syncSub) {
-    syncSub.textContent = isCloudEnabled() ? 'Toca ↻ para sincronizar ahora' : 'Actívala en «Copia en la nube»';
-  }
+  } catch { /* offline */ }
 }
-
 window.renderSystemStatus = renderSystemStatus;
 
 /* ─── Cloud controls ─── */
-function renderCloudControls() {
+async function renderCloudControls() {
   const on     = isCloudEnabled();
+  const meta   = getSyncMeta();
   const toggle = document.getElementById('cloud-toggle');
   const sub    = document.getElementById('cloud-toggle-sub');
   if (toggle) toggle.checked = on;
   if (sub) sub.textContent = on
     ? 'Activada: tu colección y tu lista de deseos se guardan en Cloudflare y se sincronizan entre tus dispositivos'
     : 'Desactivada: tus datos solo están en este dispositivo. Haz copias JSON de vez en cuando.';
-  const hadCloud = !!getSyncMeta().lastPush;
   const show = (id, v) => { const el = document.getElementById(id); if (el) el.hidden = !v; };
+  show('cloud-key-box', on);
+  show('btn-link-device', on);
   show('btn-rotate-key', on);
-  show('btn-delete-cloud', on || hadCloud);
-  const qrBtn = document.querySelector('#cloud-actions [onclick="showQR()"]');
-  if (qrBtn) qrBtn.hidden = !on;
+  show('btn-delete-cloud', on || !!meta.lastPush);
+  const keyEl = document.getElementById('cloud-key');
+  if (keyEl) { keyEl.textContent = on ? getSessionId() : ''; keyEl.classList.toggle('long', on && !isShortKey(getSessionId())); }
+  const warn = document.getElementById('cloud-key-warn');
+  if (!warn) return;
+  const msgs = [];
+  if (on && !meta.keySavedAt) msgs.push(`<div><i class="ti ti-alert-triangle" aria-hidden="true"></i> Aún no has confirmado que la guardaste. Sin ella no podrás recuperar la copia si reinstalas. <button class="link-btn" onclick="openSaveKeySheet()">Guardarla ahora</button></div>`);
+  if (on && !isShortKey(getSessionId()) && (await workerCaps()).shortKey)
+    msgs.push(`<div><i class="ti ti-info-circle" aria-hidden="true"></i> Tu clave es del formato antiguo. «Cambiar llave» te da una de 16 caracteres, más fácil de teclear.</div>`);
+  warn.innerHTML = msgs.join('');
+  warn.hidden = !msgs.length;
 }
 window.renderCloudControls = renderCloudControls;

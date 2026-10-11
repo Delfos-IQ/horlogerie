@@ -1,5 +1,12 @@
 /**
- * Cloudflare Worker — Horlogerie (Rotor) API v12
+ * Cloudflare Worker — Horlogerie (Rotor) API v13
+ *
+ * v13 (oct 2026):
+ *   - Short recovery keys: besides UUIDs, the session id can be 16 Crockford
+ *     base32 characters in groups of four (7KQ2-M4XR-9TBW-2HNF, 80 bits).
+ *   - Device linking: /pair/create stores a one-use 6-character code for
+ *     10 minutes that points to the session; /pair/claim swaps it for the
+ *     session id. Claims are limited to 10 per hour per IP.
  *
  * v12 (oct 2026):
  *   - /import-url rebuilt: the Worker downloads the page itself, extracts the
@@ -48,8 +55,15 @@ const RATE_LIMIT_MAX    = 20;             // requests per window
 const RATE_LIMIT_WINDOW = 3600;           // 1 hour in seconds
 const MAX_SYNC_PAYLOAD  = 3 * 1024 * 1024; // 3MB
 
-/* ── UUID regex ── */
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/* ── Session id formats ── */
+const UUID_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SHORT_RE = /^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$/i;   // Crockford base32, 80 bits
+
+/* ── Device linking ── */
+const PAIR_ALPHABET  = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';  // no 0/O, 1/I/L
+const PAIR_LEN       = 6;
+const PAIR_TTL       = 600;     // seconds
+const PAIR_CLAIM_MAX = 10;      // claims per hour per IP
 
 /* ══════════════════════════════════════════
    MAIN HANDLER
@@ -74,9 +88,9 @@ export default {
 
     try {
       // Rate-limited endpoints (call external paid APIs)
-      const RATE_LIMITED = ['/import-url'];
-      if (RATE_LIMITED.includes(url.pathname)) {
-        const limited = await checkRateLimit(env, ip, url.pathname);
+      const RATE_LIMITED = { '/import-url': RATE_LIMIT_MAX, '/pair/create': RATE_LIMIT_MAX, '/pair/claim': PAIR_CLAIM_MAX };
+      if (RATE_LIMITED[url.pathname] && request.method !== 'OPTIONS') {
+        const limited = await checkRateLimit(env, ip, url.pathname, RATE_LIMITED[url.pathname]);
         if (limited) {
           return corsResponse({
             error: 'Demasiadas solicitudes. Inténtalo en una hora.',
@@ -93,9 +107,12 @@ export default {
       if (pathname === '/sync/clear'  && method === 'DELETE') return await handleSyncClear(request, env, origin);
       if (pathname === '/sync/size'   && method === 'GET')    return await handleSyncSize(request, env, origin);
       if (pathname === '/import-url'  && method === 'POST')   return await handleImportUrl(request, env, origin);
+      if (pathname === '/pair/create' && method === 'POST')   return await handlePairCreate(request, env, origin);
+      if (pathname === '/pair/claim'  && method === 'POST')   return await handlePairClaim(request, env, origin);
       if (pathname === '/health'      || pathname === '/')    return corsResponse({
-        status: 'ok', version: '12.0', kv: !!env.HORLOGERIE_KV,
-        caps: { userHeader: true, wishlist: true, importUrl: !!env.GROQ_API_KEY, importText: !!env.GROQ_API_KEY },
+        status: 'ok', version: '13.0', kv: !!env.HORLOGERIE_KV,
+        caps: { userHeader: true, wishlist: true, importUrl: !!env.GROQ_API_KEY, importText: !!env.GROQ_API_KEY,
+                shortKey: true, pairing: true },
       }, 200, origin);
 
       return corsResponse({ error: 'Not found' }, 404, origin);
@@ -134,8 +151,9 @@ function corsResponse(data, status = 200, origin = '') {
 /* ══════════════════════════════════════════
    UUID VALIDATION
 ══════════════════════════════════════════ */
+/** Valid session id: UUID (until v12) or short recovery key (v13) */
 function isValidUUID(id) {
-  return typeof id === 'string' && UUID_RE.test(id);
+  return typeof id === 'string' && (UUID_RE.test(id) || SHORT_RE.test(id));
 }
 
 /* Session id: header first (v11 apps), then body (POST), then query (older apps) */
@@ -155,7 +173,7 @@ function userKey(userId) {
    KV key: ratelimit:{ip_hash}:{endpoint}
    Fails open if KV unavailable.
 ══════════════════════════════════════════ */
-async function checkRateLimit(env, ip, pathname) {
+async function checkRateLimit(env, ip, pathname, max = RATE_LIMIT_MAX) {
   if (!env.HORLOGERIE_KV) return false;
   const endpoint = pathname.replace(/\//g, '_');
   // Hash the IP for privacy (first 7 chars of hex)
@@ -164,7 +182,7 @@ async function checkRateLimit(env, ip, pathname) {
   try {
     const raw   = await env.HORLOGERIE_KV.get(key);
     const count = raw ? parseInt(raw, 10) : 0;
-    if (count >= RATE_LIMIT_MAX) return true;
+    if (count >= max) return true;
     await env.HORLOGERIE_KV.put(key, String(count + 1), { expirationTtl: RATE_LIMIT_WINDOW });
     return false;
   } catch {
@@ -215,7 +233,7 @@ async function handleSyncPush(request, env, origin) {
   const userId = getUserId(request, body);
   const { watches, mode = 'full', deletedIds = [], wishlist } = body;
 
-  if (!isValidUUID(userId))        return corsResponse({ error: 'userId inválido (UUID v4 requerido)' }, 400, origin);
+  if (!isValidUUID(userId))        return corsResponse({ error: 'userId inválido' }, 400, origin);
   if (!Array.isArray(watches))     return corsResponse({ error: 'watches debe ser un array' }, 400, origin);
   if (watches.length > 500)        return corsResponse({ error: 'Demasiados relojes (máx 500)' }, 400, origin);
   if (wishlist !== undefined && (!Array.isArray(wishlist) || wishlist.length > 500))
@@ -313,6 +331,48 @@ async function handleSyncClear(request, env, origin) {
   if (!isValidUUID(userId)) return corsResponse({ error: 'userId inválido' }, 400, origin);
   await env.HORLOGERIE_KV.delete(userKey(userId));
   return corsResponse({ ok: true }, 200, origin);
+}
+
+/* ══════════════════════════════════════════
+   DEVICE LINKING — one-use 6-character code, 10 minutes
+   KV key: pair:{CODE} → session id
+══════════════════════════════════════════ */
+function randomPairCode() {
+  const bytes = crypto.getRandomValues(new Uint8Array(PAIR_LEN * 2));
+  let out = '';
+  for (const b of bytes) {
+    if (b >= 248) continue;                       // 248 = 31 × 8: avoid modulo bias
+    out += PAIR_ALPHABET[b % PAIR_ALPHABET.length];
+    if (out.length === PAIR_LEN) break;
+  }
+  return out.length === PAIR_LEN ? out : randomPairCode();
+}
+function normalizePairCode(c) {
+  return String(c || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+}
+
+async function handlePairCreate(request, env, origin) {
+  if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
+  const userId = getUserId(request);
+  if (!isValidUUID(userId)) return corsResponse({ error: 'userId inválido' }, 400, origin);
+  if (!(await env.HORLOGERIE_KV.get(userKey(userId)))) {
+    return corsResponse({ error: 'Aún no hay copia en la nube que vincular' }, 404, origin);
+  }
+  const code = randomPairCode();
+  await env.HORLOGERIE_KV.put(`pair:${code}`, userId, { expirationTtl: PAIR_TTL });
+  return corsResponse({ code, expiresAt: Date.now() + PAIR_TTL * 1000 }, 200, origin);
+}
+
+async function handlePairClaim(request, env, origin) {
+  if (!env.HORLOGERIE_KV) return corsResponse({ error: 'KV not configured' }, 503, origin);
+  let body;
+  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON inválido' }, 400, origin); }
+  const code = normalizePairCode(body?.code);
+  if (code.length !== PAIR_LEN) return corsResponse({ error: 'El código tiene 6 caracteres' }, 400, origin);
+  const userId = await env.HORLOGERIE_KV.get(`pair:${code}`);
+  if (!userId) return corsResponse({ error: 'Código no válido o caducado' }, 404, origin);
+  await env.HORLOGERIE_KV.delete(`pair:${code}`);
+  return corsResponse({ userId }, 200, origin);
 }
 
 /* ══════════════════════════════════════════

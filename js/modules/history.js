@@ -80,6 +80,26 @@ function bindYearChips(root, rerender) {
 }
 const EMPTY_HISTORY = `<div class="history-empty"><i class="ti ti-clock" style="font-size:40px;color:var(--mid);"></i><br><br>No hay relojes</div>`;
 
+/* ── Two habits worth knowing, on top of the ranking (not year-filtered) ── */
+function usageInsightsHTML(ws) {
+  const now = Date.now(), cut30 = dayKey(now - 29 * 86400000);
+  let used30 = 0; const gaps = [];
+  ws.forEach(w => {
+    const keys = [...wornDayKeys(w, now)].sort();
+    if (keys.length && keys[keys.length - 1] >= cut30) used30++;
+    for (let i = 1; i < keys.length; i++) {
+      const g = calendarDaysBetween(new Date(keys[i - 1] + 'T12:00').getTime(), new Date(keys[i] + 'T12:00').getTime());
+      if (g > 1) gaps.push(g - 1);   // days in the box between two wears
+    }
+  });
+  const inRotation = ws.length;
+  const avgGap = gaps.length ? Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length) : null;
+  return `<div class="insights">
+    <div class="insight"><b>${used30}<small> de ${inRotation}</small></b><span>relojes usados en los últimos 30 días</span></div>
+    <div class="insight"><b>${avgGap === null ? '—' : avgGap}<small>${avgGap === null ? '' : avgGap === 1 ? ' día' : ' días'}</small></b><span>de media en la caja entre dos usos</span></div>
+  </div>`;
+}
+
 /* ══════════════════════════════════════════════
    RANKING VIEW — top 10 by days worn + the 3 least used
 ══════════════════════════════════════════════ */
@@ -122,7 +142,7 @@ function renderRanking() {
         <span>${escHtml(d.w.brand)} ${escHtml(d.w.model)}</span><em>${d.days ? `${d.days} d` : 'sin uso'}</em></button>`).join('')}
     </div>` : '';
 
-  body.innerHTML = yearChipsHTML() + (top.length
+  body.innerHTML = usageInsightsHTML(ws) + yearChipsHTML() + (top.length
     ? `<div class="rk-head">${total} ${total === 1 ? 'día' : 'días'} con reloj ${periodLabel()} · top ${top.length}</div>${rows}`
     : `<div class="history-empty" style="padding:32px 8px;">Sin usos apuntados ${periodLabel()}.</div>`) + leastHTML;
   bindYearChips(body, renderRanking);

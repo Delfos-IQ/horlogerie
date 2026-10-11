@@ -41,6 +41,40 @@ function newUUID() {
       });
 }
 
+/* Short recovery key (Worker v13+): 16 Crockford base32 characters, 80 bits,
+   shown in groups of four: 7KQ2-M4XR-9TBW-2HNF */
+const KEY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const SHORT_KEY_RE = /^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$/;
+const UUID_KEY_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function newShortKey() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  const chars = [...bytes].map(b => KEY_ALPHABET[b & 31]).join('');   // 32 symbols → 5 bits each, no bias
+  return chars.match(/.{4}/g).join('-');
+}
+function isShortKey(k) { return SHORT_KEY_RE.test(k || ''); }
+
+/**
+ * Turn whatever the user typed into a session key, or null.
+ * Accepts the short key with or without dashes/spaces, lower case and the
+ * usual look-alikes (O→0, I/L→1), and old UUID keys.
+ */
+function normalizeKey(input) {
+  const raw = String(input || '').trim();
+  if (UUID_KEY_RE.test(raw)) return raw.toLowerCase();
+  const c = raw.toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
+  if (!/^[0-9A-HJKMNP-TV-Z]{16}$/.test(c)) return null;
+  return c.match(/.{4}/g).join('-');
+}
+/** 6-character linking code typed by the user, or null */
+function normalizePairCode(input) {
+  const c = String(input || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+  return /^[2-9A-HJKMNP-Z]{6}$/.test(c) ? c : null;
+}
+window.normalizeKey = normalizeKey;
+window.normalizePairCode = normalizePairCode;
+window.isShortKey = isShortKey;
+
 function getSessionId() {
   const meta = getSyncMeta();
   if (meta.userId) return meta.userId;
@@ -73,7 +107,8 @@ function workerCaps() {
       .then(h => {
         const major = parseInt(String(h.version || '0'), 10);
         return { userHeader: major >= 11, wishlist: major >= 11, version: h.version || '?',
-                 importUrl: !!h.caps?.importUrl, importText: !!h.caps?.importText };
+                 importUrl: !!h.caps?.importUrl, importText: !!h.caps?.importText,
+                 shortKey: !!h.caps?.shortKey, pairing: !!h.caps?.pairing };
       })
       .catch(() => { _capsPromise = null; return { userHeader: false, wishlist: false, version: null }; });
   }
@@ -98,17 +133,17 @@ async function syncApi(path, { method = 'GET', body = null, userId = getSessionI
    UI
 ════════════════════════════════════════ */
 function setSyncUI(state, msg) {
+  setSyncMeta({ lastState: state, lastStateMsg: msg || '', ...(state === 'ok' ? { lastSyncAt: Date.now() } : {}) });
+  // The header only shows the cloud when something is wrong; the rest lives in Ajustes
   const el = document.getElementById(SYNC_EL);
-  if (!el) return;
-  const cfg = {
-    syncing: { icon: 'ti-refresh',     color: 'var(--mid)',            spin: true  },
-    ok:      { icon: 'ti-cloud-check', color: 'var(--ok)',               spin: false },
-    error:   { icon: 'ti-cloud-x',     color: 'var(--danger)',   spin: false },
-    idle:    { icon: 'ti-cloud',       color: 'var(--mid)',            spin: false },
-    off:     { icon: 'ti-cloud-off',   color: 'var(--mid)',            spin: false },
-  }[state] || { icon: 'ti-cloud', color: 'var(--mid)', spin: false };
-  el.innerHTML = `<i class="ti ${cfg.icon}" style="color:${cfg.color};font-size:18px;${cfg.spin ? 'animation:spin 1s linear infinite;' : ''}"></i>`;
-  el.title = msg || '';
+  if (el) {
+    el.hidden = state !== 'error';
+    el.title  = msg || '';
+    el.setAttribute('aria-label', `Problema con la copia en la nube${msg ? ': ' + msg : ''}. Ver en Ajustes`);
+  }
+  if (typeof renderSystemStatus === 'function' && document.getElementById('view-settings')?.classList.contains('active')) {
+    renderSystemStatus();
+  }
 }
 
 /* ════════════════════════════════════════
@@ -291,7 +326,7 @@ async function importSession(userId) {
     const data = await res.json();
     if (!data.exists) throw new Error('Sesión no encontrada. Comprueba el ID.');
     setSyncMeta({ userId, cloudEnabled: true, lastPush: 0, watchHashes: {}, photoHashes: {},
-                  wishlistHash: null, syncedIds: [], syncedWishlistIds: [] });
+                  wishlistHash: null, syncedIds: [], syncedWishlistIds: [], keySavedAt: Date.now() });
     await syncPull(false);
     showToast('Sesión importada correctamente');
     return true;
@@ -306,6 +341,10 @@ async function importSession(userId) {
 async function setCloudEnabled(on) {
   setSyncMeta({ cloudEnabled: !!on });
   if (!on) { setSyncUI('off', 'Copia en la nube desactivada'); return true; }
+  const m = getSyncMeta();
+  if (!m.lastPush && !isShortKey(m.userId) && (await workerCaps()).shortKey) {
+    setSyncMeta({ userId: newShortKey(), keySavedAt: null });   // never used: nothing to migrate
+  }
   getSessionId();
   const pulled = await syncPull(false);
   if (!pulled) await syncPush(true);
@@ -319,14 +358,14 @@ async function setCloudEnabled(on) {
 async function rotateSessionKey() {
   if (!isCloudEnabled()) throw new Error('Activa la copia en la nube primero');
   const oldId = getSessionId();
-  const newId = newUUID();
+  const newId = (await workerCaps()).shortKey ? newShortKey() : newUUID();
   const ws = await getWatchesWithPhotos();
   const wl = getWishlist();
   const res = await syncApi('/sync/push', { method: 'POST', userId: newId,
     body: { watches: ws, mode: 'full', deletedIds: [], wishlist: wl } });
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
   const data = await res.json();
-  setSyncMeta({ userId: newId, lastPush: data.updatedAt, watchHashes: {}, photoHashes: {},
+  setSyncMeta({ userId: newId, lastPush: data.updatedAt, watchHashes: {}, photoHashes: {}, keySavedAt: null,
                 wishlistHash: null, syncedIds: ws.map(w => w.id), syncedWishlistIds: wl.map(i => i.id) });
   await syncApi('/sync/clear', { method: 'DELETE', userId: oldId }).catch(() => {});
   return newId;
@@ -337,10 +376,39 @@ async function deleteCloudData() {
   const res = await syncApi('/sync/clear', { method: 'DELETE' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   setSyncMeta({ userId: newUUID(), cloudEnabled: false, lastPush: 0, watchHashes: {}, photoHashes: {},
-                wishlistHash: null, syncedIds: [], syncedWishlistIds: [] });
+                wishlistHash: null, syncedIds: [], syncedWishlistIds: [], keySavedAt: null });
   setSyncUI('off', 'Copia en la nube desactivada');
   return true;
 }
+
+/* ════════════════════════════════════════
+   DEVICE LINKING (Worker v13+)
+════════════════════════════════════════ */
+/** Ask the Worker for a one-use 6-character code pointing to this session (10 min) */
+async function pairCreate() {
+  if (!(await workerCaps()).pairing) throw new Error('El servidor aún no admite códigos de vinculación');
+  if (!getSyncMeta().lastPush) await syncPush(true);
+  let res = await syncApi('/pair/create', { method: 'POST', body: {} });
+  if (res.status === 404) {             // no copy under this key yet (or it was deleted): upload, then retry
+    await syncPush(true);
+    res = await syncApi('/pair/create', { method: 'POST', body: {} });
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;   // { code, expiresAt }
+}
+
+/** Swap a linking code for the session id and use that session here */
+async function pairClaim(code) {
+  const res = await fetch(`${CONFIG.WORKER_URL}/pair/claim`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 429) throw new Error('Demasiados intentos. Prueba dentro de una hora.');
+  if (!res.ok || !data.userId) throw new Error(data.error || 'Código no válido o caducado');
+  return importSession(data.userId);
+}
+window.pairCreate = pairCreate;
+window.pairClaim  = pairClaim;
 
 /* ════════════════════════════════════════
    AUTO + MANUAL

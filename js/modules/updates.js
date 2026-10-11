@@ -1,22 +1,12 @@
-const APP_VERSION = '2.7.0'; // Must match version.json
+const APP_VERSION = '2.8.0'; // Must match version.json
 
 async function initVersionCheck() {
-  // Hidden legacy elements kept for backward compatibility with other modules
-  const vEl  = document.getElementById('app-version-display');
-  const vEl2 = document.getElementById('app-version-display2');
-  if (vEl)  vEl.textContent  = APP_VERSION;
-  if (vEl2) vEl2.textContent = APP_VERSION;
-
   // Silent check on every launch — fetch version.json bypassing cache
   try {
     const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
-    const dEl = document.getElementById('app-version-date');
-    if (dEl && data.date) dEl.textContent = `Publicada el ${data.date}`;
-    if (data.version && data.version !== APP_VERSION) {
-      showUpdateBanner(data.version, data.notes);
-    }
+    if (data.version && data.version !== APP_VERSION) showUpdateBanner(data.version, data.notes);
   } catch { /* Offline — skip */ }
 }
 
@@ -47,59 +37,32 @@ function showUpdateBanner(newVersion, notes) {
   document.body.appendChild(banner);
 }
 
+/** Ajustes → Estado del sistema → Versión instalada → ↻ */
 async function checkForUpdate() {
-  // Update both the header icon and the settings button
-  const headerIcon = document.getElementById('update-btn-icon');
-  const btn        = document.getElementById('check-update-btn');
-  const status     = document.getElementById('update-status');
-
-  // Spinning animation on header icon
-  if (headerIcon) headerIcon.style.animation = 'spin 1s linear infinite';
-  if (btn)    { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Comprobando…'; }
-  if (status) { status.textContent = ''; }
-
+  const icon = document.getElementById('update-top-icon');
+  const val  = document.getElementById('status-version-val');
+  const sub  = document.getElementById('status-version-sub');
+  if (icon) icon.style.animation = 'spin 1s linear infinite';
+  if (val) { val.dataset.busy = '1'; val.textContent = 'Comprobando…'; val.style.color = 'var(--mid)'; }
   try {
     const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('No se pudo conectar');
     const data = await res.json();
-
-    const vEl = document.getElementById('app-version-display');
-    const dEl = document.getElementById('app-version-date');
-    if (vEl) vEl.textContent = data.version || APP_VERSION;
-    if (dEl && data.date) dEl.textContent = `Publicada el ${data.date}`;
-
     if (data.version && data.version !== APP_VERSION) {
-      // New version — show gold icon + toast
-      if (headerIcon) {
-        headerIcon.style.animation = '';
-        headerIcon.style.color = 'var(--gold-light)';
-        headerIcon.className = 'ti ti-arrow-bar-to-down';
-      }
-      if (status) {
-        status.style.color = 'var(--ok)';
-        status.innerHTML = `⬆️ Nueva versión <strong>${data.version}</strong> — actualizando…`;
-      }
-      showToast(`Nueva versión ${data.version} disponible. Instalando…`, 3000);
+      if (val) { val.textContent = `v${data.version} disponible · instalando…`; val.style.color = 'var(--gold-light)'; }
+      showToast(`Nueva versión ${data.version}. Instalando…`, 3000);
       setTimeout(() => applyUpdate(), 1500);
     } else {
-      // Already up to date
-      if (headerIcon) {
-        headerIcon.style.animation = '';
-        headerIcon.style.color = 'var(--ok)';
-        setTimeout(() => {
-          if (headerIcon) { headerIcon.style.color = 'var(--mid)'; }
-        }, 2000);
-      }
-      if (status) { status.style.color = 'var(--ok)'; status.textContent = '✓ Ya tienes la versión más reciente'; }
-      showToast('✓ App al día — versión ' + APP_VERSION);
+      delete val?.dataset.busy;
+      if (typeof renderSystemStatus === 'function') await renderSystemStatus();
+      showToast('Ya tienes la versión más reciente');
     }
-  } catch (e) {
-    if (headerIcon) { headerIcon.style.animation = ''; headerIcon.style.color = 'var(--danger)'; }
-    if (status) { status.style.color = 'var(--danger)'; status.textContent = 'Sin conexión'; }
-    showToast('Sin conexión — no se pudo comprobar');
+  } catch {
+    if (val) { delete val.dataset.busy; val.textContent = `v${APP_VERSION}`; val.style.color = 'var(--light)'; }
+    if (sub) sub.textContent = 'Sin conexión: no se pudo comprobar';
+    showToast('Sin conexión: no se pudo comprobar');
   }
-
-  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-refresh"></i> Buscar actualización'; }
+  if (icon) icon.style.animation = '';
 }
 
 async function applyUpdate() {

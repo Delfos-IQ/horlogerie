@@ -6,6 +6,15 @@ function renderHome() {
   const ws    = getWatches();
   const activeW = getActiveWatch();
 
+  // Header: how many watches and how much they cost (only those with a price)
+  const sub = document.getElementById('home-subtitle');
+  if (sub) {
+    const spent = ws.reduce((t, w) => t + (Number(w.purchasePrice) > 0 ? Number(w.purchasePrice) : 0), 0);
+    sub.textContent = !ws.length ? 'Tu colección de relojes'
+      : `${ws.length} ${ws.length === 1 ? 'reloj' : 'relojes'}${spent ? ` · ${Math.round(spent).toLocaleString('es-ES')} € invertidos` : ''}`;
+  }
+  if (typeof renderBackupReminder === 'function') renderBackupReminder();
+
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot ' + (activeW ? 'dot-active' : 'dot-none');
   document.getElementById('status-text').textContent = activeW ? 'Reloj activo' : 'Ningún reloj activo';

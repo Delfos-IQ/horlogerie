@@ -47,3 +47,6 @@ jobs:
 
       - name: Rellenar desde un enlace, calendario, ranking y por reloj
         run: python tests/e2e_import_history.py 8711
+
+      - name: Nube, clave corta y vincular dispositivos
+        run: python tests/e2e_cloud.py 8711

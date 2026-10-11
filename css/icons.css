@@ -1,5 +1,5 @@
 /*!
- * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (56 iconos)
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (58 iconos)
  * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
  * No editar a mano: vuelve a ejecutar el script.
  */
@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("./icons/tabler-icons-12131a17.woff2") format("woff2");
+  src: url("./icons/tabler-icons-4f9f1ecf.woff2") format("woff2");
 }
 .ti {
   font-family: "tabler-icons" !important;
@@ -22,7 +22,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 .ti-alert-triangle:before { content: "\ea06"; }
-.ti-arrow-bar-to-down:before { content: "\ec88"; }
 .ti-arrow-left:before { content: "\ea19"; }
 .ti-ban:before { content: "\ea2e"; }
 .ti-calendar-month:before { content: "\fd2f"; }
@@ -36,37 +35,40 @@
 .ti-chevron-right:before { content: "\ea61"; }
 .ti-clock:before { content: "\ea70"; }
 .ti-cloud:before { content: "\ea76"; }
-.ti-cloud-check:before { content: "\f84d"; }
-.ti-cloud-off:before { content: "\ed3e"; }
+.ti-cloud-download:before { content: "\ea71"; }
 .ti-cloud-x:before { content: "\f85d"; }
 .ti-copy:before { content: "\ea7a"; }
 .ti-database:before { content: "\ea88"; }
 .ti-database-export:before { content: "\ee6e"; }
 .ti-database-import:before { content: "\ee6f"; }
-.ti-device-mobile:before { content: "\ea8a"; }
 .ti-device-watch:before { content: "\ebf9"; }
-.ti-devices:before { content: "\eb87"; }
+.ti-devices-plus:before { content: "\f8f2"; }
 .ti-edit:before { content: "\ea98"; }
 .ti-external-link:before { content: "\ea99"; }
 .ti-eye:before { content: "\ea9a"; }
 .ti-file-type-pdf:before { content: "\fb10"; }
 .ti-heart:before { content: "\eabe"; }
+.ti-help-circle:before { content: "\f91d"; }
 .ti-info-circle:before { content: "\eac5"; }
 .ti-key:before { content: "\eac7"; }
 .ti-layout-grid:before { content: "\edba"; }
+.ti-license:before { content: "\ebc0"; }
 .ti-link:before { content: "\eade"; }
 .ti-list-details:before { content: "\ef40"; }
+.ti-mail:before { content: "\eae5"; }
 .ti-pencil:before { content: "\eb04"; }
 .ti-photo:before { content: "\eb0a"; }
 .ti-plane:before { content: "\eb6f"; }
 .ti-player-play:before { content: "\ed46"; }
 .ti-player-stop:before { content: "\ed4a"; }
 .ti-plus:before { content: "\eb0b"; }
-.ti-qrcode:before { content: "\eb11"; }
 .ti-refresh:before { content: "\eb13"; }
 .ti-ripple:before { content: "\ed82"; }
 .ti-run:before { content: "\ec82"; }
 .ti-settings:before { content: "\eb20"; }
+.ti-share:before { content: "\eb21"; }
+.ti-shield-exclamation:before { content: "\f9c6"; }
+.ti-shield-lock:before { content: "\ed58"; }
 .ti-star:before { content: "\eb2e"; }
 .ti-stopwatch:before { content: "\ff9b"; }
 .ti-switch-horizontal:before { content: "\eb31"; }

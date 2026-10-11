@@ -77,7 +77,7 @@ async def main():
         await pa.evaluate("setCloudEnabled(true)")
         await pa.wait_for_timeout(500)
         uid_a = await pa.evaluate("getSessionId()")
-        data = kv()['data'].get(f"user:{uid_a}:watches")
+        data = kv()['data'].get(f"user:{uid_a.lower()}:watches")
         check("al activar la nube se sube la colección", data and len(json.loads(data)['watches']) == 1)
         check("la foto viaja a la nube", data and json.loads(data)['watches'][0].get('photo', '').startswith('data:image/'))
         log = kv()['log']
@@ -165,20 +165,20 @@ async def main():
         await pa.wait_for_timeout(300)
         keys = kv()['keys']
         check("cambiar llave: la copia vieja desaparece y la nueva existe",
-              f"user:{old}:watches" not in keys and f"user:{new}:watches" in keys, str(keys))
+              f"user:{old.lower()}:watches" not in keys and f"user:{new.lower()}:watches" in keys, str(keys))
 
         # ── 10. Delete cloud ──
         await pa.evaluate("deleteCloudData()")
         keys = kv()['keys']
         check("borrar de la nube: no queda nada y la nube se apaga",
-              f"user:{new}:watches" not in keys and not await pa.evaluate("isCloudEnabled()"))
+              f"user:{new.lower()}:watches" not in keys and not await pa.evaluate("isCloudEnabled()"))
         check("borrar de la nube: los datos locales siguen", len(await names(pa)) == 2)
 
         # ── 11. QR generated locally ──
         await pb.evaluate("showView('settings')")
-        await pb.evaluate("showQR()")
-        await pb.wait_for_timeout(200)
-        svg = await pb.locator("#qr-container svg").count()
+        await pb.evaluate("openPairSheet()")
+        await pb.wait_for_selector(".pair-qr svg", timeout=5000)
+        svg = await pb.locator(".pair-qr svg").count()
         check("QR generado en el dispositivo (sin servicios externos)", svg == 1 and not (xa + xb + xc + xd))
 
         # ── 12. No JS errors ──

@@ -13,6 +13,8 @@ PWA para gestionar una colección de relojes. El nombre visible es **Rotor**; la
 horlogerie/
 ├── index.html              Única página de la app (vistas, modales, registro del SW)
 ├── privacidad.html         Política de privacidad pública (enlazada en Ajustes y en Play)
+├── ayuda.html              Ayuda: nube, clave de recuperación, vincular y reinstalar
+├── licencias.html          Licencias de terceros (MIT y OFL)
 ├── brand/                  Logo maestro (rotor-icon.svg) y símbolo sin fondo (rotor-symbol.svg)
 ├── manifest.json           Manifest PWA (scope /horlogerie/)
 ├── sw.js                   Service worker: red primero para la app, caché para fuentes/iconos
@@ -38,7 +40,7 @@ horlogerie/
 │       ├── history.js      Calendario, ranking top 10 y detalle por reloj (filtro por año)
 │       ├── settings.js     Estadísticas, copias JSON, tamaño en la nube, inicio de la app
 │       ├── wishlist.js     Lista de deseos
-│       ├── session.js      ID de sesión, QR e importación de sesión
+│       ├── session.js      Clave de recuperación, vincular dispositivos y recuperar
 │       ├── updates.js      Aviso de nueva versión (APP_VERSION)
 │       └── url-import.js   Importar especificaciones desde una URL (vía Worker)
 ├── worker/
@@ -51,7 +53,8 @@ horlogerie/
 │   ├── worker-harness.mjs  Ejecuta el Worker real en Node con KV en memoria
 │   ├── e2e_sync.py         Sincronización con varios "dispositivos" (Playwright)
 │   ├── e2e_wear.py         Registro de uso, recomendación, PDF y funcionamiento sin terceros
-│   └── e2e_import_history.py  Rellenar desde un enlace, calendario, ranking y «Por reloj»
+│   ├── e2e_import_history.py  Rellenar desde un enlace, calendario, ranking y «Por reloj»
+│   └── e2e_cloud.py        Clave corta, vincular dispositivos, recuperar, avisos y Ajustes
 └── tools/
     ├── bump-version.mjs    Propaga la versión de version.json al resto de archivos
     ├── build-icons.py      Regenera el subconjunto de iconos (ejecutar al usar un icono nuevo)
@@ -107,7 +110,7 @@ Secretos (Cloudflare → Workers → horlogerie → Settings → Variables and S
 | `GROQ_API_KEY` | `/import-url` («Rellenar desde un enlace») | Solo para esa función; la sincronización funciona sin ella |
 | `EBAY_APP_ID`, `EBAY_CERT_ID` | Precios de eBay | No |
 
-Versión actual: **v12** (`/import-url` reconstruido: descarga la página, extrae la ficha y Groq `openai/gpt-oss-20b` la estructura; cada valor se contrasta con el texto de la página). Variables opcionales: `GROQ_MODEL`, `IMPORT_DAILY_CAP` (300 por defecto).
+Versión actual: **v13** (claves cortas de recuperación y vinculación con código de 6 caracteres: `/pair/create`, `/pair/claim`). Antes, v12: (`/import-url` reconstruido: descarga la página, extrae la ficha y Groq `openai/gpt-oss-20b` la estructura; cada valor se contrasta con el texto de la página). Variables opcionales: `GROQ_MODEL`, `IMPORT_DAILY_CAP` (300 por defecto).
 
 Desde la v11: La app detecta la versión con `/health`: con v11 envía el ID de sesión en la cabecera `X-Horlogerie-User` y sincroniza la lista de deseos; con v10 sigue funcionando (ID por query, lista de deseos solo en copias JSON).
 
@@ -116,7 +119,7 @@ Enlace KV: variable `HORLOGERIE_KV` → namespace `HORLOGERIE`. El `id` del name
 ## Datos del usuario
 
 - **En el dispositivo:** relojes en `localStorage` (`horlogerie_v3`), fotos en IndexedDB (`horlogerie_photos`), lista de deseos en `localStorage` (`horlogerie_wishlist_v1`).
-- **En la nube (opcional, apagada por defecto en instalaciones nuevas):** KV con clave `user:{uuid}:watches` que guarda `{ watches, wishlist, updatedAt }`. El UUID de Ajustes es la única llave: quien lo tenga puede leer y borrar la colección. Desde Ajustes se puede cambiar la llave o borrar los datos de la nube.
+- **En la nube (opcional, apagada por defecto en instalaciones nuevas):** KV con clave `user:{clave}:watches` que guarda `{ watches, wishlist, updatedAt }`. La clave de recuperación es la única llave: quien la tenga puede leer y borrar la colección. Desde la v2.8 (con Worker v13) es de 16 caracteres Crockford base32 (`7KQ2-M4XR-9TBW-2HNF`, 80 bits); las claves UUID anteriores siguen valiendo. «Vincular otro dispositivo» guarda `pair:{CÓDIGO}` → clave durante 10 minutos, de un solo uso.
 - **Registro de uso:** `history` guarda intervalos `{start, end}` y `wearStart` la sesión en curso. Los «días de uso» son días de calendario distintos (`wornDayKeys`): dos horas cuentan como un día y dos usos el mismo día, como uno.
 - **Campos por reloj (v2.3):** `favorite`, `rotation` (false = fuera de rotación), `purchasePrice`, `purchaseDate`, `lastService`, `batteryChanged`.
 - **Fusión:** cada reloj y deseo lleva `updatedAt`. Al sincronizar gana la copia modificada más recientemente; los borrados viajan como lápidas (`horlogerie_tombstones_v1`).

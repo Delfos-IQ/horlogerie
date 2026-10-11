@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<title>Licencias · Rotor</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --dark:#F3EEE3; --dark2:#FBF8F1; --dark3:#E8E1D2; --gold:#B8963E; --gold-light:#7E6118; --light:#1E1B16; --mid:#655D51;
+          --line:rgba(126,97,24,.24); color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --dark:#0B1220; --dark2:#141D30; --dark3:#1F2A42; --gold-light:#D4AF6A; --light:#E6E1D6; --mid:#97A0B1;
+            --line:rgba(184,150,62,.24); color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'Jost', system-ui, sans-serif;
+         font-size: 16px; line-height: 1.65; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+       letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+       margin: 36px 0 8px; }
+  p, li { color: var(--light); }
+  .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+  .box { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid var(--line); }
+  th { color: var(--gold-light); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--gold-light); }
+  code { font-size: 13px; background: var(--dark3); padding: 1px 5px; border-radius: 4px; }
+  details { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 12px 16px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 500; color: var(--light); }
+  details[open] summary { margin-bottom: 6px; }
+  .key { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--dark3); padding: 1px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Licencias</h1>
+  <div class="meta">Software y fuentes de terceros incluidos en Rotor</div>
+  <p>Rotor incluye estos componentes de código abierto. Los avisos de copyright completos van dentro de cada archivo distribuido con la app.</p>
+
+  <h2>Librerías</h2>
+  <div class="scroll"><table>
+    <tr><th>Componente</th><th>Uso</th><th>Licencia</th></tr>
+    <tr><td><a href="https://github.com/parallax/jsPDF">jsPDF 2.5.1</a><br><small>© 2010-2021 James Hall y colaboradores</small></td><td>Exportar a PDF</td><td>MIT. Incluye componentes de terceros con licencias MIT y BSD (p. ej., el codificador JPEG © 2008 Adobe Systems), cuyos avisos van en el archivo.</td></tr>
+    <tr><td><a href="https://github.com/kazuhikoarase/qrcode-generator">qrcode-generator 1.4.4</a><br><small>© 2009 Kazuhiko Arase</small></td><td>Código QR para vincular dispositivos</td><td>MIT</td></tr>
+    <tr><td><a href="https://tabler.io/icons">Tabler Icons 3.47</a><br><small>© 2020-2024 Paweł Kuna</small></td><td>Iconos</td><td>MIT</td></tr>
+  </table></div>
+
+  <h2>Fuentes</h2>
+  <div class="scroll"><table>
+    <tr><th>Fuente</th><th>Uso</th><th>Licencia</th></tr>
+    <tr><td><a href="https://github.com/indestructible-type/Bodoni">Bodoni Moda</a><br><small>© 2020 The Bodoni Moda Project Authors</small></td><td>Títulos</td><td>SIL Open Font License 1.1 · <a href="./css/fonts/OFL-BodoniModa.txt">texto</a></td></tr>
+    <tr><td><a href="https://github.com/indestructible-type/Jost">Jost</a><br><small>© 2020 The Jost Project Authors</small></td><td>Texto</td><td>SIL Open Font License 1.1 · <a href="./css/fonts/OFL-Jost.txt">texto</a></td></tr>
+  </table></div>
+
+  <h2>Licencia MIT</h2>
+  <p style="font-size:13.5px;color:var(--mid);">Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+  <p style="font-size:13.5px;color:var(--mid);">The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+  <p style="font-size:13.5px;color:var(--mid);">THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+  <p style="margin-top:40px;"><a href="./">← Volver a Rotor</a></p>
+</main>
+</body>
+</html>

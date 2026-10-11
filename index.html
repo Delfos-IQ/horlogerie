@@ -26,8 +26,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <title>Rotor</title>
-<link rel="stylesheet" href="./css/fonts.css?v=2.7.0">
-<link rel="stylesheet" href="./css/icons.css?v=2.7.0">
+<link rel="stylesheet" href="./css/fonts.css?v=2.8.0">
+<link rel="stylesheet" href="./css/icons.css?v=2.8.0">
 <style>
 /* CRITICAL CSS - inlined to survive SW cache issues */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -118,7 +118,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 .loading-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--mid);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 </style>
-<link rel="stylesheet" href="./css/app.css?v=2.7.0">
+<link rel="stylesheet" href="./css/app.css?v=2.8.0">
 </head>
 <body>
 <a href="#view-home" class="sr-only skip-link">Saltar al contenido principal</a>
@@ -164,19 +164,18 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
   <div class="view active" id="view-home" role="main" aria-label="Colección de relojes">
     <div class="app-header">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
-        <div id="update-btn" onclick="checkForUpdate()" title="Buscar actualización"
-          style="cursor:pointer;width:28px;display:flex;align-items:center;justify-content:center;">
-          <i class="ti ti-refresh" id="update-btn-icon" style="color:var(--mid);font-size:18px;"></i>
-        </div>
+        <div style="width:32px;" aria-hidden="true"></div>
         <div>
           <div class="app-title">Rotor</div>
-          <div class="app-subtitle">Tu colección de relojes</div>
+          <div class="app-subtitle" id="home-subtitle">Tu colección de relojes</div>
         </div>
-        <div id="sync-status-indicator" onclick="syncManual()" style="cursor:pointer;width:28px;display:flex;align-items:center;justify-content:center;" title="Sincronizar">
-          <i class="ti ti-cloud" style="color:var(--mid);font-size:18px;"></i>
-        </div>
+        <button id="sync-status-indicator" class="hdr-alert" hidden onclick="showView('settings')"
+          aria-label="Problema con la copia en la nube. Ver en Ajustes">
+          <i class="ti ti-cloud-x" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
+    <div id="backup-reminder"></div>
     <div class="status-bar" id="status-bar">
       <div class="status-item">
         <div class="status-dot dot-none" id="status-dot"></div>
@@ -190,6 +189,8 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
       <div class="empty-icon">⌚</div>
       <div class="empty-title">Tu colección está vacía</div>
       <div class="empty-text">Pulsa el botón <strong>+</strong> para añadir tu primer reloj</div>
+      <button class="chip-btn empty-recover" onclick="openLinkSheet()">
+        <i class="ti ti-cloud-download" aria-hidden="true"></i> Ya tengo Rotor: recuperar mis relojes</button>
     </div>
   </div>
 
@@ -606,63 +607,30 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 
       <!-- ESTADO DEL SISTEMA -->
       <div class="settings-section-title">Estado del sistema</div>
-
       <div class="system-status-card">
-
-        <!-- Versión -->
         <div class="status-row" id="status-version-row">
-          <div class="status-icon" id="status-version-icon">
-            <i class="ti ti-versions" style="font-size:18px;"></i>
-          </div>
+          <div class="status-icon" id="status-version-icon"><i class="ti ti-versions" style="font-size:18px;" aria-hidden="true"></i></div>
           <div class="status-body">
             <div class="status-label">Versión instalada</div>
             <div class="status-value" id="status-version-val">Comprobando…</div>
+            <div class="status-sub" id="status-version-sub"></div>
           </div>
-          <button class="status-action-btn" id="update-top-btn"
-            aria-label="Buscar actualización de la app"
-            onclick="checkForUpdate()">
-            <i class="ti ti-refresh" id="update-top-icon"></i>
+          <button class="status-action-btn" id="update-top-btn" aria-label="Buscar actualización de la app" onclick="checkForUpdate()">
+            <i class="ti ti-refresh" id="update-top-icon" aria-hidden="true"></i>
           </button>
         </div>
-
         <div class="status-divider"></div>
-
-        <!-- Sesión -->
         <div class="status-row">
-          <div class="status-icon" id="status-session-icon">
-            <i class="ti ti-device-mobile" style="font-size:18px;"></i>
-          </div>
+          <div class="status-icon" id="status-sync-icon"><i class="ti ti-cloud" style="font-size:18px;" aria-hidden="true"></i></div>
           <div class="status-body">
-            <div class="status-label">Tu sesión</div>
-            <div class="status-value mono" id="session-id-display">—</div>
-            <div class="status-sub" id="status-session-sub">Este código es la llave de tu copia en la nube</div>
-          </div>
-          <button class="status-action-btn"
-            aria-label="Copiar ID de sesión"
-            onclick="copySessionId()">
-            <i class="ti ti-copy"></i>
-          </button>
-        </div>
-
-        <div class="status-divider"></div>
-
-        <!-- Sync -->
-        <div class="status-row">
-          <div class="status-icon" id="status-sync-icon">
-            <i class="ti ti-cloud" style="font-size:18px;"></i>
-          </div>
-          <div class="status-body">
-            <div class="status-label">Nube</div>
+            <div class="status-label">Copia en la nube</div>
             <div class="status-value" id="status-sync-val">—</div>
-            <div class="status-sub" id="status-sync-sub">Toca para sincronizar ahora</div>
+            <div class="status-sub" id="status-sync-sub"></div>
           </div>
-          <button class="status-action-btn"
-            aria-label="Sincronizar ahora"
-            onclick="syncManual()">
-            <i class="ti ti-refresh"></i>
+          <button class="status-action-btn" id="status-sync-btn" aria-label="Sincronizar ahora" onclick="syncManual()">
+            <i class="ti ti-refresh" aria-hidden="true"></i>
           </button>
         </div>
-
       </div>
 
       <!-- COPIA EN LA NUBE -->
@@ -675,45 +643,31 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
           </div>
           <input type="checkbox" id="cloud-toggle" class="cloud-switch" role="switch" onchange="handleCloudToggle(this.checked)">
         </label>
-        <div class="cloud-warning">
-          <i class="ti ti-key" aria-hidden="true"></i>
-          <div>Tu <strong>ID de sesión</strong> funciona como una contraseña: quien lo tenga puede ver y borrar tu copia en la nube. No lo publiques ni lo envíes a nadie. Si crees que se ha filtrado, cambia la llave.</div>
+        <div class="cloud-key-box" id="cloud-key-box" hidden>
+          <div class="cloud-key-label">Tu clave de recuperación</div>
+          <div class="cloud-key" id="cloud-key"></div>
+          <div class="cloud-key-note">Con ella recuperas todo si reinstalas la app o cambias de móvil. Funciona como una contraseña: no la compartas con nadie.</div>
+          <div class="cloud-key-actions">
+            <button class="session-btn" onclick="copySessionId()"><i class="ti ti-copy" aria-hidden="true"></i> Copiar</button>
+            <button class="session-btn" onclick="shareSessionKey()"><i class="ti ti-share" aria-hidden="true"></i> Guardar…</button>
+          </div>
+          <div class="cloud-key-warn" id="cloud-key-warn" hidden></div>
         </div>
         <div class="cloud-actions" id="cloud-actions">
-          <button class="session-btn" aria-label="Mostrar código QR de sesión" onclick="showQR()">
-            <i class="ti ti-qrcode" aria-hidden="true"></i> Ver QR
+          <button class="session-btn" id="btn-link-device" onclick="openPairSheet()">
+            <i class="ti ti-devices-plus" aria-hidden="true"></i> Vincular otro dispositivo
           </button>
-          <button class="session-btn" aria-label="Usar la sesión de otro dispositivo" onclick="openImportSession()">
-            <i class="ti ti-devices" aria-hidden="true"></i> Otro dispositivo
+          <button class="session-btn" id="btn-use-key" onclick="openLinkSheet()">
+            <i class="ti ti-key" aria-hidden="true"></i> Usar una clave o código
           </button>
-          <button class="session-btn" id="btn-rotate-key" aria-label="Cambiar la llave de la nube" onclick="handleRotateKey()">
-            <i class="ti ti-key" aria-hidden="true"></i> Cambiar llave
+          <button class="session-btn" id="btn-rotate-key" onclick="handleRotateKey()">
+            <i class="ti ti-refresh" aria-hidden="true"></i> Cambiar llave
           </button>
-          <button class="session-btn session-btn-danger" id="btn-delete-cloud" aria-label="Borrar mis datos de la nube" onclick="handleDeleteCloud()">
+          <button class="session-btn session-btn-danger" id="btn-delete-cloud" onclick="handleDeleteCloud()">
             <i class="ti ti-cloud-x" aria-hidden="true"></i> Borrar de la nube
           </button>
         </div>
       </div>
-      <div id="update-top-status" style="font-size:12px;min-height:16px;padding:6px 4px 0;text-align:center;color:var(--mid);"></div>
-
-      <!-- SESSION legacy IDs needed by JS -->
-      <div id="app-version-display2" style="display:none;"></div>
-      <div id="sync-status-2"        style="display:none;"></div>
-
-
-      <!-- Cloud storage size bar (inside system status area via JS) -->
-      <div id="cloud-size-info" style="display:none;">
-        <span id="cloud-size-text"></span>
-        <div id="cloud-size-bar"><div id="cloud-size-fill"></div></div>
-        <span id="cloud-size-max"></span>
-      </div>
-      <div id="sync-last-time" style="display:none;"></div>
-
-      <!-- STATS -->
-      <div class="settings-section-title" style="margin-top:20px;">Colección</div>
-      <div class="settings-stats-grid" id="settings-stats"></div>
-      <div class="settings-section-title" style="margin-top:14px;">Análisis de uso</div>
-      <div id="settings-advanced-stats"></div>
 
       <!-- EXPORT -->
       <div class="settings-section-title" style="margin-top:20px;">Exportar</div>
@@ -735,7 +689,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
         </div>
         <div class="settings-card-text">
           <div class="settings-card-title">Copia de seguridad (JSON)</div>
-          <div class="settings-card-sub">Relojes, fotos, historial y lista de deseos en un archivo</div>
+          <div class="settings-card-sub" id="backup-card-sub">Relojes, fotos, historial y lista de deseos en un archivo</div>
         </div>
         <i class="ti ti-chevron-right settings-card-arrow"></i>
       </div>
@@ -754,72 +708,34 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 
       <!-- ABOUT -->
       <div class="settings-section-title" style="margin-top:20px;">Acerca de</div>
-      <div class="settings-about">
-        <div style="font-family:var(--font-display);font-size:22px;color:var(--gold-light);letter-spacing:2px;">Rotor</div>
-        <div style="font-size:12px;color:var(--mid);margin-top:6px;">
-          Versión <span id="app-version-display">—</span>
-        </div>
-        <div style="font-size:11px;color:var(--mid);margin-top:2px;" id="app-version-date"></div>
-        <div style="height:12px;"></div>
-        <button class="action-btn btn-search" id="check-update-btn" aria-label="Buscar actualización de la app" onclick="checkForUpdate()" style="margin-bottom:0;font-size:13px;padding:11px;">
-          <i class="ti ti-refresh"></i> Buscar actualización
-        </button>
-        <div id="update-status" style="font-size:12px;color:var(--mid);margin-top:8px;min-height:18px;text-align:center;"></div>
-        <a href="./privacidad.html" style="display:inline-block;margin-top:6px;font-size:12px;color:var(--gold-light);">Política de privacidad</a>
+      <div class="about-links">
+        <a href="./ayuda.html"><i class="ti ti-help-circle" aria-hidden="true"></i><span>Ayuda<small>La nube, tu clave y cómo recuperar tus relojes</small></span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+        <a href="./privacidad.html"><i class="ti ti-shield-lock" aria-hidden="true"></i><span>Política de privacidad</span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+        <a href="./licencias.html"><i class="ti ti-license" aria-hidden="true"></i><span>Licencias de terceros</span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+        <a href="mailto:pedicode.app@gmail.com?subject=Rotor"><i class="ti ti-mail" aria-hidden="true"></i><span>Contacto<small>pedicode.app@gmail.com</small></span><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
       </div>
+      <div class="about-foot">Rotor · Delfos-IQ</div>
 
-    </div>
-  </div>
-
-  <!-- Import session modal -->
-  <div class="modal-overlay" id="import-session-modal" role="dialog" aria-modal="true" aria-label="Importar sesión" style="display:none;" onclick="if(event.target.id==='import-session-modal')closeImportSession()">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-title">Usar en este dispositivo</div>
-      <div style="font-size:13px;color:var(--mid);margin-bottom:14px;line-height:1.6;">
-        Introduce el ID de sesión de tu otro dispositivo. Los relojes que ya tengas aquí se combinarán con los de la nube; no se borra nada.
-      </div>
-      <div class="form-field">
-        <label class="form-label">ID de sesión</label>
-        <input class="form-input" id="import-session-input" aria-label="ID de sesión a importar" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" style="font-family:monospace;font-size:13px;">
-      </div>
-      <div id="import-session-status" style="font-size:12px;color:var(--mid);margin-bottom:12px;min-height:16px;"></div>
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" aria-label="Cancelar importación de sesión" onclick="closeImportSession()">Cancelar</button>
-        <button class="modal-btn modal-btn-save" aria-label="Importar sesión" onclick="handleImportSession()">Importar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- QR modal -->
-  <div class="modal-overlay" id="qr-modal" role="dialog" aria-modal="true" aria-label="Código QR de sesión" style="display:none;" onclick="if(event.target.id==='qr-modal')document.getElementById('qr-modal').style.display='none'">
-    <div class="modal-sheet" style="text-align:center;">
-      <div class="modal-handle"></div>
-      <div class="modal-title">Tu código QR</div>
-      <div style="font-size:13px;color:var(--mid);margin-bottom:16px;">Escanéalo desde el otro dispositivo para importar tu sesión</div>
-      <div id="qr-container" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
-      <div id="qr-session-id" style="font-family:monospace;font-size:11px;color:var(--mid);word-break:break-all;padding:8px;background:var(--dark3);border-radius:8px;margin-bottom:14px;"></div>
-      <button class="modal-btn modal-btn-cancel" aria-label="Cerrar QR" style="width:100%;" onclick="document.getElementById('qr-modal').style.display='none'">Cerrar</button>
     </div>
   </div>
 
 </div><!-- #app -->
 
 <script src="./js/vendor/qrcode-generator-1.4.4.js"></script>
-<script src="./js/db.js?v=2.7.0"></script>
-<script src="./js/storage.js?v=2.7.0"></script>
-<script src="./js/api.js?v=2.7.0"></script>
-<script src="./js/sync.js?v=2.7.0"></script>
-<script src="./js/export.js?v=2.7.0"></script>
-<script src="./js/modules/core.js?v=2.7.0"></script>
-<script src="./js/modules/home-detail.js?v=2.7.0"></script>
-<script src="./js/modules/modals.js?v=2.7.0"></script>
-<script src="./js/modules/history.js?v=2.7.0"></script>
-<script src="./js/modules/settings.js?v=2.7.0"></script>
-<script src="./js/modules/wishlist.js?v=2.7.0"></script>
-<script src="./js/modules/session.js?v=2.7.0"></script>
-<script src="./js/modules/updates.js?v=2.7.0"></script>
-<script src="./js/modules/url-import.js?v=2.7.0"></script>
+<script src="./js/db.js?v=2.8.0"></script>
+<script src="./js/storage.js?v=2.8.0"></script>
+<script src="./js/api.js?v=2.8.0"></script>
+<script src="./js/sync.js?v=2.8.0"></script>
+<script src="./js/export.js?v=2.8.0"></script>
+<script src="./js/modules/core.js?v=2.8.0"></script>
+<script src="./js/modules/home-detail.js?v=2.8.0"></script>
+<script src="./js/modules/modals.js?v=2.8.0"></script>
+<script src="./js/modules/history.js?v=2.8.0"></script>
+<script src="./js/modules/settings.js?v=2.8.0"></script>
+<script src="./js/modules/wishlist.js?v=2.8.0"></script>
+<script src="./js/modules/session.js?v=2.8.0"></script>
+<script src="./js/modules/updates.js?v=2.8.0"></script>
+<script src="./js/modules/url-import.js?v=2.8.0"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
