@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.delfosiq.horlogerie",
+      "sha256_cert_fingerprints": [
+        "AA:BB:CC:... huella SHA-256 de tu clave de subida (sale en el ZIP de PWABuilder)",
+        "DD:EE:FF:... huella SHA-256 de Play App Signing (Play Console → Integridad de la app)"
+      ]
+    }
+  }
+]
