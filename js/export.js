@@ -1,6 +1,6 @@
 /**
  * export.js — PDF export of the entire watch collection
- * Uses jsPDF (loaded from CDN) — runs 100% in the browser, no server needed.
+ * Uses jsPDF 2.5.1 (bundled in js/vendor, MIT) — runs 100% in the browser, offline.
  *
  * generateCollectionPDF()
  *   → one cover page + one full-page card per watch
@@ -19,9 +19,9 @@ const PDF_GREEN   = [76,  175, 80];
 const PDF_WHITE   = [250, 248, 244];
 
 async function generateCollectionPDF() {
-  // Dynamic load jsPDF from CDN if not already present
+  // jsPDF is bundled with the app (js/vendor) and loaded only when needed
   if (typeof window.jspdf === 'undefined') {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    await loadScript('./js/vendor/jspdf-2.5.1.umd.min.js');
   }
 
   const { jsPDF } = window.jspdf;
@@ -84,12 +84,8 @@ function drawCover(doc, ws, W, H) {
   doc.text('Colección Personal de Relojes', W / 2, 97, { align: 'center', charSpace: 1.5 });
 
   // Stats block
-  const totalSessions = ws.reduce((a, w) => a + (w.history?.length || 0) + (w.wearStart ? 1 : 0), 0);
-  const totalDays     = ws.reduce((a, w) => {
-    const all = [...(w.history || [])];
-    if (w.wearStart) all.push({ start: w.wearStart, end: Date.now() });
-    return a + all.reduce((s, i) => s + Math.max(1, Math.ceil((i.end - i.start) / 86400000)), 0);
-  }, 0);
+  const totalSessions = ws.reduce((a, w) => a + wearStats(w).sessions, 0);
+  const totalDays     = ws.reduce((a, w) => a + wearStats(w).daysWorn, 0);
   const autoCount  = ws.filter(w => w.type === 'automatic').length;
   const quartzCount = ws.filter(w => w.type === 'quartz').length;
   const manualCount = ws.filter(w => w.type === 'manual').length;
@@ -218,11 +214,12 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
   const photoX = 14;
   const photoY = cy;
 
-  if (w.photo) {
+  const jpeg = isSafePhoto(w.photo) ? await photoToSquareJpeg(w.photo, 600) : null;
+  if (jpeg) {
     try {
       doc.setFillColor(...PDF_DARK2);
       doc.roundedRect(photoX, photoY, photoW, photoH, 3, 3, 'F');
-      doc.addImage(w.photo, 'JPEG', photoX, photoY, photoW, photoH, undefined, 'MEDIUM');
+      doc.addImage(jpeg, 'JPEG', photoX, photoY, photoW, photoH, undefined, 'MEDIUM');
       // Rounded border
       doc.setDrawColor(...PDF_GOLD);
       doc.setLineWidth(0.4);
@@ -279,7 +276,7 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.setFontSize(8);
     doc.text('Sin especificaciones.', specX, sy + 10);
     doc.setFontSize(7);
-    doc.text('Usa "Buscar información" en la app.', specX, sy + 18);
+    doc.text('Toca cada campo en la ficha para añadirlas.', specX, sy + 18);
   }
 
   cy = photoY + photoH + 8;
@@ -310,7 +307,7 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
 
   /* ── Wear status ── */
   if (w.wearStart) {
-    const d = Math.max(1, Math.ceil((Date.now() - w.wearStart) / 86400000));
+    const d = calendarDaysBetween(w.wearStart, Date.now()) + 1;
     doc.setFillColor(76, 175, 80, 0.1);
     doc.setFillColor(20, 40, 20);
     doc.roundedRect(14, cy, W - 28, 12, 2, 2, 'F');
@@ -331,8 +328,7 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
   }
 
   /* ── History ── */
-  const allIntervals = [...(w.history || [])];
-  if (w.wearStart) allIntervals.push({ start: w.wearStart, end: Date.now(), active: true });
+  const allIntervals = wearIntervals(w);
 
   if (allIntervals.length) {
     doc.setTextColor(...PDF_GOLD);
@@ -341,8 +337,9 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.text('HISTORIAL DE USO', 14, cy + 4, { charSpace: 1.5 });
     cy += 8;
 
-    const totalSess = allIntervals.length;
-    const totalD    = allIntervals.reduce((a, i) => a + Math.max(1, Math.ceil(((i.end || Date.now()) - i.start) / 86400000)), 0);
+    const wst       = wearStats(w);
+    const totalSess = wst.sessions;
+    const totalD    = wst.daysWorn;
 
     // Mini stats
     doc.setFillColor(...PDF_DARK2);
@@ -357,18 +354,18 @@ async function drawWatchPage(doc, w, pageNum, total, W, H) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.5);
     doc.text('SESIONES', 14 + (W - 28) / 4, cy + 7 + 5, { align: 'center', charSpace: 0.8 });
-    doc.text('DÍAS TOTALES', 14 + (W - 28) * 3 / 4 + 2, cy + 7 + 5, { align: 'center', charSpace: 0.8 });
+    doc.text('DÍAS DE USO', 14 + (W - 28) * 3 / 4 + 2, cy + 7 + 5, { align: 'center', charSpace: 0.8 });
     cy += 18;
 
     // Last 8 intervals (most recent first)
     const recent = [...allIntervals].reverse().slice(0, 8);
     recent.forEach((interval, idx) => {
       if (cy > H - 20) return;
-      const d2 = Math.max(1, Math.ceil(((interval.end || Date.now()) - interval.start) / 86400000));
+      const d2 = calendarDaysBetween(interval.start, interval.end || Date.now()) + 1;
       const bg = idx % 2 === 0 ? PDF_DARK2 : PDF_DARK3;
       doc.setFillColor(...bg);
       doc.rect(14, cy - 3, W - 28, 7, 'F');
-      doc.setTextColor(interval.active ? PDF_GREEN : PDF_MID);
+      doc.setTextColor(...(interval.active ? PDF_GREEN : PDF_MID));
       doc.setFontSize(7.5);
       doc.setFont('helvetica', interval.active ? 'bold' : 'normal');
       doc.text(formatDate(interval.start), 18, cy + 1.5);
@@ -456,10 +453,7 @@ function drawSummaryPage(doc, ws, W, H) {
   // Rows
   ws.forEach((w, i) => {
     if (cy > H - 30) return;
-    const allIntervals = [...(w.history || [])];
-    if (w.wearStart) allIntervals.push({ start: w.wearStart, end: Date.now() });
-    const totalD = allIntervals.reduce((a, iv) =>
-      a + Math.max(1, Math.ceil(((iv.end || Date.now()) - iv.start) / 86400000)), 0);
+    const totalD = wearStats(w).daysWorn;
 
     doc.setFillColor(...(i % 2 === 0 ? PDF_DARK2 : PDF_DARK3));
     doc.rect(14, cy - 3.5, W - 28, 9, 'F');
@@ -534,6 +528,28 @@ function drawNoPhoto(doc, x, y, w, h) {
 function roundedRect(doc, x, y, w, h, r, fillColor) {
   doc.setFillColor(...fillColor);
   doc.roundedRect(x, y, w, h, r, r, 'F');
+}
+
+/**
+ * jsPDF 2.5 cannot read WebP (the format photos are stored in) and stretches
+ * non-square images. Re-encode as a centre-cropped square JPEG.
+ */
+function photoToSquareJpeg(dataUrl, size = 600) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const side = Math.min(img.width, img.height);
+      const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+      const c = document.createElement('canvas');
+      c.width = c.height = Math.min(size, side);
+      const g = c.getContext('2d');
+      g.fillStyle = '#1A1A1A'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, sx, sy, side, side, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
 }
 
 // formatDate is defined in core.js (loaded after this file)
