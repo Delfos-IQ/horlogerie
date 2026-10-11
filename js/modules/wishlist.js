@@ -25,7 +25,7 @@ function renderWishlist() {
     Object.values(i.specs || {}).some(v => v)).length;
 
   if (banner) {
-    banner.style.display = exportable > 0 ? 'flex' : 'none';
+    banner.style.display = FEATURES.devTools && exportable > 0 ? 'flex' : 'none';
     const countEl = banner.querySelector('.wl-exportable-count');
     if (countEl) countEl.textContent = exportable;
   }
@@ -48,7 +48,7 @@ function renderWishlist() {
           </div>
           <div class="wl-card-actions">
             <button class="wl-btn-icon" data-action="edit" aria-label="Editar ${escHtml(item.brand)} ${escHtml(item.model)}" title="Editar"><i class="ti ti-edit" aria-hidden="true"></i></button>
-            <button class="wl-btn-icon" data-action="promote" aria-label="Añadir ${escHtml(item.brand)} ${escHtml(item.model)} a mi colección" title="Añadir a colección"><i class="ti ti-wrist-watch" aria-hidden="true"></i></button>
+            <button class="wl-btn-icon" data-action="promote" aria-label="Añadir ${escHtml(item.brand)} ${escHtml(item.model)} a mi colección" title="Añadir a colección"><i class="ti ti-device-watch" aria-hidden="true"></i></button>
             <button class="wl-btn-icon wl-btn-danger" data-action="delete" aria-label="Eliminar ${escHtml(item.brand)} ${escHtml(item.model)} de deseos" title="Eliminar"><i class="ti ti-trash" aria-hidden="true"></i></button>
           </div>
         </div>

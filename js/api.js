@@ -13,4 +13,5 @@ const CONFIG = {
  */
 const FEATURES = {
   urlImport: false,
+  devTools:  false,   // "Exportar a base de datos" in the wishlist (to curate watches_db.json)
 };

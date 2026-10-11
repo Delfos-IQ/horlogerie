@@ -26,17 +26,13 @@ function inferCategory(w) {
   for (const rule of CATEGORY_RULES) {
     if (rule.kw.some(k => text.includes(k))) return rule;
   }
-  return { cat: 'Otros', icon: 'ti-watch', color: 'var(--mid)' };
+  return { cat: 'Otros', icon: 'ti-device-watch', color: 'var(--mid)' };
 }
 
 function watchStats(w) {
-  const all = [...(w.history || [])];
-  if (w.wearStart) all.push({ start: w.wearStart, end: Date.now(), active: true });
-  const totalDays = all.reduce((a, i) => a + durationDays(i.start, i.end || Date.now()), 0);
-  const sessions  = all.length;
-  const lastEnd   = all.length ? Math.max(...all.map(i => i.end || Date.now())) : null;
-  const daysSinceLast = lastEnd ? Math.floor((Date.now() - lastEnd) / 86400000) : null;
-  return { totalDays, sessions, lastEnd, daysSinceLast, active: !!w.wearStart };
+  const st = wearStats(w);
+  return { totalDays: st.daysWorn, sessions: st.sessions, lastEnd: st.lastWorn,
+           daysSinceLast: st.daysSinceLast, active: st.active };
 }
 
 /* ── Mode toggle ── */
@@ -203,41 +199,50 @@ function renderHistoryBody() {
   const body = document.getElementById('history-body');
   if (!body) return;
   if (!w) { body.innerHTML = ''; return; }
-  const all = [...(w.history || [])];
-  if (w.wearStart) all.push({ start: w.wearStart, end: Date.now(), active: true });
+  const all = wearIntervals(w);
+  const addBtn = `<button class="chip-btn" id="hist-add" style="margin-bottom:14px;">
+      <i class="ti ti-calendar-plus" aria-hidden="true"></i> Apuntar un uso</button>`;
   if (!all.length) {
-    body.innerHTML = `<div class="history-empty"><i class="ti ti-calendar-x" style="font-size:36px;color:var(--mid);"></i><br><br>Aún no has usado este reloj</div>`;
+    body.innerHTML = addBtn + `<div class="history-empty"><i class="ti ti-calendar-x" style="font-size:36px;color:var(--mid);"></i><br><br>Aún no has usado este reloj</div>`;
+    body.querySelector('#hist-add').addEventListener('click', () => openWearSheet(w.id));
     return;
   }
-  const totalDays = all.reduce((a, i) => a + durationDays(i.start, i.end || Date.now()), 0);
+  const st = wearStats(w);
   const years = [...new Set(all.map(i => new Date(i.start).getFullYear()))].sort((a, b) => b - a);
-  if (!historySelectedYear) historySelectedYear = years[0];
+  if (!historySelectedYear || !years.includes(historySelectedYear)) historySelectedYear = years[0];
   const yearTabs = `<div class="year-tabs">${years.map(y =>
-    `<div class="year-tab${y === historySelectedYear ? ' active' : ''}" data-year="${y}">${y}</div>`
+    `<button class="year-tab${y === historySelectedYear ? ' active' : ''}" data-year="${y}">${y}</button>`
   ).join('')}</div>`;
-  const summary = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-    <div class="spec-card"><div class="spec-label">Total sesiones</div><div class="spec-value">${all.length}</div></div>
-    <div class="spec-card"><div class="spec-label">Total días</div><div class="spec-value">${totalDays}</div></div>
+  const summary = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+    <div class="spec-card"><div class="spec-label">Días de uso</div><div class="spec-value">${st.daysWorn}</div></div>
+    <div class="spec-card"><div class="spec-label">Sesiones</div><div class="spec-value">${st.sessions}</div></div>
+    <div class="spec-card"><div class="spec-label">90 días</div><div class="spec-value">${st.daysWorn90}</div></div>
   </div>`;
-  const filtered = all.filter(i => new Date(i.start).getFullYear() === historySelectedYear);
-  const byMonth  = {};
+  const filtered = all.filter(i => new Date(i.start).getFullYear() === historySelectedYear).reverse();
+  const byMonth  = new Map();
   filtered.forEach(i => {
     const m = new Date(i.start).toLocaleDateString('es-ES', { month: 'long' });
-    if (!byMonth[m]) byMonth[m] = [];
-    byMonth[m].push(i);
+    if (!byMonth.has(m)) byMonth.set(m, []);
+    byMonth.get(m).push(i);
   });
-  const monthsHTML = Object.entries(byMonth).map(([month, intervals]) => `
+  const monthsHTML = [...byMonth.entries()].map(([month, intervals]) => `
     <div class="month-group">
       <div class="month-label">${month}</div>
       ${intervals.map(i => {
-        const dur = i.active ? elapsedSince(i.start) : `${durationDays(i.start, i.end)} días`;
+        const days = calendarDaysBetween(i.start, i.end) + 1;
+        const dates = days === 1 ? formatDate(i.start) : `${formatDate(i.start)} → ${i.active ? 'ahora' : formatDate(i.end)}`;
+        const dur = i.active ? elapsedSince(i.start) : `${days} ${days === 1 ? 'día' : 'días'}`;
         return `<div class="interval-row">
-          <div class="interval-dates">${formatDate(i.start)} → ${i.active ? 'ahora' : formatDate(i.end)}</div>
+          <div class="interval-dates">${dates}</div>
           <div class="interval-duration">${dur}${i.active ? ' <span style="color:#4CAF50">●</span>' : ''}</div>
+          ${i.active ? '' : `<button class="interval-edit" data-idx="${i.idx}" aria-label="Editar o borrar este uso"><i class="ti ti-pencil" aria-hidden="true"></i></button>`}
         </div>`;
       }).join('')}
     </div>`).join('');
-  body.innerHTML = summary + yearTabs + monthsHTML;
+  body.innerHTML = addBtn + summary + yearTabs + monthsHTML;
+  body.querySelector('#hist-add').addEventListener('click', () => openWearSheet(w.id));
+  body.querySelectorAll('.interval-edit').forEach(b =>
+    b.addEventListener('click', () => openWearSheet(w.id, Number(b.dataset.idx))));
   body.querySelectorAll('.year-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       historySelectedYear = parseInt(tab.dataset.year);
@@ -245,4 +250,3 @@ function renderHistoryBody() {
     });
   });
 }
-

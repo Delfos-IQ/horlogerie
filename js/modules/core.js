@@ -106,9 +106,6 @@ function showToast(msg, dur = 2600) {
   t._timer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function durationDays(startTs, endTs) {
-  return Math.max(1, Math.ceil((endTs - startTs) / 86400000));
-}
 function daysSince(ts) {
   return Math.floor((Date.now() - ts) / 86400000);
 }
@@ -165,6 +162,8 @@ function escHtml(s) {
 
 /* ─── Navigation ─── */
 function showView(v) {
+  // Re-rendering the view that is already open: keep scroll and back stack
+  const sameView = !!document.getElementById('view-' + v)?.classList.contains('active');
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(x => {
     x.classList.remove('active');
@@ -182,14 +181,14 @@ function showView(v) {
   if (v === 'history')  renderHistory();
   if (v === 'settings') renderSettings();
   if (v === 'wishlist') renderWishlist();
-  document.getElementById('view-' + v).scrollTop = 0;
+  if (!sameView) document.getElementById('view-' + v).scrollTop = 0;
   updateFab(v);
 
   // Push a history state so Android back gesture navigates within the app
   // When on 'home', replace state (no back from home → exits app, correct behaviour)
   // When on any other view, push so back returns to previous view
-  if (v === 'home') {
-    history.replaceState({ view: 'home' }, '', '');
+  if (v === 'home' || sameView) {
+    history.replaceState({ view: v }, '', '');
   } else {
     history.pushState({ view: v }, '', '');
   }

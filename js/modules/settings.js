@@ -6,21 +6,20 @@ function renderSettings() {
   const autoCount = ws.filter(w=>w.type==='automatic').length;
   const qtzCount  = ws.filter(w=>w.type==='quartz').length;
   const manCount  = ws.filter(w=>w.type==='manual').length;
-  const totalSess = ws.reduce((a,w) => a + (w.history?.length||0) + (w.wearStart?1:0), 0);
-  let totalDays=0, mostUsedWatch=null, mostUsedDays=0;
-  const gapDays=[];
+  const now = Date.now();
+  let totalDays = 0, totalSess = 0, mostUsedWatch = null, mostUsedDays = 0, used30 = 0;
+  const gapDays = [];
+  const cut30 = dayKey(now - 29 * 86400000);
   ws.forEach(w => {
-    const all = [...(w.history||[])];
-    if (w.wearStart) all.push({start:w.wearStart,end:Date.now()});
-    const wDays = all.reduce((s,i)=>s+durationDays(i.start,i.end||Date.now()),0);
-    totalDays += wDays;
-    if (wDays > mostUsedDays) { mostUsedDays = wDays; mostUsedWatch = w; }
-    if (all.length > 1) {
-      const sorted = [...all].sort((a,b)=>a.start-b.start);
-      for (let i=1;i<sorted.length;i++) {
-        const gap = Math.round((sorted[i].start - (sorted[i-1].end||Date.now()))/86400000);
-        if (gap >= 0) gapDays.push(gap);
-      }
+    const st = wearStats(w, now);
+    totalDays += st.daysWorn;
+    totalSess += st.sessions;
+    if (st.daysWorn > mostUsedDays) { mostUsedDays = st.daysWorn; mostUsedWatch = w; }
+    const keys = [...wornDayKeys(w, now)].sort();
+    if (keys.length && keys[keys.length - 1] >= cut30) used30++;
+    for (let i = 1; i < keys.length; i++) {
+      const g = calendarDaysBetween(new Date(keys[i - 1] + 'T12:00').getTime(), new Date(keys[i] + 'T12:00').getTime());
+      if (g > 1) gapDays.push(g - 1);   // days in the box between two wears
     }
   });
   const avgGap = gapDays.length ? Math.round(gapDays.reduce((a,b)=>a+b,0)/gapDays.length) : null;
@@ -37,12 +36,15 @@ function renderSettings() {
   if (!advEl) return;
   const rows=[];
   if (mostUsedWatch) rows.push({l:'Reloj más usado',v:`${mostUsedWatch.brand} ${mostUsedWatch.model} · ${mostUsedDays}d`});
-  if (avgGap!==null) rows.push({l:'Media días entre usos',v:`${avgGap} días`});
+  if (avgGap!==null) rows.push({l:'Media de días en la caja entre usos',v:`${avgGap} días`});
   if (ws.length) rows.push({l:'Media días por reloj',v:`${Math.round(totalDays/ws.length)}d`});
+  if (ws.length) rows.push({l:'Rotación (últimos 30 días)',v:`${used30} de ${ws.length} relojes`});
+  const alerts = ws.flatMap(w => maintenanceAlerts(w, now).map(a => `${w.brand} ${w.model}`));
+  if (alerts.length) rows.push({l:'Mantenimiento pendiente',v:`${alerts.length}: ${alerts.slice(0,2).join(', ')}${alerts.length > 2 ? '…' : ''}`});
   advEl.innerHTML = rows.map(r=>`
     <div class="interval-row" style="margin-bottom:6px;">
       <div class="interval-dates" style="color:var(--mid);font-size:12px;">${r.l}</div>
-      <div class="interval-duration" style="color:var(--light);font-weight:500;">${r.v}</div>
+      <div class="interval-duration" style="color:var(--light);font-weight:500;">${escHtml(r.v)}</div>
     </div>`).join('');
 
   // Render session ID and cloud controls

@@ -24,7 +24,7 @@ function renderHome() {
 
   grid.innerHTML = ws.map(w => {
     const isActive = !!w.wearStart;
-    const locked   = !!(activeW && !isActive);
+    const locked   = false;   // any watch can be opened and switched to
     return `
       <div class="watch-card${locked ? ' locked' : ''}${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}" role="button" tabindex="0" aria-label="${escHtml(w.brand)} ${escHtml(w.model)}${isActive ? ' — actualmente puesto' : ''}">
         <div class="watch-img-wrap">
@@ -33,12 +33,13 @@ function renderHome() {
             : `<div class="watch-img-placeholder">${watchEmoji(w.type)}</div>`}
           <div class="watch-type-badge">${typeLabel(w.type)}</div>
           ${isActive ? `<div class="active-badge">Puesto</div>` : ''}
-          ${locked   ? `<div class="locked-badge"><i class="ti ti-eye"></i></div>` : ''}
+          ${w.favorite ? `<div class="fav-badge" aria-label="Favorito"><i class="ti ti-star" aria-hidden="true"></i></div>` : ''}
+          ${maintenanceAlerts(w).length ? `<div class="alert-badge" aria-label="Necesita mantenimiento"><i class="ti ti-tool" aria-hidden="true"></i></div>` : ''}
         </div>
         <div class="watch-info">
           <div class="watch-brand">${escHtml(w.brand)}</div>
           <div class="watch-model">${escHtml(w.model)}</div>
-          ${isActive ? `<div class="days-badge">${elapsedShort(w.wearStart)}</div>` : ''}
+          ${isActive ? `<div class="days-badge">${elapsedShort(w.wearStart)}</div>` : `<div class="last-worn">${shortLastWorn(w)}</div>`}
         </div>
       </div>`;
   }).join('');
@@ -53,54 +54,71 @@ function renderHome() {
   });
 }
 
-/* ─── Recommendation banner ─── */
+/* ─── Recommendation banner ───
+   Rotation, not urgency: suggest the watch that has gone longest without
+   wrist time, among those "en rotación". Favourites win ties.
+   No alarmist claims: a mechanical watch resting a few weeks is fine. */
 function renderRecommendation(ws, activeW) {
   const banner = document.getElementById('recommendation-banner');
   if (!banner) return;
   if (activeW) { banner.innerHTML = ''; return; }
 
-  const ranked = rankWatchesByNeed(ws);
+  // Watches already worn today are not "due": suggest from the rest
+  const ranked = rankWatchesForRotation(ws).filter(r => r.stats.daysSinceLast !== 0);
   if (!ranked.length) { banner.innerHTML = ''; return; }
 
-  const { watch: w, daysSinceLastWorn, msSince } = ranked[0];
-  const color = daysSinceLastWorn === null || daysSinceLastWorn > 25 ? '#e57373'
-    : daysSinceLastWorn > 14 ? '#D4AF6A' : '#4CAF50';
-  const text = formatLastWorn(daysSinceLastWorn, msSince);
-
+  const [top, ...rest] = ranked;
+  const w = top.watch;
+  const others = rest.slice(0, 2).map(r => `${escHtml(r.watch.brand)} ${escHtml(r.watch.model)}`);
   banner.innerHTML = `
-    <div class="recommendation-card" data-rec-id="${escHtml(w.id)}">
-      <div class="rec-icon"><i class="ti ti-alarm" style="color:${color};font-size:20px;"></i></div>
+    <div class="recommendation-card" role="button" tabindex="0" aria-label="Recomendación: ${escHtml(w.brand)} ${escHtml(w.model)}">
+      <div class="rec-icon"><i class="ti ti-refresh" style="color:var(--gold-light);font-size:20px;" aria-hidden="true"></i></div>
       <div class="rec-body">
-        <div class="rec-label">Recomendación</div>
-        <div class="rec-watch">${escHtml(w.brand)} ${escHtml(w.model)}</div>
-        <div class="rec-reason" style="color:${color};">${text}</div>
+        <div class="rec-label">Toca ponerse</div>
+        <div class="rec-watch">${escHtml(w.brand)} ${escHtml(w.model)}${w.favorite ? ' <i class="ti ti-star" aria-label="favorito"></i>' : ''}</div>
+        <div class="rec-reason">${formatLastWorn(top.stats)}</div>
+        ${others.length ? `<div class="rec-others">Después: ${others.join(' · ')}</div>` : ''}
       </div>
-      <i class="ti ti-chevron-right" style="color:var(--mid);font-size:18px;flex-shrink:0;"></i>
+      <i class="ti ti-chevron-right" style="color:var(--mid);font-size:18px;flex-shrink:0;" aria-hidden="true"></i>
     </div>`;
-  banner.querySelector('.recommendation-card').addEventListener('click', () => openDetail(w.id));
+  const card = banner.querySelector('.recommendation-card');
+  card.addEventListener('click', () => openDetail(w.id));
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(w.id); } });
 }
 
-function rankWatchesByNeed(ws) {
-  return ws.filter(w => !w.wearStart).map(w => {
-    const all = [...(w.history || [])];
-    const lastEnd = all.length ? Math.max(...all.map(i => i.end || i.start)) : null;
-    const msSince = lastEnd ? Date.now() - lastEnd : null;
-    const daysSinceLastWorn = msSince ? Math.floor(msSince / 86400000) : null;
-    const base = daysSinceLastWorn === null ? 9999 : daysSinceLastWorn;
-    const score = (w.type === 'automatic' || w.type === 'manual') ? base * 1.3 : base;
-    return { watch: w, daysSinceLastWorn, msSince, score };
-  }).sort((a, b) => b.score - a.score);
+/**
+ * Order: never worn first, then most days since last worn, then fewer days
+ * worn in the last 90 days, then favourites. Watches out of rotation and the
+ * one on the wrist are excluded.
+ */
+function rankWatchesForRotation(ws, now = Date.now()) {
+  return ws
+    .filter(w => !w.wearStart && w.rotation !== false)
+    .map(w => ({ watch: w, stats: wearStats(w, now) }))
+    .sort((a, b) => {
+      const da = a.stats.daysSinceLast === null ? Infinity : a.stats.daysSinceLast;
+      const db = b.stats.daysSinceLast === null ? Infinity : b.stats.daysSinceLast;
+      if (da !== db) return db - da;
+      if (a.stats.daysWorn90 !== b.stats.daysWorn90) return a.stats.daysWorn90 - b.stats.daysWorn90;
+      return (b.watch.favorite ? 1 : 0) - (a.watch.favorite ? 1 : 0);
+    });
+}
+window.rankWatchesForRotation = rankWatchesForRotation;
+
+function formatLastWorn(st) {
+  if (st.lastWorn === null) return 'Todavía no lo has llevado';
+  if (st.daysSinceLast === 0) return 'Lo llevaste hoy';
+  if (st.daysSinceLast === 1) return 'Lo llevaste ayer';
+  return `${st.daysSinceLast} días sin salir de la caja`;
 }
 
-function formatLastWorn(daysSince, msSince) {
-  if (msSince === null) return 'Nunca usado — ¡el aceite se seca!';
-  if (daysSince === 0) {
-    const h = Math.floor(msSince / 3600000);
-    return h < 1 ? 'Hace menos de 1h' : `Hace ${h}h`;
-  }
-  if (daysSince > 25) return `Hace ${daysSince} días — necesita movimiento`;
-  if (daysSince > 14) return `Hace ${daysSince} días — ponértelo pronto`;
-  return `Hace ${daysSince} días — al día`;
+function shortLastWorn(w) {
+  const st = wearStats(w);
+  if (w.rotation === false) return 'Fuera de rotación';
+  if (st.lastWorn === null) return 'Sin estrenar';
+  if (st.daysSinceLast === 0) return 'Hoy';
+  if (st.daysSinceLast === 1) return 'Ayer';
+  return `Hace ${st.daysSinceLast} días`;
 }
 
 /* ─── DETAIL ─── */
@@ -129,6 +147,7 @@ function openDetail(id) {
   }
 
   renderDetailActions(w);
+  renderUsage(w);
   renderSpecs(w);
   renderPrice(w);
 
@@ -186,26 +205,66 @@ function stopActiveTimer() {
 function renderDetailActions(w) {
   const div = document.getElementById('d-actions');
   const activeW = getActiveWatch();
+  const todayDone = wornDayKeys(w).has(dayKey(Date.now()));
+  let main;
   if (w.wearStart) {
-    div.innerHTML = `<button class="action-btn btn-stop" id="btn-stop-wear"><i class="ti ti-player-stop" aria-hidden="true"></i> Quitarme este reloj</button>`;
-    document.getElementById('btn-stop-wear').addEventListener('click', () => handleStopWearing(w.id));
-  } else if (!activeW) {
-    div.innerHTML = `<button class="action-btn btn-wear" id="btn-start-wear"><i class="ti ti-wrist-watch" aria-hidden="true"></i> Ponerme este reloj</button>`;
-    document.getElementById('btn-start-wear').addEventListener('click', () => handleStartWearing(w.id));
+    main = `<button class="action-btn btn-stop" data-act="stop"><i class="ti ti-player-stop" aria-hidden="true"></i> Quitarme este reloj</button>`;
+  } else if (activeW) {
+    main = `<button class="action-btn btn-wear" data-act="switch"><i class="ti ti-switch-horizontal" aria-hidden="true"></i> Cambiar a este reloj</button>
+            <div class="action-hint">Ahora llevas el ${escHtml(activeW.brand)} ${escHtml(activeW.model)}: se cerrará su sesión.</div>`;
   } else {
-    div.innerHTML = `
-      <div class="readonly-banner">
-        <i class="ti ti-eye" style="color:var(--gold-light);font-size:16px;" aria-hidden="true"></i>
-        <div>
-          <div style="font-size:13px;color:var(--light);font-weight:500;">Modo consulta</div>
-          <div style="font-size:11px;color:var(--mid);margin-top:2px;">
-            Llevas el <strong>${escHtml(activeW.brand)} ${escHtml(activeW.model)}</strong>.
-            Quítatelo para poder ponerte este.
-          </div>
-        </div>
-      </div>`;
+    main = `<button class="action-btn btn-wear" data-act="start"><i class="ti ti-player-play" aria-hidden="true"></i> Ponerme este reloj</button>`;
   }
+  div.innerHTML = `
+    ${main}
+    <div class="wear-quick">
+      ${w.wearStart ? '' : `<button class="chip-btn" data-act="today" ${todayDone ? 'disabled' : ''}>
+        <i class="ti ti-check" aria-hidden="true"></i> ${todayDone ? 'Hoy ya cuenta' : 'Lo llevé hoy'}</button>`}
+      <button class="chip-btn" data-act="past"><i class="ti ti-calendar-plus" aria-hidden="true"></i> Otro día</button>
+      <button class="chip-btn${w.favorite ? ' on' : ''}" data-act="fav" aria-pressed="${!!w.favorite}">
+        <i class="ti ti-star" aria-hidden="true"></i> Favorito</button>
+      <button class="chip-btn${w.rotation === false ? ' on' : ''}" data-act="rotation" aria-pressed="${w.rotation === false}">
+        <i class="ti ti-ban" aria-hidden="true"></i> Fuera de rotación</button>
+    </div>`;
+  div.querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', () => {
+    const act = btn.dataset.act;
+    if (act === 'stop')   return handleStopWearing(w.id);
+    if (act === 'start')  return handleStartWearing(w.id);
+    if (act === 'switch') return handleSwitchWearing(w.id);
+    if (act === 'today') {
+      const r = markWornToday(w.id);
+      showToast(r === 'already' ? 'Hoy ya estaba apuntado' : 'Apuntado: lo llevaste hoy');
+      return openDetail(w.id);
+    }
+    if (act === 'past') return openWearSheet(w.id);
+    if (act === 'fav') { setWatchFlag(w.id, 'favorite', !w.favorite); return openDetail(w.id); }
+    if (act === 'rotation') {
+      const out = w.rotation !== false;
+      setWatchFlag(w.id, 'rotation', !out);
+      showToast(out ? 'Fuera de rotación: no se te recomendará' : 'De vuelta en la rotación');
+      return openDetail(w.id);
+    }
+  }));
+}
 
+/* Usage box: days worn, last time, cost per wear, maintenance alerts */
+function renderUsage(w) {
+  const el = document.getElementById('d-usage');
+  if (!el) return;
+  const st = wearStats(w);
+  const alerts = maintenanceAlerts(w);
+  const eur = v => v.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: v < 10 ? 2 : 0 });
+  const cells = [
+    { l: 'Días de uso', v: st.daysWorn },
+    { l: 'Últimos 90 días', v: st.daysWorn90 },
+    { l: 'Última vez', v: st.lastWorn === null ? 'Nunca' : st.daysSinceLast === 0 ? 'Hoy' : st.daysSinceLast === 1 ? 'Ayer' : `Hace ${st.daysSinceLast} d` },
+    { l: 'Coste por uso', v: st.costPerWear !== null ? eur(st.costPerWear) : (w.purchasePrice ? '—' : 'Añade el precio') },
+  ];
+  el.innerHTML = `
+    <div class="usage-grid">${cells.map(c => `
+      <div class="usage-cell"><div class="usage-val">${escHtml(String(c.v))}</div><div class="usage-label">${c.l}</div></div>`).join('')}
+    </div>
+    ${alerts.map(a => `<div class="maint-alert"><i class="ti ti-tool" aria-hidden="true"></i><span>${escHtml(a.text)}</span></div>`).join('')}`;
 }
 
 function renderSpecs(w) {
@@ -256,20 +315,27 @@ function editSpecInline(key, w) {
   input.placeholder = 'Añadir valor...';
   valEl.replaceWith(input);
   input.focus(); input.select();
+  let done = false;
   function commit() {
+    if (done) return;          // Enter and the following blur both call commit
+    done = true;
     const newVal = input.value.trim();
-    const newSpecs = { ...(getWatch(w.id)?.specs || {}), [key]: newVal };
-    updateWatch(w.id, { specs: newSpecs });
+    const prevVal = (getWatch(w.id)?.specs || {})[key] || '';
+    if (newVal !== prevVal) {
+      const newSpecs = { ...(getWatch(w.id)?.specs || {}), [key]: newVal };
+      updateWatch(w.id, { specs: newSpecs });
+    }
     const newEl = document.createElement('div');
     newEl.className = 'spec-value'; newEl.id = 'spec-val-' + key;
     newEl.textContent = newVal || '—';
     input.replaceWith(newEl);
-    if (newVal) showToast('Guardado');
+    if (newVal && newVal !== prevVal) showToast('Guardado');
   }
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); commit(); }
     if (e.key === 'Escape') {
+      done = true;
       const rv = document.createElement('div');
       rv.className = 'spec-value'; rv.id = 'spec-val-' + key;
       rv.textContent = current || '—'; input.replaceWith(rv);
@@ -330,7 +396,7 @@ function renderPrice(w) {
   const isReal = w._source === 'local_db' || w._source?.includes('watchbase') || w._source?.includes('ebay');
   badge.style.cssText = `font-size:11px;color:${isReal ? '#4CAF50' : 'var(--gold)'};display:flex;align-items:center;gap:5px;padding:4px 0 10px;`;
   badge.innerHTML = isReal
-    ? `<i class="ti ti-database-check"></i> ${w._source === 'local_db' ? 'Base de datos local' : 'Datos verificados'}`
+    ? `<i class="ti ti-database"></i> ${w._source === 'local_db' ? 'Base de datos local' : 'Datos verificados'}`
     : `<i class="ti ti-alert-triangle"></i> ${w._warning || 'Revisa los datos'}`;
   document.getElementById('d-specs')?.insertAdjacentElement('afterend', badge);
 }
@@ -341,7 +407,91 @@ function handleStartWearing(id) {
   if (startWearing(id)) { showToast(`¡Disfruta del ${w.brand} ${w.model}!`); openDetail(id); }
 }
 function handleStopWearing(id) {
-  if (stopWearing(id)) { showToast('Intervalo registrado'); stopActiveTimer(); showView('home'); }
+  if (stopWearing(id)) { showToast('Sesión guardada en el historial'); stopActiveTimer(); showView('home'); }
+}
+function handleSwitchWearing(id) {
+  const prev = getActiveWatch();
+  const w = getWatch(id);
+  if (switchToWatch(id)) {
+    showToast(`Guardado el ${prev ? prev.brand : ''} · ahora llevas el ${w.brand} ${w.model}`);
+    openDetail(id);
+  }
+}
+
+/* ─── Date sheet: log a past wear or edit/delete a history entry ─── */
+function toDateInput(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function fromDateInput(v) {
+  const [y, m, d] = (v || '').split('-').map(Number);
+  return y ? new Date(y, m - 1, d, 12, 0, 0).getTime() : null;
+}
+
+/**
+ * openWearSheet(watchId)              → add a past wear (one day or a range)
+ * openWearSheet(watchId, historyIdx)  → edit or delete that entry
+ */
+function openWearSheet(watchId, idx = null) {
+  const w = getWatch(watchId);
+  if (!w) return;
+  const entry = idx !== null ? w.history?.[idx] : null;
+  const today = toDateInput(Date.now());
+  const from  = entry ? toDateInput(entry.start) : today;
+  const to    = entry ? toDateInput(entry.end)   : today;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;z-index:400;';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.innerHTML = `
+    <div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
+      <div class="modal-handle"></div>
+      <div class="modal-title">${entry ? 'Editar uso' : 'Apuntar un uso'}</div>
+      <div style="font-size:13px;color:var(--mid);margin-bottom:14px;line-height:1.6;">
+        ${escHtml(w.brand)} ${escHtml(w.model)}. Cuenta cada día del rango como un día de uso.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-field"><label class="form-label" for="ws-from">Desde</label>
+          <input class="form-input" type="date" id="ws-from" value="${from}" max="${today}"></div>
+        <div class="form-field"><label class="form-label" for="ws-to">Hasta</label>
+          <input class="form-input" type="date" id="ws-to" value="${to}" max="${today}"></div>
+      </div>
+      <div class="modal-actions">
+        ${entry ? '<button class="modal-btn" id="ws-del" style="background:rgba(220,80,80,0.85);color:#fff;">Borrar</button>' : ''}
+        <button class="modal-btn modal-btn-cancel" id="ws-cancel">Cancelar</button>
+        <button class="modal-btn modal-btn-save" id="ws-save">Guardar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  overlay.querySelector('#ws-cancel').addEventListener('click', close);
+  overlay.querySelector('#ws-save').addEventListener('click', () => {
+    const a = fromDateInput(overlay.querySelector('#ws-from').value);
+    const b = fromDateInput(overlay.querySelector('#ws-to').value) ?? a;
+    if (!a) { showToast('Elige una fecha'); return; }
+    const ok = entry ? updateHistoryEntry(watchId, idx, a, b) : addWearDays(watchId, a, b);
+    if (!ok) { showToast('No se pueden apuntar días futuros'); return; }
+    close();
+    showToast(entry ? 'Uso actualizado' : 'Uso apuntado');
+    refreshAfterWearChange(watchId);
+  });
+  overlay.querySelector('#ws-del')?.addEventListener('click', () => {
+    deleteHistoryEntry(watchId, idx);
+    close();
+    showToast('Uso borrado');
+    refreshAfterWearChange(watchId);
+  });
+  overlay.querySelector('#ws-from').focus();
+}
+window.openWearSheet = openWearSheet;
+
+function refreshAfterWearChange(watchId) {
+  const active = document.querySelector('.view.active')?.id;
+  if (active === 'view-detail' && currentWatchId === watchId) openDetail(watchId);
+  else if (active === 'view-history') renderHistory();
+  else renderHome();
 }
 
 /* ─── Delete (custom confirm) ─── */

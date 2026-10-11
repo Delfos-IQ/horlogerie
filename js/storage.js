@@ -232,6 +232,169 @@ function stopWearing(id) {
   return true;
 }
 
+/* ═══════════════════════════════════════
+   WEAR LOG — calendar-day semantics
+   A watch "was worn on a day" if any interval touches that local calendar
+   day. Two hours count as one day; two sessions on the same day count once.
+═══════════════════════════════════════ */
+const DAY_MS = 86400000;
+
+function dayKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function startOfDay(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
+/** Whole calendar days between two timestamps (0 = same day) */
+function calendarDaysBetween(a, b) {
+  return Math.round((startOfDay(b) - startOfDay(a)) / DAY_MS);
+}
+
+/** All intervals of a watch, including the live one */
+function wearIntervals(w, now = Date.now()) {
+  const all = (w.history || []).map((h, i) => ({ start: h.start, end: h.end || h.start, idx: i }));
+  if (w.wearStart) all.push({ start: w.wearStart, end: now, active: true, idx: -1 });
+  return all.sort((a, b) => a.start - b.start);
+}
+
+/** Set of local day keys on which the watch was worn */
+function wornDayKeys(w, now = Date.now()) {
+  const keys = new Set();
+  for (const iv of wearIntervals(w, now)) {
+    let t = startOfDay(iv.start);
+    const last = startOfDay(iv.end);
+    let guard = 0;
+    while (t <= last && guard++ < 3700) {   // 10 years cap
+      keys.add(dayKey(t));
+      const d = new Date(t); d.setDate(d.getDate() + 1); t = d.getTime();
+    }
+  }
+  return keys;
+}
+
+/**
+ * Usage summary for one watch.
+ *   daysWorn          distinct calendar days worn (all time)
+ *   daysWorn90        distinct days in the last 90 days
+ *   sessions          number of intervals
+ *   lastWorn          timestamp of the last time it was on the wrist (null = never)
+ *   daysSinceLast     calendar days since lastWorn (0 = today)
+ *   costPerWear       purchasePrice / daysWorn (null if unknown)
+ */
+function wearStats(w, now = Date.now()) {
+  const ivs  = wearIntervals(w, now);
+  const keys = wornDayKeys(w, now);
+  const cutoff = dayKey(now - 89 * DAY_MS);
+  let worn90 = 0;
+  for (const k of keys) if (k >= cutoff) worn90++;
+  const lastWorn = ivs.length ? Math.max(...ivs.map(i => i.active ? now : i.end)) : null;
+  const price = typeof w.purchasePrice === 'number' && w.purchasePrice > 0 ? w.purchasePrice : null;
+  return {
+    daysWorn: keys.size,
+    daysWorn90: worn90,
+    sessions: ivs.length,
+    lastWorn,
+    daysSinceLast: lastWorn === null ? null : (w.wearStart ? 0 : calendarDaysBetween(lastWorn, now)),
+    active: !!w.wearStart,
+    costPerWear: price && keys.size ? price / keys.size : null,
+  };
+}
+
+/** Maintenance alerts: quartz battery (> 24 months) and service (> 5 years) */
+const BATTERY_MONTHS = 24;
+const SERVICE_YEARS  = 5;
+function maintenanceAlerts(w, now = Date.now()) {
+  const out = [];
+  const months = ts => Math.floor((now - ts) / (30.44 * DAY_MS));
+  if (w.type === 'quartz' && typeof w.batteryChanged === 'number') {
+    const m = months(w.batteryChanged);
+    if (m >= BATTERY_MONTHS) out.push({ kind: 'battery', months: m,
+      text: `Pila cambiada hace ${m} meses: revísala antes de que se agote y pierda líquido` });
+  }
+  if (w.type !== 'quartz') {
+    const ref = typeof w.lastService === 'number' ? w.lastService
+              : typeof w.purchaseDate === 'number' ? w.purchaseDate : null;
+    if (ref !== null) {
+      const y = (now - ref) / (365.25 * DAY_MS);
+      if (y >= SERVICE_YEARS) out.push({ kind: 'service', years: Math.floor(y),
+        text: `${typeof w.lastService === 'number' ? 'Última revisión' : 'Comprado'} hace ${Math.floor(y)} años: toca revisión (cada ${SERVICE_YEARS} años aprox.)` });
+    }
+  }
+  return out;
+}
+
+/* ── Wear actions ── */
+
+/** Mark a day (or a range of days) as worn, without live tracking */
+function addWearDays(id, fromTs, toTs = fromTs) {
+  const w = getWatch(id);
+  if (!w) return false;
+  const now = Date.now();
+  let start = startOfDay(Math.min(fromTs, toTs)) + 9 * 3600000;          // 09:00
+  let end   = startOfDay(Math.max(fromTs, toTs)) + 21 * 3600000;         // 21:00
+  if (start > now) return false;                                          // no future days
+  if (end > now) end = Math.max(start, now);
+  if (start > end) start = end;
+  if (!w.history) w.history = [];
+  w.history.push({ start, end });
+  w.history.sort((a, b) => a.start - b.start);
+  w.updatedAt = now;
+  save();
+  return true;
+}
+
+/** "Lo llevé hoy" — idempotent: does nothing if it already counts for today */
+function markWornToday(id) {
+  const w = getWatch(id);
+  if (!w) return false;
+  if (wornDayKeys(w).has(dayKey(Date.now()))) return 'already';
+  return addWearDays(id, Date.now());
+}
+
+function updateHistoryEntry(id, idx, fromTs, toTs) {
+  const w = getWatch(id);
+  if (!w || !w.history?.[idx]) return false;
+  const now = Date.now();
+  const start = startOfDay(Math.min(fromTs, toTs)) + 9 * 3600000;
+  let end     = startOfDay(Math.max(fromTs, toTs)) + 21 * 3600000;
+  if (start > now) return false;
+  if (end > now) end = Math.max(start, now);
+  w.history[idx] = { start, end };
+  w.history.sort((a, b) => a.start - b.start);
+  w.updatedAt = now;
+  save();
+  return true;
+}
+
+function deleteHistoryEntry(id, idx) {
+  const w = getWatch(id);
+  if (!w || !w.history?.[idx]) return false;
+  w.history.splice(idx, 1);
+  w.updatedAt = Date.now();
+  save();
+  return true;
+}
+
+/** Take off whatever is on the wrist and put this one on, in one step */
+function switchToWatch(id) {
+  const active = getActiveWatch();
+  if (active && active.id === id) return false;
+  if (active) stopWearing(active.id);
+  return startWearing(id);
+}
+
+function setWatchFlag(id, key, value) {
+  if (!['favorite', 'rotation'].includes(key)) return false;
+  const w = getWatch(id);
+  if (!w) return false;
+  w[key] = !!value;
+  w.updatedAt = Date.now();
+  save();
+  return true;
+}
+
+Object.assign(window, { dayKey, startOfDay, calendarDaysBetween, wearIntervals, wornDayKeys, wearStats,
+  maintenanceAlerts, addWearDays, markWornToday, updateHistoryEntry, deleteHistoryEntry, switchToWatch, setWatchFlag });
+
 /* ─── Cloud sync helpers (used by sync.js) ─── */
 
 // Returns watches with photos embedded (for KV push)
@@ -399,6 +562,11 @@ function sanitizeWatch(raw) {
     created:   _num(raw.created) || Date.now(),
   };
   if (_num(raw.updatedAt)) w.updatedAt = raw.updatedAt;
+  if (typeof raw.favorite === 'boolean') w.favorite = raw.favorite;
+  if (typeof raw.rotation === 'boolean') w.rotation = raw.rotation;
+  for (const k of ['purchasePrice', 'purchaseDate', 'lastService', 'batteryChanged']) {
+    if (_num(raw[k])) w[k] = raw[k];
+  }
   if (raw._source)  w._source  = _str(raw._source, 80);
   if (raw._warning) w._warning = _str(raw._warning, 200);
   if (isSafePhoto(raw.photo)) w.photo = raw.photo;
