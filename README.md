@@ -103,10 +103,12 @@ Secretos (Cloudflare → Workers → horlogerie → Settings → Variables and S
 
 | Variable | Uso | Obligatoria |
 |---|---|---|
-| `GROQ_API_KEY` | `/import-url` (hoy desactivada en la app) | No: desde la v11 la sincronización funciona sin ella |
+| `GROQ_API_KEY` | `/import-url` («Rellenar desde un enlace») | Solo para esa función; la sincronización funciona sin ella |
 | `EBAY_APP_ID`, `EBAY_CERT_ID` | Precios de eBay | No |
 
-Versión actual: **v11**. La app detecta la versión con `/health`: con v11 envía el ID de sesión en la cabecera `X-Horlogerie-User` y sincroniza la lista de deseos; con v10 sigue funcionando (ID por query, lista de deseos solo en copias JSON).
+Versión actual: **v12** (`/import-url` reconstruido: descarga la página, extrae la ficha y Groq `openai/gpt-oss-20b` la estructura; cada valor se contrasta con el texto de la página). Variables opcionales: `GROQ_MODEL`, `IMPORT_DAILY_CAP` (300 por defecto).
+
+Desde la v11: La app detecta la versión con `/health`: con v11 envía el ID de sesión en la cabecera `X-Horlogerie-User` y sincroniza la lista de deseos; con v10 sigue funcionando (ID por query, lista de deseos solo en copias JSON).
 
 Enlace KV: variable `HORLOGERIE_KV` → namespace `HORLOGERIE`. El `id` del namespace en `wrangler.toml` sigue siendo un marcador; cópialo desde el panel de Cloudflare antes de desplegar con Wrangler.
 

@@ -30,4 +30,8 @@ Ubicación, información personal (nombre, email, dirección…), información f
 - **Anuncios:** No contiene anuncios.
 - **Acceso a la app:** Toda la funcionalidad está disponible sin restricciones.
 - **Público objetivo:** 18 años o más. La app no está diseñada para menores.
-- **Funciones con IA generativa:** No (la importación desde URL está desactivada en esta versión).
+- **Funciones con IA:** «Rellenar desde un enlace» envía el enlace (o el texto pegado) a Groq, un proveedor de IA, para extraer especificaciones. No genera contenido para otros usuarios ni conversaciones: es extracción de datos. Si Play pregunta por funciones de IA generativa, responde que la app usa IA para extraer datos de páginas que el usuario indica, a petición suya.
+
+## Rellenar desde un enlace (desde la v2.5)
+
+Lo que se envía es una URL pública o un texto que pega el usuario. Decláralo en **Actividad en la app → Otro contenido generado por el usuario** (ya marcado), añadiendo la finalidad «Funciones de la app». Es **opcional** (solo si el usuario usa la función) y **no compartido**: el Worker y Groq actúan como proveedores de servicio. Política de privacidad: sección «Rellenar desde un enlace».
