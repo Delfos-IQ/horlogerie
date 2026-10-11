@@ -1,6 +1,7 @@
 import { addWatch, addWishlistItem, deleteWishlistItem, getWishlist, promoteWishlistToCollection, saveWishlist, updateWatch } from '../storage.js';
 import { escHtml, showToast } from './core.js';
-import { renderHome, showConfirm } from './home-detail.js';
+import { renderHome } from './home-detail.js';
+import { showConfirm } from './sheet.js';
 import { importEnabled } from './url-import.js';
 
 export const PRIORITY_CFG = {

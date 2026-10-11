@@ -192,6 +192,18 @@ async def main():
             check(f"{page_name} carga y tiene su contenido", needle in await pg.content())
             await pg.close()
 
+        # ── Hojas: foco dentro, Escape cierra y el foco vuelve ──
+        await a.evaluate("showView('settings')"); await a.wait_for_timeout(200)
+        await a.focus("#btn-delete-cloud")
+        await a.keyboard.press("Enter"); await a.wait_for_timeout(200)
+        inside = await a.evaluate("!!document.activeElement.closest('.sheet')")
+        await a.keyboard.press("Tab"); await a.keyboard.press("Tab"); await a.keyboard.press("Tab")
+        still = await a.evaluate("!!document.activeElement.closest('.sheet')")
+        await a.keyboard.press("Escape"); await a.wait_for_timeout(150)
+        back = await a.evaluate("document.activeElement.id")
+        check("hojas: el foco entra, el tabulador no se escapa, Escape cierra y el foco vuelve al botón",
+              inside and still and await a.locator(".sheet").count() == 0 and back == 'btn-delete-cloud', f"{inside} {still} {back}")
+
         # ── El lector de páginas no responde a llamadas de fuera de la app ──
         req = urllib.request.Request(f"http://localhost:{PORT}/import-url", data=b'{"url":"https://example.com"}', method='POST',
                                      headers={'Content-Type': 'application/json', 'X-Test-Origin': 'none'})

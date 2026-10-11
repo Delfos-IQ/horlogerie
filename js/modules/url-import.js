@@ -14,6 +14,7 @@
 import { getWatch, updateWatch } from '../storage.js';
 import { CONFIG, FEATURES } from '../api.js';
 import { workerCaps } from '../sync.js';
+import { openSheet } from './sheet.js';
 import { escHtml, showToast, ui } from './core.js';
 import { openDetail } from './home-detail.js';
 import { updateMaintVisibility } from './modals.js';
@@ -65,15 +66,7 @@ export async function openImportSheet(opts) {
 }
 
 export function buildImportSheet({ title = 'Rellenar desde un enlace', current = {}, onApply, canRead = true }) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'display:flex;z-index:450;';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', title);
-  overlay.innerHTML = `
-    <div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
-      <div class="modal-handle"></div>
+  const sh = openSheet({ label: title, html: `
       <div class="modal-title">${escHtml(title)}</div>
       <div class="imp-step" data-step="input">
         <div class="form-field">
@@ -101,16 +94,13 @@ export function buildImportSheet({ title = 'Rellenar desde un enlace', current =
           <button class="modal-btn modal-btn-cancel" data-act="back">Atrás</button>
           <button class="modal-btn modal-btn-save" data-act="apply">Aplicar</button>
         </div>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
+      </div>` });
 
-  const $ = sel => overlay.querySelector(sel);
+  const { $, close } = sh;
+  const overlay = sh.sheet;
   const status = (msg, kind = '') => { const el = $('#imp-status'); el.textContent = msg; el.dataset.kind = kind; };
-  const close = () => overlay.remove();
   let found = null, sourceUrl = '';
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   $('[data-act="cancel"]').addEventListener('click', close);
   $('[data-act="back"]').addEventListener('click', () => {
     $('[data-step="review"]').hidden = true; $('[data-step="input"]').hidden = false;

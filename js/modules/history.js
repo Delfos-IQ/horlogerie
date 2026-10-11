@@ -2,7 +2,8 @@
 
 import { addWearDays, calendarDaysBetween, dayKey, getWatch, getWatches, isSafePhoto, removeWearDay, startOfDay, wearIntervals, wearStats, wornDayKeys } from '../storage.js';
 import { elapsedSince, escHtml, formatDate, navPush, navReplace, showToast, ui } from './core.js';
-import { openDetail, openWearSheet, showConfirm } from './home-detail.js';
+import { openDetail, openWearSheet } from './home-detail.js';
+import { openSheet, showConfirm } from './sheet.js';
 
 export let _historyMode   = 'calendar'; // 'calendar' | 'ranking' | 'detail'
 export let _calMonth      = null;       // Date set to the 1st of the month shown
@@ -378,24 +379,13 @@ export function openDaySheet(key) {
   const dt = new Date(key + 'T12:00');
   const raw = dt.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
   const title = raw.charAt(0).toUpperCase() + raw.slice(1);
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'display:flex;z-index:400;';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', title);
-  document.body.appendChild(overlay);
-  const close = () => { overlay.remove(); renderCalendar(); };
-  overlay._close = close;
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  const sh = openSheet({ label: title, html: '', onClose: renderCalendar });
 
   function paint() {
     const worn = (wornByDay().get(key) || []);
     const wornIds = new Set(worn.map(w => w.id));
     const others = getWatches().filter(w => !wornIds.has(w.id));
-    overlay.innerHTML = `
-      <div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
-        <div class="modal-handle"></div>
+    sh.setContent(`
         <div class="modal-title">${escHtml(title)}</div>
         <div class="day-section">${worn.length ? 'Llevaste' : 'Ningún reloj apuntado este día'}</div>
         ${worn.map(w => `
@@ -408,14 +398,12 @@ export function openDaySheet(key) {
         ${others.length ? `<div class="day-section">Añadir un reloj a este día</div>
         <div class="day-add">${others.map(w => `
           <button class="day-pick" data-add="${escHtml(w.id)}">${watchChip(w, 28)}<span>${escHtml(w.brand)} ${escHtml(w.model)}</span></button>`).join('')}</div>` : ''}
-        <button class="modal-btn modal-btn-cancel" style="width:100%;margin-top:14px;" data-close>Hecho</button>
-      </div>`;
-    overlay.querySelector('[data-close]').addEventListener('click', close);
-    overlay.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+        <button class="modal-btn modal-btn-cancel sheet-done" data-close>Hecho</button>`);
+    sh.$$('[data-add]').forEach(b => b.addEventListener('click', () => {
       if (addWearDays(b.dataset.add, dt.getTime())) { showToast('Apuntado'); paint(); }
       else showToast('No se pueden apuntar días futuros');
     }));
-    overlay.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => {
+    sh.$$('[data-remove]').forEach(b => b.addEventListener('click', () => {
       const w = getWatch(b.dataset.remove);
       if (w?.wearStart && startOfDay(w.wearStart) <= startOfDay(dt.getTime())) {
         showToast('Es la sesión en curso: quítate el reloj desde su ficha'); return;

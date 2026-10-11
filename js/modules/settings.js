@@ -3,7 +3,8 @@ import { buildBackup, getWatches, getWishlist, importBackup, isPersisted, storag
 import { getSessionId, getSyncMeta, isCloudEnabled, isShortKey, syncApi, workerCaps } from '../sync.js';
 import { generateCollectionPDF } from '../export.js';
 import { showToast } from './core.js';
-import { renderHome, showConfirm } from './home-detail.js';
+import { renderHome } from './home-detail.js';
+import { showConfirm } from './sheet.js';
 import { renderWishlist } from './wishlist.js';
 
 import { APP_VERSION } from './updates.js';

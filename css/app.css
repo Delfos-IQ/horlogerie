@@ -1264,3 +1264,12 @@ button:focus-visible,
 .source-badge.legacy { color: var(--mid); }
 .source-badge i { margin-top: 2px; }
 .source-badge.legacy i { color: var(--warn); }
+
+/* ===== Hoja común (js/modules/sheet.js) ===== */
+.sheet { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+.sheet:focus { outline: none; }
+.sheet-title { font-family: var(--font-display); font-size: 20px; color: var(--light); margin-bottom: 8px; }
+.sheet-msg { font-size: 13.5px; color: var(--mid); line-height: 1.6; margin-bottom: 20px; }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-btn-danger { background: var(--danger-fill); color: #fff; flex: 1; }
+.sheet-done { width: 100%; margin-top: 14px; }

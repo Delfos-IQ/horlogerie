@@ -1,5 +1,6 @@
 /* ─── HOME ─── */
 import { addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, isSafePhoto, maintenanceAlerts, markWornToday, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
+import { openSheet, showConfirm } from './sheet.js';
 import { elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui, watchEmoji } from './core.js';
 import { openEditModal } from './modals.js';
 import { renderHistory } from './history.js';
@@ -439,37 +440,25 @@ export function openWearSheet(watchId, idx = null) {
   const today = toDateInput(Date.now());
   const from  = entry ? toDateInput(entry.start) : today;
   const to    = entry ? toDateInput(entry.end)   : today;
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'display:flex;z-index:400;';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.innerHTML = `
-    <div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
-      <div class="modal-handle"></div>
-      <div class="modal-title">${entry ? 'Editar uso' : 'Apuntar un uso'}</div>
-      <div style="font-size:13px;color:var(--mid);margin-bottom:14px;line-height:1.6;">
-        ${escHtml(w.brand)} ${escHtml(w.model)}. Cuenta cada día del rango como un día de uso.
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+  const { $, close } = openSheet({
+    label: entry ? 'Editar uso' : 'Apuntar un uso',
+    html: `<div class="modal-title">${entry ? 'Editar uso' : 'Apuntar un uso'}</div>
+      <div class="sheet-text">${escHtml(w.brand)} ${escHtml(w.model)}. Cuenta cada día del rango como un día de uso.</div>
+      <div class="form-grid-2">
         <div class="form-field"><label class="form-label" for="ws-from">Desde</label>
           <input class="form-input" type="date" id="ws-from" value="${from}" max="${today}"></div>
         <div class="form-field"><label class="form-label" for="ws-to">Hasta</label>
           <input class="form-input" type="date" id="ws-to" value="${to}" max="${today}"></div>
       </div>
       <div class="modal-actions">
-        ${entry ? '<button class="modal-btn" id="ws-del" style="background:var(--danger-fill);color:#fff;">Borrar</button>' : ''}
-        <button class="modal-btn modal-btn-cancel" id="ws-cancel">Cancelar</button>
+        ${entry ? '<button class="modal-btn modal-btn-danger" id="ws-del">Borrar</button>' : ''}
+        <button class="modal-btn modal-btn-cancel" id="ws-cancel" data-close>Cancelar</button>
         <button class="modal-btn modal-btn-save" id="ws-save">Guardar</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  const close = () => overlay.remove();
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-  overlay.querySelector('#ws-cancel').addEventListener('click', close);
-  overlay.querySelector('#ws-save').addEventListener('click', () => {
-    const a = fromDateInput(overlay.querySelector('#ws-from').value);
-    const b = fromDateInput(overlay.querySelector('#ws-to').value) ?? a;
+      </div>`,
+  });
+  $('#ws-save').addEventListener('click', () => {
+    const a = fromDateInput($('#ws-from').value);
+    const b = fromDateInput($('#ws-to').value) ?? a;
     if (!a) { showToast('Elige una fecha'); return; }
     const ok = entry ? updateHistoryEntry(watchId, idx, a, b) : addWearDays(watchId, a, b);
     if (!ok) { showToast('No se pueden apuntar días futuros'); return; }
@@ -477,7 +466,7 @@ export function openWearSheet(watchId, idx = null) {
     showToast(entry ? 'Uso actualizado' : 'Uso apuntado');
     refreshAfterWearChange(watchId);
   });
-  overlay.querySelector('#ws-del')?.addEventListener('click', () => {
+  $('#ws-del')?.addEventListener('click', () => {
     const days = calendarDaysBetween(entry.start, entry.end) + 1;
     const when = days === 1 ? `del ${formatDate(entry.start)}` : `del ${formatDate(entry.start)} al ${formatDate(entry.end)} (${days} días)`;
     showConfirm('¿Borrar este uso?', `Se quitará el uso ${when} del ${w.brand} ${w.model}.`, () => {
@@ -487,7 +476,6 @@ export function openWearSheet(watchId, idx = null) {
       refreshAfterWearChange(watchId);
     }, { okLabel: 'Borrar' });
   });
-  overlay.querySelector('#ws-from').focus();
 }
 export function refreshAfterWearChange(watchId) {
   const active = document.querySelector('.view.active')?.id;
@@ -503,26 +491,5 @@ export function handleDeleteWatch(id) {
   showConfirm('¿Eliminar reloj?', `Se borrará ${name} y todo su historial. Esta acción no se puede deshacer.`, () => {
     deleteWatch(id); showView('home'); showToast('Reloj eliminado');
   });
-}
-export function showConfirm(title, msg, onConfirm, { okLabel = 'Eliminar', danger = true } = {}) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  // Above the day and wear sheets (z-index 400), which can open it
-  overlay.style.cssText = 'display:flex;z-index:500;';
-  overlay.setAttribute('role', 'alertdialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.innerHTML = `
-    <div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
-      <div class="modal-handle"></div>
-      <div style="font-family:var(--font-display);font-size:20px;color:var(--light);margin-bottom:8px;">${escHtml(title)}</div>
-      <div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:20px;">${escHtml(msg)}</div>
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" id="cc">Cancelar</button>
-        <button class="modal-btn${danger ? '' : ' modal-btn-save'}" id="co" style="${danger ? 'background:var(--danger-fill);color:#fff;' : ''}flex:1;">${escHtml(okLabel)}</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  overlay.querySelector('#cc').addEventListener('click', () => overlay.remove());
-  overlay.querySelector('#co').addEventListener('click', () => { overlay.remove(); onConfirm(); });
 }
 

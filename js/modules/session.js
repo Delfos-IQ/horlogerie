@@ -12,28 +12,15 @@
 import { getWatches } from '../storage.js';
 import { deleteCloudData, getSessionId, getSyncMeta, importSession, isCloudEnabled, normalizeKey, normalizePairCode, pairClaim, pairCreate, rotateSessionKey, setCloudEnabled, setSyncMeta } from '../sync.js';
 import { escHtml, showToast } from './core.js';
-import { renderHome, showConfirm } from './home-detail.js';
+import { renderHome } from './home-detail.js';
+import { openSheet, showConfirm } from './sheet.js';
 import { renderCloudControls, renderSettings } from './settings.js';
 import { renderWishlist } from './wishlist.js';
 
 export const APP_URL = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}`;
 
-/** Bottom sheet built on the fly; the back gesture closes it via _close */
-export function openSheet(html, { onClose } = {}) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'display:flex;z-index:400;';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.innerHTML = `<div class="modal-sheet" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
-    <div class="modal-handle"></div>${html}</div>`;
-  document.body.appendChild(overlay);
-  const close = () => { overlay.remove(); onClose?.(); };
-  overlay._close = close;
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-  overlay.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
-  return { overlay, close, $: sel => overlay.querySelector(sel) };
-}
+/** Sheets of this module: html first, like the rest of session.js */
+function sessionSheet(html, { onClose } = {}) { return openSheet({ html, onClose }); }
 
 export function fmtPairCode(c) { return `${c.slice(0, 3)}-${c.slice(3)}`; }
 
@@ -82,7 +69,7 @@ export async function shareSessionKey() {
 
 export function openSaveKeySheet() {
   const key = getSessionId();
-  const { $, close } = openSheet(`
+  const { $, close } = sessionSheet(`
     <div class="modal-title">Guarda tu clave de recuperación</div>
     <div class="sheet-text">Es lo único que necesitas para recuperar tu colección si reinstalas la app o cambias de móvil.
       Rotor no te pide email ni cuenta, así que <b>si la pierdes nadie puede recuperarla</b>.</div>
@@ -103,7 +90,7 @@ export function openSaveKeySheet() {
 
 /* ─── Link another device: temporary 6-character code ─── */
 export async function openPairSheet() {
-  const { $ } = openSheet(`
+  const { $ } = sessionSheet(`
     <div class="modal-title">Vincular otro dispositivo</div>
     <div id="pair-body" class="sheet-text">Generando código…</div>
     <button class="modal-btn modal-btn-cancel" style="width:100%;margin-top:12px;" data-close>Cerrar</button>`,
@@ -149,7 +136,7 @@ export async function openPairSheet() {
 
 /* ─── Use a key or a code on this device (also: recover after reinstalling) ─── */
 export function openLinkSheet(prefill = '') {
-  const { $, close } = openSheet(`
+  const { $, close } = sessionSheet(`
     <div class="modal-title">Usar una clave o código</div>
     <div class="sheet-text">Escribe el <b>código de 6 caracteres</b> que ves en tu otro dispositivo, o tu <b>clave de recuperación</b>.
       Lo que ya tengas aquí se combina con lo de la nube: no se borra nada.</div>
