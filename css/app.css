@@ -1475,3 +1475,58 @@ button.care-row { cursor: pointer; }
 .history-mode-btn { white-space: nowrap; flex: 1 0 auto; padding-left: 8px; padding-right: 8px; }
 @media (max-width: 400px) { .history-mode-btn i { display: none; } }
 .usage-val.is-word { font-size: 17px; line-height: 1.6; overflow-wrap: normal; }
+
+/* ══ Pantallas grandes (v2.17): tableta y ordenador ══
+   En el móvil nada cambia. Desde 700 px la app deja de ser una columna de móvil:
+   las hojas pasan a ser diálogos centrados y la colección usa más columnas.
+   Desde 1024 px la navegación pasa a una barra lateral y la ficha de un reloj
+   pone la foto a la izquierda y los datos a la derecha. */
+@media (min-width: 700px) {
+  #app { max-width: 760px; }
+  .bottom-nav { max-width: 760px; }
+  .watches-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .modal-overlay { align-items: center; padding: 24px; }
+  .modal-sheet { max-width: 560px; border-radius: 20px; border: 0.5px solid var(--glass-border); max-height: 86dvh;
+    padding-bottom: 24px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28); }
+  .modal-handle { display: none; }
+  .watch-card:hover { border-color: var(--gold); }
+}
+
+@media (min-width: 1024px) {
+  :root { --rail: 232px; }
+  #app { max-width: none; margin-left: var(--rail); }
+  .view { padding-bottom: 40px; padding-inline: max(32px, calc((100% - var(--view-max, 1120px)) / 2)); }
+  #view-history, #view-settings { --view-max: 880px; }
+  #view-wishlist { --view-max: 960px; }
+
+  /* Navegación lateral */
+  .bottom-nav { left: 0; top: 0; bottom: 0; transform: none; width: var(--rail); max-width: none; flex-direction: column;
+    justify-content: flex-start; gap: 4px; padding: 0 14px 24px; border-top: 0; border-right: 0.5px solid var(--glass-border); }
+  .bottom-nav::before { content: 'Rotor'; display: block; font-family: var(--font-display); font-size: 24px; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--gold-light); padding: 40px 12px 28px; }
+  .nav-item { flex: 0 0 auto; flex-direction: row; justify-content: flex-start; gap: 14px; padding: 12px 14px; border-radius: 12px; min-height: 48px; }
+  .nav-item:hover { background: var(--dark3); color: var(--light); }
+  .nav-item.active { background: color-mix(in srgb, var(--gold) 14%, transparent); }
+  .nav-label { font-size: 13px; letter-spacing: 1.5px; }
+  .nav-item i { font-size: 21px; }
+  .fab { right: 40px; bottom: 40px; width: 58px; height: 58px; }
+  .toast { left: calc(50% + var(--rail) / 2); }
+  .app-header { padding-top: 40px; }
+
+  /* Colección */
+  .watches-grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; padding-inline: 0; }
+  #backup-reminder, #today-card, #recommendation-banner { width: 100%; }
+
+  /* Ficha: foto a la izquierda, pestañas y datos a la derecha */
+  #view-detail.active { display: grid !important; grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr; column-gap: 36px; align-content: start; }
+  #view-detail .detail-header { grid-column: 1 / -1; padding-inline: 0; }
+  #view-detail .detail-img-wrap { grid-column: 1; grid-row: 2 / 4; align-self: start; position: sticky; top: 24px; aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; margin-top: 16px; }
+  #view-detail .detail-tabs { grid-column: 2; grid-row: 2; margin-top: 16px; }
+  #view-detail .detail-body { grid-column: 2; grid-row: 3; padding-inline: 0; }
+  .specs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  /* Lista de deseos en dos columnas */
+  #wishlist-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; padding-inline: 0; }
+  #wishlist-list > * { margin: 0; }
+}

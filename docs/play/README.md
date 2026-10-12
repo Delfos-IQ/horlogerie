@@ -72,13 +72,13 @@ Android solo abre la app a pantalla completa si la web declara que la app es suy
 5. **Prueba cerrada** (obligatoria en cuentas personales creadas después del 13/11/2023): crea una pista de prueba cerrada, sube el AAB, añade **al menos 12 testers** (lista de emails de Google) y que **sigan apuntados 14 días seguidos**. Luego solicita acceso a producción desde el panel.
 6. Producción: promociona la versión de la prueba cerrada.
 
-## 3 bis. Rotor Pro (pago único, 9,99 €)
+## 3 bis. Rotor Pro (pago único, 5,99 €)
 
 La app es gratuita y Pro se desbloquea con un **producto integrado no consumible** de Play. La TWA usa la *Digital Goods API* de Chrome; el Worker v15 verifica cada compra con Google.
 
 1. **Cuenta de comerciante:** Play Console → Configuración → Perfil de pagos (sin ella no se pueden vender productos). Al ser persona física en Portugal, Google retiene el IVA de cada país; tú recibes el neto menos la comisión (15 % hasta 1 M$/año).
 2. **Envoltorio con Play Billing:** en `twa-manifest.json` ya está `"playBilling": { "enabled": true }`. Con PWABuilder: *Options → Play Billing → Enable*. Hay que generar y subir un AAB nuevo (el de la v2.4 no lo lleva).
-3. **Producto:** Play Console → Monetizar → Productos → Productos integrados → Crear: ID **`rotor_pro`** (exacto), nombre «Rotor Pro», precio 9,99 € (Play calcula el resto de monedas). Actívalo.
+3. **Producto:** Play Console → Monetizar → Productos → Productos integrados → Crear: ID **`rotor_pro`** (exacto), nombre «Rotor Pro», precio 5,99 € (Play calcula el resto de monedas). Actívalo.
 4. **Cuenta de servicio para verificar compras:**
    - Google Cloud Console → crea un proyecto (o usa uno) → habilita **Google Play Android Developer API**.
    - IAM → Cuentas de servicio → Crear → sin roles → Claves → Añadir clave → JSON. Descarga el archivo.

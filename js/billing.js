@@ -11,7 +11,7 @@
  * In a normal browser there is no Play: Pro can't be bought there (the app says so).
  *
  * The check is on the device, so a determined user could switch Pro on by hand. That is
- * accepted for a one-off 9,99 € purchase: the server check stops casual token reuse,
+ * accepted for a one-off 5,99 € purchase: the server check stops casual token reuse,
  * and nothing secret or shared depends on Pro.
  */
 import { CONFIG } from './api.js';
