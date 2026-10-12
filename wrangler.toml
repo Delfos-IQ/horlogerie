@@ -1,0 +1,16 @@
+# Web de Rotor (portada, blog, privacidad, términos y ayuda), igual que ScudoWeb:
+# un Worker de Cloudflare solo con archivos estáticos, conectado a este repositorio.
+#
+# En Cloudflare (Workers & Pages → Create → Import a repository → horlogerie):
+#   Build command:  cd web && npm ci && node build.mjs
+#   Deploy command: npx wrangler deploy        (lee este archivo)
+#   → https://rotor.pedicode-app.workers.dev
+#
+# No tiene relación con worker/wrangler.toml (el Worker de la nube y de «Rellenar
+# desde un enlace»): cada uno se despliega por separado.
+name = "rotor"
+compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./web/dist"
+not_found_handling = "404-page"

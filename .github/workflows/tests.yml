@@ -39,6 +39,9 @@ jobs:
       - name: Todos los textos tienen versión en inglés
         run: node tools/check-i18n.mjs
 
+      - name: Web (portada, blog y páginas legales se generan sin errores)
+        run: cd web && npm ci && node build.mjs
+
       - name: Lógica de datos (unitarias)
         run: TZ=Europe/Lisbon node tests/storage.test.mjs
 

@@ -16,3 +16,6 @@ _archivo*/
 # Cloudflare Wrangler
 worker/.wrangler/
 node_modules/
+
+# Web de Rotor (se genera en Cloudflare)
+web/dist/

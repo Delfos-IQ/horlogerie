@@ -1,0 +1,13 @@
+{
+  "name": "rotorweb",
+  "private": true,
+  "type": "module",
+  "description": "Web y blog de Rotor",
+  "scripts": {
+    "build": "node build.mjs",
+    "preview": "node build.mjs && node tools/preview.mjs"
+  },
+  "dependencies": {
+    "marked": "14.1.4"
+  }
+}
