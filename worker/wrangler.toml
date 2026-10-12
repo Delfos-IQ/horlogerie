@@ -1,6 +1,8 @@
 name = "horlogerie"
 main = "index.js"
 compatibility_date = "2024-09-01"
+# Keep the variables set in the dashboard (IMPORT_DAILY_CAP, PLAY_PACKAGE…) when deploying with Wrangler
+keep_vars = true
 
 # ══════════════════════════════════════════
 # Deploy: cd worker && wrangler deploy
@@ -32,7 +34,7 @@ compatibility_date = "2024-09-01"
 
 [[kv_namespaces]]
 binding = "HORLOGERIE_KV"
-id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id      = "6e26bbdee66c4845be8e9c7a2f865735"
 
 [[d1_databases]]
 binding       = "DB"
