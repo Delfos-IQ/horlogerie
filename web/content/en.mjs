@@ -159,7 +159,7 @@ export default {
     ai: 'This article was written with the help of artificial intelligence and reviewed by a person.',
     ctaH: 'Which of your watches has been idle the longest?', ctaP: 'Rotor tells you every morning. Free and with no account.', back: '← All articles',
   },
-  final: { h2: 'Today, wear the one that has been idle the longest.', lead: 'Rotor is free and works in your browser right now.', cta: 'Open Rotor' },
+  final: { h2: 'Today, wear the one that inspires you.', lead: 'Rotor is free and works in your browser right now.', cta: 'Open Rotor' },
   foot: { privacy: 'Privacy', help: 'Help', terms: 'Terms', contact: 'Contact', rss: 'RSS', made: 'Rotor · a Delfos-IQ project' },
   hint: { text: 'Prefer to read it in English?', link: 'English' },
   betaSubject: 'I want to try Rotor on Android',

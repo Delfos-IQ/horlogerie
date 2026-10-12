@@ -159,7 +159,7 @@ export default {
     ai: 'Este artigo foi escrito com a ajuda de inteligência artificial e revisto por uma pessoa.',
     ctaH: 'Qual dos teus relógios está parado há mais tempo?', ctaP: 'O Rotor diz-te todas as manhãs. Grátis e sem conta.', back: '← Todos os artigos',
   },
-  final: { h2: 'Hoje, usa o que está parado há mais tempo.', lead: 'O Rotor é grátis e funciona já no teu navegador.', cta: 'Abrir o Rotor' },
+  final: { h2: 'Hoje, usa o que te inspira.', lead: 'O Rotor é grátis e funciona já no teu navegador.', cta: 'Abrir o Rotor' },
   foot: { privacy: 'Privacidade', help: 'Ajuda', terms: 'Termos', contact: 'Contacto', rss: 'RSS', made: 'Rotor · um projeto da Delfos-IQ' },
   hint: { text: 'Preferes ler em português?', link: 'Português' },
   betaSubject: 'Quero experimentar o Rotor no Android',
