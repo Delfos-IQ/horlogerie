@@ -37,4 +37,4 @@ id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 [[d1_databases]]
 binding       = "DB"
 database_name = "rotor"
-database_id   = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id   = "c41b2855-b2c1-4804-a703-1405ac8e708e"
