@@ -69,6 +69,9 @@ export function locale() {
   return /^en\b/i.test(nl) ? nl : 'en-GB';
 }
 
+/** Marks a text for translation where it is defined (tables); translate it later with t() */
+export const tk = s => s;
+
 /** Translate a Spanish text into the active language */
 export function t(s, vars) {
   const d = DICTS[lang()];

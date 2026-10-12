@@ -127,6 +127,37 @@ export function sanitizeWatch(raw) {
   for (const k of ['purchasePrice', 'purchaseDate', 'lastService', 'batteryChanged']) {
     if (_num(raw[k])) w[k] = raw[k];
   }
+  // Rotor Pro fields
+  if (raw.serial) w.serial = _str(raw.serial, 80);
+  if (_num(raw.currentValue)) w.currentValue = raw.currentValue;
+  if (Array.isArray(raw.serviceLog)) {
+    const log = raw.serviceLog.slice(0, 200)
+      .filter(e => e && _num(e.date) && ['service', 'battery', 'strap', 'polish', 'repair', 'other'].includes(e.kind))
+      .map(e => {
+        const o = { id: /^[A-Za-z0-9_-]{1,40}$/.test(e.id || '') ? e.id : 's_' + Math.random().toString(36).slice(2, 10), date: e.date, kind: e.kind };
+        if (typeof e.cost === 'number' && isFinite(e.cost) && e.cost >= 0) o.cost = e.cost;
+        if (e.note) o.note = _str(e.note, 300);
+        return o;
+      });
+    if (log.length) w.serviceLog = log;
+  }
+  if (Array.isArray(raw.accuracy)) {
+    const acc = raw.accuracy.slice(0, 500)
+      .filter(r => r && _num(r.ts) && typeof r.offset === 'number' && isFinite(r.offset) && Math.abs(r.offset) <= 86400)
+      .map(r => (r.setAfter === true ? { ts: r.ts, offset: r.offset, setAfter: true } : { ts: r.ts, offset: r.offset }));
+    if (acc.length) w.accuracy = acc;
+  }
+  if (Array.isArray(raw.straps)) {
+    const st = raw.straps.slice(0, 50).filter(x => x && _str(x.name, 80).trim()).map(x => {
+      const o = { id: /^[A-Za-z0-9_-]{1,40}$/.test(x.id || '') ? x.id : 'st_' + Math.random().toString(36).slice(2, 10), name: _str(x.name, 80).trim() };
+      if (x.material) o.material = _str(x.material, 60);
+      if (x.width) o.width = _str(x.width, 20);
+      if (x.note) o.note = _str(x.note, 200);
+      if (x.fitted === true) o.fitted = true;
+      return o;
+    });
+    if (st.length) w.straps = st;
+  }
   if (raw._source)  w._source  = _str(raw._source, 80);
   if (isSafeUrl(raw.sourceUrl)) w.sourceUrl = raw.sourceUrl;
   if (raw._warning) w._warning = _str(raw._warning, 200);

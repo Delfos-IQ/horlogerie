@@ -6,7 +6,12 @@ compatibility_date = "2024-09-01"
 # Deploy: cd worker && wrangler deploy
 # Worker URL: https://horlogerie.pedicode-app.workers.dev
 #
-# No secrets needed. Optional variable: IMPORT_DAILY_CAP (page reads per day, default 300).
+# Optional variable: IMPORT_DAILY_CAP (page reads per day, default 300).
+# Secret for Rotor Pro (v15): GOOGLE_SERVICE_ACCOUNT = JSON key of the service account
+#   that can read the app's orders in Play Console (docs/play/README.md, step 3 bis).
+#   Dashboard → Workers → horlogerie → Settings → Variables → Add → Secret,
+#   or: wrangler secret put GOOGLE_SERVICE_ACCOUNT < key.json
+#   Optional variable PLAY_PACKAGE (default com.delfosiq.rotor).
 #
 # D1 database (cloud 2.0, end-to-end encrypted, v14+):
 #   Cloudflare dashboard → Storage & Databases → D1 → Create database "rotor"

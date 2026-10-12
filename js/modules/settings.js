@@ -6,11 +6,13 @@ import { showToast } from './core.js';
 import { renderHome } from './home-detail.js';
 import { showConfirm } from './sheet.js';
 import { renderWishlist } from './wishlist.js';
+import { renderProCard } from './pro.js';
 
 import { APP_VERSION } from './updates.js';
 import { CURRENCIES, LANGS, THEMES, currencySymbol, locale, prefs, setPref, t } from '../i18n.js';
 
 export function renderSettings() {
+  renderProCard();
   renderPrefs();
   renderCloudControls();
   renderSystemStatus();
@@ -256,7 +258,7 @@ export function handlePrefChange(key, value) {
   setPref(key, value);
   if (key === 'lang') { location.reload(); return; }   // static texts are translated once, at start
   if (key === 'currency') {
-    const cur = document.getElementById('f-price-cur'); if (cur) cur.textContent = currencySymbol();
+    document.querySelectorAll('.f-cur').forEach(el => { el.textContent = currencySymbol(); });
     renderHome();
     showToast(t('Moneda: {c}. Los importes no se convierten.', { c: value }));
   }

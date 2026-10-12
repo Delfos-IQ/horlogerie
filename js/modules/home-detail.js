@@ -7,6 +7,7 @@ import { intervalsHTML, renderHistory, watchChip } from './history.js';
 import { renderBackupReminder } from './settings.js';
 import { importEnabled, importIntoWatch } from './url-import.js';
 import { locale, money, t } from '../i18n.js';
+import { renderCare, renderStraps } from './care.js';
 
 const name = w => `${escHtml(w.brand)} ${escHtml(w.model)}`;
 const daysTxt = n => n === 1 ? t('1 día') : t('{n} días', { n });
@@ -280,6 +281,9 @@ export function openDetail(id, tab) {
   renderPrice(w);
   renderDetailHistory(w);
   renderMaintenance(w);
+  const refresh = () => openDetail(w.id);
+  renderCare(w, document.getElementById('d-care'), refresh);
+  renderStraps(w, document.getElementById('d-straps'), refresh);
 
   const notesEl = document.getElementById('d-notes-val');
   if (notesEl) notesEl.textContent = w.notes || '—';

@@ -26,6 +26,12 @@ interface Watch {
   lastService?: number | null;
   batteryChanged?: number | null;
   sourceUrl?: string;
+  /** Rotor Pro */
+  serial?: string;
+  currentValue?: number;
+  serviceLog?: ServiceEntry[];
+  accuracy?: AccuracyReading[];
+  straps?: Strap[];
   /** In memory only (photos live in IndexedDB) */
   photo?: string | null;
   created: number;
@@ -33,6 +39,11 @@ interface Watch {
   _source?: string;
   _warning?: string;
 }
+
+interface ServiceEntry { id: string; date: number; kind: 'service' | 'battery' | 'strap' | 'polish' | 'repair' | 'other'; cost?: number; note?: string }
+/** offset: seconds fast (+) or slow (−) at ts; setAfter: the watch was put right after this reading */
+interface AccuracyReading { ts: number; offset: number; setAfter?: boolean }
+interface Strap { id: string; name: string; material?: string; width?: string; note?: string; fitted?: boolean }
 
 interface WishlistItem {
   id: string;

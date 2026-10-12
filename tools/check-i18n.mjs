@@ -32,6 +32,7 @@ for (const f of files) {
   for (const m of src.matchAll(/\bt\(\s*'((?:[^'\\]|\\.)*)'/g)) add(unescape(m[1]), rel);
   for (const m of src.matchAll(/\bt\(\s*"((?:[^"\\]|\\.)*)"/g)) add(unescape(m[1]), rel);
   for (const m of src.matchAll(/\bt\(\s*`([^`$]*)`/g)) add(m[1], rel);
+  for (const m of src.matchAll(/\btk\(\s*'((?:[^'\\]|\\.)*)'/g)) add(unescape(m[1]), rel);
   for (const m of src.matchAll(/\bnotify\(\s*'((?:[^'\\]|\\.)*)'/g)) add(unescape(m[1]), rel);
   if (rel.startsWith('js/data')) for (const m of src.matchAll(/new Error\(\s*'((?:[^'\\]|\\.)*)'/g)) add(unescape(m[1]), rel);
   if (/modules|i18n\.js/.test(rel)) {
@@ -56,7 +57,7 @@ for (const m of html.matchAll(/\s(?:placeholder|aria-label|title|alt)="([^"]+)"/
 
 const SAME = new Set(['Rotor', 'Rotor · Delfos-IQ', 'Ranking', 'pedicode.app@gmail.com', 'Berny, Pagani Design, Seiko...',
   'Berny, Pagani Design, San Martin...', 'Open Heart, PD-1651...', 'Open Heart, Submariner...', 'AM5813L...',
-  'AM5813L, PD-1651, SN0121...', 'Berny Open Heart, Pagani PD-1651...', 'K7Q-M4X  ·  7KQ2-M4XR-9TBW-2HNF']);
+  'AM5813L, PD-1651, SN0121...', 'Berny Open Heart, Pagani PD-1651...', 'K7Q-M4X  ·  7KQ2-M4XR-9TBW-2HNF', 'Rotor Pro', 'PRO']);
 const missing = [...keys.entries()].filter(([k]) => !(k in en) && !SAME.has(k));
 const unused = Object.keys(en).filter(k => !keys.has(k));
 

@@ -75,3 +75,9 @@ jobs:
 
       - name: Inglés, tema, moneda, bienvenida y ficha por secciones
         run: python tests/e2e_i18n.py
+
+      - name: Rotor Pro (compra en Play simulada y funciones Pro)
+        run: |
+          node tests/worker-harness.mjs ../worker/index.js 8713 > /tmp/worker-pro.log 2>&1 &
+          sleep 2
+          python tests/e2e_pro.py 8713

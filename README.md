@@ -35,16 +35,21 @@ horlogerie/
 │   ├── db.js               Carga y búsqueda en watches_db.json
 │   ├── storage.js          Capa de datos (reexporta js/data/*)
 │   ├── data/               persist (lecturas seguras y persistencia), photos (IndexedDB), watches,
-│   │                       wear (días de uso, avisos), merge (saneado y fusión), backup, wishlist
+│   │                       wear (días de uso, avisos), merge (saneado y fusión), backup, wishlist,
+│   │                       care (Pro: mantenimiento, precisión, correas, valor)
 │   ├── api.js              URL del Worker y FEATURES (interruptores de funciones)
 │   ├── sync.js             Copia en la nube opcional: fusión por elemento, envío diferencial
 │   ├── export.js           Exportación a PDF (jsPDF)
+│   ├── insurance.js        Rotor Pro: inventario en PDF para el seguro
+│   ├── billing.js          Rotor Pro: compra en Google Play y verificación
 │   ├── vendor/             qrcode-generator 1.4.4 y jsPDF 2.5.1 (MIT)
 │   └── modules/
 │       ├── core.js         Estado, utilidades, navegación y gesto atrás de Android
 │       ├── sheet.js        Hoja común para todos los diálogos (foco, Escape, atrás)
 │       ├── home-detail.js  Colección, «Hoy llevo…», recomendación y ficha por secciones
 │       ├── onboarding.js   Bienvenida de la primera vez
+│       ├── pro.js          Hoja de Rotor Pro, candados y tarjeta de Ajustes
+│       ├── care.js         Pro en la ficha: mantenimiento, precisión, correas; Historial → Valor
 │       ├── modals.js       Alta/edición de relojes y búsqueda en la base
 │       ├── history.js      Calendario, ranking top 10 y detalle por reloj (filtro por año)
 │       ├── settings.js     Estadísticas, copias JSON, tamaño en la nube, inicio de la app
@@ -67,6 +72,7 @@ horlogerie/
 │   ├── e2e_import_history.py  Rellenar desde un enlace, calendario, ranking y «Por reloj»
 │   ├── e2e_cloud.py        Clave corta, vincular dispositivos, recuperar, avisos y Ajustes
 │   ├── e2e_cloud2.py       Nube 2.0 cifrada de extremo a extremo (Worker con D1)
+│   ├── e2e_pro.py          Rotor Pro: compra en Play simulada, verificación y funciones Pro
 │   └── e2e_i18n.py         Inglés, tema, moneda, bienvenida y ficha por secciones
 └── tools/
     ├── bump-version.mjs    Propaga la versión de version.json al resto de archivos
@@ -120,9 +126,9 @@ cd worker
 npx wrangler deploy
 ```
 
-No necesita secretos. Variables opcionales en Cloudflare → Workers → horlogerie → Settings → Variables:
+Secreto para Rotor Pro: `GOOGLE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio con acceso a los pedidos de la app en Play Console; ver `docs/play/README.md`, paso 3 bis). Variables opcionales en Cloudflare → Workers → horlogerie → Settings → Variables: `PLAY_PACKAGE`, `IMPORT_DAILY_CAP`.
 
-Versión actual: **v14**: nube 2.0 cifrada de extremo a extremo sobre D1 (binding `DB`; `/v2/sync`, `/v2/account`, `/v2/pair*`), un registro por elemento y sin techo de 3 MB; sin `DB` se comporta como v13. Antes, v13: claves cortas de recuperación, vinculación con código de 6 caracteres (`/pair/create`, `/pair/claim`) y `/import-url` **sin IA**: descarga la página que indica el usuario y devuelve el texto con la ficha (JSON-LD, tablas, líneas); la app la lee con `js/spec-parser.js` (pruebas: `node tests/spec-parser.test.mjs`). El texto pegado se lee en el dispositivo. `GROQ_API_KEY` ya no se usa: puedes borrarla de Cloudflare. Variable opcional: `IMPORT_DAILY_CAP` (lecturas de página al día, 300 por defecto).
+Versión actual: **v15**: `/v2/pro/verify` comprueba con la API de Google Play un token de compra de Rotor Pro, lo confirma (*acknowledge*) y no guarda nada; sin el secreto, `/health` dice `pro: false`. Antes, **v14**: nube 2.0 cifrada de extremo a extremo sobre D1 (binding `DB`; `/v2/sync`, `/v2/account`, `/v2/pair*`), un registro por elemento y sin techo de 3 MB; sin `DB` se comporta como v13. Antes, v13: claves cortas de recuperación, vinculación con código de 6 caracteres (`/pair/create`, `/pair/claim`) y `/import-url` **sin IA**: descarga la página que indica el usuario y devuelve el texto con la ficha (JSON-LD, tablas, líneas); la app la lee con `js/spec-parser.js` (pruebas: `node tests/spec-parser.test.mjs`). El texto pegado se lee en el dispositivo. `GROQ_API_KEY` ya no se usa: puedes borrarla de Cloudflare. Variable opcional: `IMPORT_DAILY_CAP` (lecturas de página al día, 300 por defecto).
 
 Desde la v11: La app detecta la versión con `/health`: con v11 envía el ID de sesión en la cabecera `X-Horlogerie-User` y sincroniza la lista de deseos; con v10 sigue funcionando (ID por query, lista de deseos solo en copias JSON).
 
@@ -135,6 +141,9 @@ Enlace KV: variable `HORLOGERIE_KV` → namespace `HORLOGERIE`. El `id` del name
 - **En la nube v1 (sin D1):** KV con clave `user:{clave}:watches` que guarda `{ watches, wishlist, updatedAt }`. La clave de recuperación es la única llave: quien la tenga puede leer y borrar la colección. Desde la v2.8 (con Worker v13) es de 16 caracteres Crockford base32 (`7KQ2-M4XR-9TBW-2HNF`, 80 bits); las claves UUID anteriores siguen valiendo. «Vincular otro dispositivo» guarda `pair:{CÓDIGO}` → clave durante 10 minutos, de un solo uso.
 - **Registro de uso:** `history` guarda intervalos `{start, end}` y `wearStart` la sesión en curso. Los «días de uso» son días de calendario distintos (`wornDayKeys`): dos horas cuentan como un día y dos usos el mismo día, como uno.
 - **Campos por reloj (v2.3):** `favorite`, `rotation` (false = fuera de rotación), `purchasePrice`, `purchaseDate`, `lastService`, `batteryChanged`.
+- **Campos Pro (v2.15, `js/data/care.js`):** `serial`, `currentValue`, `serviceLog` `[{id, date, kind, cost?, note?}]`, `accuracy` `[{ts, offset, setAfter?}]` (segundos de adelanto/atraso; `setAfter` = puesto en hora tras leerlo) y `straps` `[{id, name, material?, width?, note?, fitted?}]`. Viajan con la nube y las copias, y `sanitizeWatch` los valida.
+- **Rotor Pro:** `js/billing.js` (Digital Goods API + PaymentRequest de Play, verificación en el Worker) guarda el estado en `localStorage` (`rotor_pro_v1`). Pruebas: `tests/e2e_pro.py` (Play y Google simulados).
+- **Preferencias:** `rotor_prefs_v1` (idioma, tema, moneda, bienvenida vista).
 - **Fusión:** cada reloj y deseo lleva `updatedAt`. Al sincronizar gana la copia modificada más recientemente; los borrados viajan como lápidas (`horlogerie_tombstones_v1`).
 - **Copia de seguridad:** Ajustes → Copia de seguridad (JSON, formato v3): relojes con fotos, historial y lista de deseos. Restaurar combina con lo que ya hay; no borra nada.
 
@@ -145,3 +154,9 @@ Auditoría y plan de mejoras hacia Google Play: fases F0–F5.
 - F1 (datos seguros): v2.2.0. Worker v11 desplegado.
 - F2 (calidad) y F3 (producto): v2.3.0.
 - F4 (Play): materiales listos en `docs/play/`; faltan los pasos con la cuenta de Play.
+
+Segunda auditoría (v2.9) y plan F6–F10:
+- F6 robustez y F7 arquitectura (módulos ES, CSP estricta, capa de datos tipada): v2.10–v2.12.
+- F8 nube 2.0 cifrada de extremo a extremo (Worker v14 + D1): v2.13.0.
+- F9 idioma y uso («Hoy llevo…», ficha por secciones, inglés, tema, moneda, bienvenida): v2.14.0.
+- F10 Rotor Pro, pago único (Worker v15 + Play Billing): v2.15.0. Falta configurar Play y el secreto del Worker.

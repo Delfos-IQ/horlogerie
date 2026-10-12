@@ -5,8 +5,9 @@ import { elapsedSince, escHtml, formatDate, navPush, navReplace, showToast, ui }
 import { locale, t } from '../i18n.js';
 import { openDetail, openWearSheet } from './home-detail.js';
 import { openSheet, showConfirm } from './sheet.js';
+import { renderValue } from './care.js';
 
-export let _historyMode   = 'calendar'; // 'calendar' | 'ranking' | 'detail'
+export let _historyMode   = 'calendar'; // 'calendar' | 'ranking' | 'detail' | 'value'
 export let _calMonth      = null;       // Date set to the 1st of the month shown
 export let _histYear      = 'all';      // year filter shared by ranking and "por reloj": 'all' | 2026…
 
@@ -44,11 +45,13 @@ export function setHistoryMode(mode, fromUser = false) {
   document.getElementById('history-calendar-view').style.display = mode === 'calendar' ? 'block' : 'none';
   document.getElementById('history-ranking-view').style.display  = mode === 'ranking'  ? 'block' : 'none';
   document.getElementById('history-detail-view').style.display   = mode === 'detail'   ? 'block' : 'none';
-  ['calendar', 'ranking', 'detail'].forEach(m =>
+  document.getElementById('history-value-view').style.display    = mode === 'value'    ? 'block' : 'none';
+  ['calendar', 'ranking', 'detail', 'value'].forEach(m =>
     document.getElementById('btn-mode-' + m)?.classList.toggle('active', m === mode));
   if (mode === 'calendar') renderCalendar();
   if (mode === 'ranking')  renderRanking();
   if (mode === 'detail')   renderHistoryDetail();
+  if (mode === 'value')    renderValue(document.getElementById('value-body'), id => openDetail(id));
 }
 /* ── Main renderHistory entry point ── */
 export function renderHistory() {

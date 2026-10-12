@@ -1,5 +1,14 @@
 /**
- * Cloudflare Worker — Horlogerie (Rotor) API v14
+ * Cloudflare Worker — Horlogerie (Rotor) API v15
+ *
+ * v15 (oct 2026) — Rotor Pro (one-time purchase on Google Play):
+ *   - POST /v2/pro/verify { sku, token }: asks the Google Play Developer API
+ *     whether the purchase token is valid, acknowledges it (Play refunds
+ *     purchases not acknowledged within 3 days) and answers { ok }.
+ *   - Needs the secret GOOGLE_SERVICE_ACCOUNT (JSON key of a service account
+ *     with access to the app in Play Console) and optionally PLAY_PACKAGE
+ *     (default com.delfosiq.rotor). Without it /health reports caps.pro=false.
+ *   - Tokens are not stored: nothing about purchases is kept on the server.
  *
  * v14 (oct 2026) — cloud 2.0, needs a D1 database bound as DB:
  *   - End-to-end encryption: the app encrypts every watch, wishlist item and
@@ -40,7 +49,9 @@
  *   - /health reports capabilities so the app can pick the safest protocol.
  *
  * Secrets / variables (Cloudflare dashboard → Settings → Variables):
- *   IMPORT_DAILY_CAP  — optional, page reads per day for everyone (default 300)
+ *   IMPORT_DAILY_CAP        — optional, page reads per day for everyone (default 300)
+ *   GOOGLE_SERVICE_ACCOUNT  — secret, for Rotor Pro (see v15)
+ *   PLAY_PACKAGE            — optional, Android package name (default com.delfosiq.rotor)
  *
  * KV Binding: HORLOGERIE_KV
  *
@@ -102,12 +113,13 @@ export default {
       // Endpoints that only make sense from the app: refuse calls without its
       // origin (stops casual use of the page reader as an open proxy; not a
       // security boundary, a script can fake the header).
-      const APP_ONLY = ['/import-url', '/pair/create', '/pair/claim', '/v2/pair', '/v2/pair/claim'];
+      const APP_ONLY = ['/import-url', '/pair/create', '/pair/claim', '/v2/pair', '/v2/pair/claim', '/v2/pro/verify'];
       if (APP_ONLY.includes(url.pathname) && request.method !== 'OPTIONS' && !isAllowedOrigin(origin)) {
         return corsResponse({ error: 'Origin not allowed' }, 403, origin);
       }
       const RATE_LIMITED = { '/import-url': [RATE_LIMIT_MAX, false], '/pair/create': [RATE_LIMIT_MAX, false], '/pair/claim': [PAIR_CLAIM_MAX, true],
-                             '/v2/pair': [RATE_LIMIT_MAX, false], '/v2/pair/claim': [PAIR_CLAIM_MAX, true], '/v2/sync': [V2_SYNC_MAX, false] };
+                             '/v2/pair': [RATE_LIMIT_MAX, false], '/v2/pair/claim': [PAIR_CLAIM_MAX, true], '/v2/sync': [V2_SYNC_MAX, false],
+                             '/v2/pro/verify': [PRO_VERIFY_MAX, true] };
       if (RATE_LIMITED[url.pathname] && request.method !== 'OPTIONS') {
         const [max, durable] = RATE_LIMITED[url.pathname];
         const limited = await checkRateLimit(env, ip, url.pathname, max, durable);
@@ -134,10 +146,11 @@ export default {
       if (pathname === '/v2/account'    && method === 'DELETE') return await handleV2Delete(request, env, origin);
       if (pathname === '/v2/pair'       && method === 'POST')   return await handleV2PairCreate(request, env, origin);
       if (pathname === '/v2/pair/claim' && method === 'POST')   return await handleV2PairClaim(request, env, origin);
+      if (pathname === '/v2/pro/verify' && method === 'POST')   return await handleProVerify(request, env, origin);
       if (pathname === '/health'      || pathname === '/')    return corsResponse({
-        status: 'ok', version: '14.0', kv: !!env.HORLOGERIE_KV, db: !!env.DB,
+        status: 'ok', version: '15.0', kv: !!env.HORLOGERIE_KV, db: !!env.DB,
         caps: { userHeader: true, wishlist: true, importUrl: true, importSource: true, shortKey: true, pairing: true,
-                v2: !!env.DB, e2e: !!env.DB, pairingV2: !!env.HORLOGERIE_KV },
+                v2: !!env.DB, e2e: !!env.DB, pairingV2: !!env.HORLOGERIE_KV, pro: !!env.GOOGLE_SERVICE_ACCOUNT },
       }, 200, origin);
 
       return corsResponse({ error: 'Not found' }, 404, origin);
@@ -852,3 +865,65 @@ function buildSource(html) {
 
 const SPEC_HINT = /calib|caliber|movement|movimiento|movimento|automatic|autom[aá]tic|quartz|cuarzo|quartzo|cristal|crystal|vidro|zafiro|sapphire|safira|di[aá]metro|diameter|case size|caja|case|caixa|grosor|thickness|espessura|water|agua|[áa]gua|resist|\bATM\b|\bbar\b|reserva|power reserve|bracelet|brazalete|correa|strap|pulseira|dial|esfera|mostrador|lug|asas|\bmm\b|jewels|rub[ií]es|\bbph\b|NH3\d|Miyota|Seiko|ETA|Sellita|Seagull|PT5000/i;
 
+
+/* ══════════════════════════════════════════
+   ROTOR PRO — verify a Google Play purchase (v15)
+   The app sends the purchase token it got from the Digital Goods API.
+   We ask Google, acknowledge it if needed and answer yes or no.
+══════════════════════════════════════════ */
+const PRO_SKUS = ['rotor_pro'];
+const PRO_VERIFY_MAX = 20;          // per hour and IP
+const GOOGLE_API = 'https://androidpublisher.googleapis.com/androidpublisher/v3';
+let googleToken = null;             // { value, exp } cached in the isolate
+
+function b64url(bytes) {
+  let s = '';
+  for (const b of new Uint8Array(bytes)) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function googleAccessToken(env) {
+  if (googleToken && googleToken.exp > Date.now() + 60000) return googleToken.value;
+  const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+  const iat = Math.floor(Date.now() / 1000);
+  const enc = o => b64url(new TextEncoder().encode(JSON.stringify(o)));
+  const unsigned = `${enc({ alg: 'RS256', typ: 'JWT' })}.${enc({
+    iss: sa.client_email, scope: 'https://www.googleapis.com/auth/androidpublisher',
+    aud: sa.token_uri || 'https://oauth2.googleapis.com/token', iat, exp: iat + 3600 })}`;
+  const der = Uint8Array.from(atob(sa.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '')), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned));
+  const res = await fetch(sa.token_uri || 'https://oauth2.googleapis.com/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=${encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer')}&assertion=${unsigned}.${b64url(sig)}`,
+  });
+  if (!res.ok) throw new Error(`Google OAuth ${res.status}`);
+  const data = await res.json();
+  googleToken = { value: data.access_token, exp: Date.now() + (data.expires_in || 3600) * 1000 };
+  return googleToken.value;
+}
+
+async function handleProVerify(request, env, origin) {
+  if (!env.GOOGLE_SERVICE_ACCOUNT) return corsResponse({ error: 'Rotor Pro aún no está disponible' }, 503, origin);
+  let body;
+  try { body = await request.json(); } catch { return corsResponse({ error: 'JSON no válido' }, 400, origin); }
+  const sku = String(body?.sku || ''), token = String(body?.token || '');
+  if (!PRO_SKUS.includes(sku) || !/^[A-Za-z0-9._-]{20,1000}$/.test(token)) {
+    return corsResponse({ error: 'Compra no válida' }, 400, origin);
+  }
+  const pkg = env.PLAY_PACKAGE || 'com.delfosiq.rotor';
+  const base = `${GOOGLE_API}/applications/${encodeURIComponent(pkg)}/purchases/products/${sku}/tokens/${encodeURIComponent(token)}`;
+  const auth = { Authorization: `Bearer ${await googleAccessToken(env)}` };
+  const res = await fetch(base, { headers: auth });
+  if (res.status === 404 || res.status === 410 || res.status === 400) return corsResponse({ ok: false, invalid: true }, 200, origin);
+  if (!res.ok) throw new Error(`Play API ${res.status}`);
+  const p = await res.json();
+  // purchaseState: 0 purchased, 1 cancelled (refunded), 2 pending
+  if (p.purchaseState === 1) return corsResponse({ ok: false, revoked: true }, 200, origin);
+  if (p.purchaseState === 2) return corsResponse({ ok: false, pending: true }, 200, origin);
+  if (p.purchaseState !== 0) return corsResponse({ ok: false, invalid: true }, 200, origin);
+  if (p.acknowledgementState === 0) {
+    const ack = await fetch(`${base}:acknowledge`, { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: '{}' });
+    if (!ack.ok) throw new Error(`Play acknowledge ${ack.status}`);
+  }
+  return corsResponse({ ok: true, sku, orderId: p.orderId || '', purchaseTime: Number(p.purchaseTimeMillis) || null }, 200, origin);
+}

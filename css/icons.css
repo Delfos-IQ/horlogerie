@@ -1,5 +1,5 @@
 /*!
- * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (63 iconos)
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (67 iconos)
  * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
  * No editar a mano: vuelve a ejecutar el script.
  */
@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("./icons/tabler-icons-bfc43494.woff2") format("woff2");
+  src: url("./icons/tabler-icons-6b83bdd5.woff2") format("woff2");
 }
 .ti {
   font-family: "tabler-icons" !important;
@@ -37,10 +37,13 @@
 .ti-circle:before { content: "\ea6b"; }
 .ti-circle-check:before { content: "\ea67"; }
 .ti-clock:before { content: "\ea70"; }
+.ti-clock-plus:before { content: "\f7c5"; }
 .ti-cloud:before { content: "\ea76"; }
 .ti-cloud-download:before { content: "\ea71"; }
 .ti-cloud-x:before { content: "\f85d"; }
+.ti-coin:before { content: "\eb82"; }
 .ti-copy:before { content: "\ea7a"; }
+.ti-crown:before { content: "\ed12"; }
 .ti-database:before { content: "\ea88"; }
 .ti-database-export:before { content: "\ee6e"; }
 .ti-database-import:before { content: "\ee6f"; }
@@ -60,6 +63,7 @@
 .ti-license:before { content: "\ebc0"; }
 .ti-link:before { content: "\eade"; }
 .ti-list-details:before { content: "\ef40"; }
+.ti-lock:before { content: "\eae2"; }
 .ti-mail:before { content: "\eae5"; }
 .ti-pencil:before { content: "\eb04"; }
 .ti-photo:before { content: "\eb0a"; }

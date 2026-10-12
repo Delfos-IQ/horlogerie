@@ -30,6 +30,44 @@ const DB = {
 // NO_DB=1 starts the Worker without D1 (behaves like v13: cloud v1 only)
 const env = { HORLOGERIE_KV: KV, ALLOW_LOCAL_FETCH: '1', ...(process.env.NO_DB ? {} : { DB }) };
 
+// Google Play mock for Rotor Pro (NO_PRO=1 starts without it). A real RSA key signs
+// the service-account JWT and the mock checks the signature, like Google would.
+// Purchase tokens: valid-… (bought, not yet acknowledged), acked-…, refunded-…, pending-…; anything else is unknown.
+const google = { acks: [], tokens: 0 };
+if (!process.env.NO_PRO) {
+  const kp = await crypto.subtle.generateKey({ name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['sign', 'verify']);
+  const pkcs8 = Buffer.from(await crypto.subtle.exportKey('pkcs8', kp.privateKey)).toString('base64');
+  env.GOOGLE_SERVICE_ACCOUNT = JSON.stringify({ client_email: 'rotor@test.iam', token_uri: 'https://oauth2.test/token',
+    private_key: `-----BEGIN PRIVATE KEY-----\n${pkcs8.match(/.{1,64}/g).join('\n')}\n-----END PRIVATE KEY-----\n` });
+  const realFetch = globalThis.fetch;
+  const b64d = s => Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+  globalThis.fetch = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json' } });
+    if (url === 'https://oauth2.test/token') {
+      const jwt = new URLSearchParams(init.body).get('assertion') || '';
+      const [h, c, sig] = jwt.split('.');
+      const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', kp.publicKey, b64d(sig || ''), new TextEncoder().encode(`${h}.${c}`));
+      const claims = ok ? JSON.parse(b64d(c)) : {};
+      if (!ok || claims.iss !== 'rotor@test.iam' || !claims.scope?.includes('androidpublisher')) return json({ error: 'invalid_grant' }, 400);
+      google.tokens++;
+      return json({ access_token: 'ya29.test', expires_in: 3600 });
+    }
+    if (url.startsWith('https://androidpublisher.googleapis.com/')) {
+      if ((init.headers?.Authorization || '') !== 'Bearer ya29.test') return json({ error: 'unauthorized' }, 401);
+      const m = url.match(/applications\/([^/]+)\/purchases\/products\/([^/]+)\/tokens\/([^/:]+)(:acknowledge)?$/);
+      if (!m || m[1] !== 'com.delfosiq.rotor') return json({ error: 'not found' }, 404);
+      const tok = decodeURIComponent(m[3]);
+      if (m[4]) { google.acks.push(tok); return new Response(null, { status: 204 }); }
+      const state = tok.startsWith('valid-') ? [0, 0] : tok.startsWith('acked-') ? [0, 1]
+        : tok.startsWith('refunded-') ? [1, 1] : tok.startsWith('pending-') ? [2, 0] : null;
+      if (!state) return json({ error: 'not found' }, 404);
+      return json({ purchaseState: state[0], acknowledgementState: state[1], orderId: 'GPA.1234-5678', purchaseTimeMillis: '1791700000000' });
+    }
+    return realFetch(input, init);
+  };
+}
+
 const log = [];
 http.createServer(async (req, res) => {
   const chunks = []; for await (const c of req) chunks.push(c);
@@ -48,7 +86,7 @@ http.createServer(async (req, res) => {
   // Test-only introspection
   if (req.url.startsWith('/__kv')) {
     res.writeHead(200, { 'Content-Type': 'application/json', ...cors });
-    return res.end(JSON.stringify({ keys: [...store.keys()], data: Object.fromEntries(store), log,
+    return res.end(JSON.stringify({ keys: [...store.keys()], data: Object.fromEntries(store), log, google,
       d1: process.env.NO_DB ? null : { users: (() => { try { return sqlite.prepare('SELECT * FROM users').all(); } catch { return []; } })(), items: (() => { try { return sqlite.prepare('SELECT uid, id, kind, updated, rev, deleted, data, LENGTH(photo) AS photoLen FROM items').all(); } catch { return []; } })() } }));
   }
   // Requests from the app (localhost in tests) arrive as if from the real app

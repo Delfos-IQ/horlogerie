@@ -23,6 +23,9 @@ import * as urlImport from './modules/url-import.js';
 import * as db from './db.js';
 import * as i18n from './i18n.js';
 import * as onboarding from './modules/onboarding.js';
+import * as billing from './billing.js';
+import * as pro from './modules/pro.js';
+import * as care from './modules/care.js';
 
 // Language and theme first: the static HTML is translated before anything is drawn
 i18n.applyTheme();
@@ -35,6 +38,8 @@ const actions = {
   historyMode:       arg => history.setHistoryMode(arg, true),
   detailTab:         arg => homeDetail.setDetailTab(arg),
   openTodaySheet:    () => homeDetail.openTodaySheet(),
+  openProSheet:      () => pro.openProSheet(),
+  openInsurance:     () => { if (pro.requirePro()) care.openInsuranceSheet(); },
   openLinkSheet:     () => session.openLinkSheet(),
   openPairSheet:     () => session.openPairSheet(),
   openSaveKeySheet:  () => session.openSaveKeySheet(),
@@ -129,7 +134,16 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', e => { if (e.data?.type === 'SW_UPDATED') reloadOnce(); });
   });
 }
+// Pro switched on or off (purchase, restore, refund): repaint what is on screen
+billing.onProChange(() => {
+  const v = document.querySelector('.view.active')?.id?.replace('view-', '');
+  if (v === 'detail' && core.ui.currentWatchId) homeDetail.openDetail(core.ui.currentWatchId);
+  else if (v === 'history') history.renderHistory();
+  else if (v === 'settings') settings.renderSettings();
+});
+
 window.addEventListener('load', () => {
+  setTimeout(billing.recheckPro, 3000);
   setTimeout(updates.initVersionCheck, 2000);
   setTimeout(sync.syncAuto, 1200);
 });
@@ -137,7 +151,7 @@ window.addEventListener('load', () => {
 /* ── Console and test access ──
    window.rotor exposes the modules for debugging. On localhost (tests,
    development) every exported function is also global, as before. */
-const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db, i18n, onboarding };
+const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db, i18n, onboarding, billing, pro, care };
 window.rotor = modulesApi;
 if (['localhost', '127.0.0.1'].includes(location.hostname)) {
   for (const mod of Object.values(modulesApi)) {

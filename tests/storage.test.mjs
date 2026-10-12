@@ -105,6 +105,68 @@ cases.push(async () => {
   t('saneado: sin id no entra', ctx.sanitizeWatch({ brand: 'A' }) === null);
 });
 
+// ── Rotor Pro: mantenimiento, precisión, correas, valor ──
+cases.push(async () => {
+  const now = at(2026, 6, 15);
+  const { ctx } = await load({}, now);
+  const w = await ctx.addWatch({ brand: 'Seiko', model: 'SPB', type: 'automatic' });
+  t('revisión: se apunta y actualiza «última revisión»', ctx.addServiceEntry(w.id, { date: at(2026, 5, 1), kind: 'service', cost: 180, note: 'Limpieza' })
+    && ctx.getWatch(w.id).lastService === at(2026, 5, 1));
+  ctx.addServiceEntry(w.id, { date: at(2025, 1, 1), kind: 'service', cost: 20 });
+  t('una revisión más antigua no retrocede la fecha', ctx.getWatch(w.id).lastService === at(2026, 5, 1));
+  t('coste total de mantenimiento', ctx.serviceCost(ctx.getWatch(w.id)) === 200);
+  t('tipo de intervención desconocido: no entra', !ctx.addServiceEntry(w.id, { date: at(2026, 5, 2), kind: 'magia' }));
+  const id0 = ctx.getWatch(w.id).serviceLog[0].id;
+  t('el historial va de más reciente a más antiguo y se borra por id',
+    ctx.getWatch(w.id).serviceLog[0].date === at(2026, 5, 1) && ctx.deleteServiceEntry(w.id, id0) && ctx.getWatch(w.id).serviceLog.length === 1);
+});
+cases.push(async () => {
+  const { ctx } = await load();
+  const w = await ctx.addWatch({ brand: 'Seiko', model: 'SPB', type: 'automatic' });
+  const t0 = at(2026, 6, 1, 9);
+  ctx.addAccuracyReading(w.id, { ts: t0, offset: 0 });
+  ctx.addAccuracyReading(w.id, { ts: t0 + 4 * D, offset: 20 });            // +5 s/d
+  ctx.addAccuracyReading(w.id, { ts: t0 + 5 * D, offset: 23, setAfter: true }); // +3 s/d, then set right
+  ctx.addAccuracyReading(w.id, { ts: t0 + 7 * D, offset: -2 });            // −1 s/d from 0
+  const st = ctx.accuracyStats(ctx.getWatch(w.id));
+  const r = st.rates.map(x => Math.round(x.rate * 10) / 10);
+  t('precisión: s/día entre lecturas, y tras ponerlo en hora cuenta desde 0', r.join(',') === '5,3,-1', r.join(','));
+  t('media de las 3 últimas ponderada por días ((20+3−2)/7 = 3)', Math.round(st.avg * 10) / 10 === 3, String(st.avg));
+  t('lecturas absurdas (más de un día) no entran', !ctx.addAccuracyReading(w.id, { ts: t0, offset: 100000 }));
+});
+cases.push(async () => {
+  const { ctx } = await load();
+  const w = await ctx.addWatch({ brand: 'A', model: 'B' });
+  const s1 = ctx.addStrap(w.id, { name: 'Acero original', width: '20 mm' });
+  const s2 = ctx.addStrap(w.id, { name: 'NATO gris' });
+  t('correas: la primera queda puesta', s1.fitted === true && !s2.fitted);
+  ctx.fitStrap(w.id, s2.id);
+  const st = ctx.getWatch(w.id).straps;
+  t('poner otra quita la anterior', st.find(x => x.id === s2.id).fitted && !st.find(x => x.id === s1.id).fitted);
+  ctx.deleteStrap(w.id, s2.id);
+  t('al borrar la puesta, pasa a la siguiente', ctx.getWatch(w.id).straps[0].fitted === true);
+});
+cases.push(async () => {
+  const { ctx } = await load();
+  const ws = [
+    { id: '1', brand: 'Seiko', model: 'A', type: 'automatic', purchasePrice: 400, currentValue: 500, serviceLog: [{ id: 's', date: 1, kind: 'service', cost: 100 }] },
+    { id: '2', brand: 'Casio', model: 'B', type: 'quartz', purchasePrice: 100 },
+    { id: '3', brand: 'Seiko', model: 'C', type: 'automatic' },
+  ];
+  const v = ctx.collectionValue(ws, w => ({ 1: 10, 2: 20, 3: 0 })[w.id]);
+  t('valor: pagado, valor actual (sin valor usa el precio) y cambio', v.paid === 500 && v.value === 600 && Math.abs(v.change - 0.2) < 1e-9);
+  t('coste por uso de la colección incluye mantenimiento ((500+100)/30)', v.perWear === 20, String(v.perWear));
+  t('por marca, de mayor a menor', v.byBrand[0][0] === 'Seiko' && v.byBrand[0][1] === 500);
+});
+cases.push(async () => {
+  const { ctx } = await load();
+  const w = ctx.sanitizeWatch({ id: 'x', brand: 'A', model: 'B', serial: 'SN1', currentValue: 300,
+    serviceLog: [{ id: 'ok', date: 5, kind: 'service', cost: 10 }, { date: 5, kind: 'hack' }],
+    accuracy: [{ ts: 1, offset: 2 }, { ts: 2, offset: 'x' }], straps: [{ name: 'NATO', fitted: true }, { name: '' }] });
+  t('saneado Pro: se conservan los datos válidos y se descartan los malos',
+    w.serial === 'SN1' && w.currentValue === 300 && w.serviceLog.length === 1 && w.accuracy.length === 1 && w.straps.length === 1 && w.straps[0].fitted);
+});
+
 if (process.env.CASE !== undefined) {
   await cases[Number(process.env.CASE)]();
   console.log(`#RESULT ${ok} ${ko}`);

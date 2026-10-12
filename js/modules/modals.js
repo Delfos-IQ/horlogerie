@@ -236,10 +236,11 @@ export function setMaintFields(w) {
   document.getElementById('f-battery').value        = tsToDateInput(w.batteryChanged);
   const today = tsToDateInput(Date.now());
   ['f-purchase-date', 'f-last-service', 'f-battery'].forEach(id => document.getElementById(id).max = today);
-  const cur = document.getElementById('f-price-cur');
-  if (cur) cur.textContent = currencySymbol();
+  document.querySelectorAll('.f-cur').forEach(el => { el.textContent = currencySymbol(); });
+  document.getElementById('f-current-value').value = typeof w.currentValue === 'number' ? w.currentValue : '';
+  document.getElementById('f-serial').value = w.serial || '';
   const details = document.getElementById('f-maint');
-  if (details) details.open = !!(w.purchasePrice || w.purchaseDate || w.lastService || w.batteryChanged);
+  if (details) details.open = !!(w.purchasePrice || w.purchaseDate || w.lastService || w.batteryChanged || w.currentValue || w.serial);
   updateMaintVisibility();
 }
 /** Battery only matters for quartz; service only for mechanical */
@@ -253,13 +254,18 @@ export function readMaintFields() {
   const raw = document.getElementById('f-purchase-price').value.trim().replace(',', '.');
   const price = raw === '' ? null : Number(raw);
   if (price !== null && (!isFinite(price) || price < 0)) { showToast(t('El precio debe ser un número')); return null; }
+  const rawV = document.getElementById('f-current-value').value.trim().replace(',', '.');
+  const currentValue = rawV === '' ? null : Number(rawV);
+  if (currentValue !== null && (!isFinite(currentValue) || currentValue < 0)) { showToast(t('El precio debe ser un número')); return null; }
   const out = {
     purchasePrice:  price,
     purchaseDate:   dateInputToTs(document.getElementById('f-purchase-date').value),
     lastService:    dateInputToTs(document.getElementById('f-last-service').value),
     batteryChanged: dateInputToTs(document.getElementById('f-battery').value),
+    currentValue,
+    serial:         document.getElementById('f-serial').value.trim() || null,
   };
-  if (Object.entries(out).some(([k, v]) => k !== 'purchasePrice' && v !== null && v > Date.now())) {
+  if (['purchaseDate', 'lastService', 'batteryChanged'].some(k => out[k] !== null && out[k] > Date.now())) {
     showToast(t('Las fechas no pueden ser futuras')); return null;
   }
   return out;

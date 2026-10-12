@@ -6,12 +6,12 @@ Material listo en esta carpeta:
 
 | Archivo | Para qué |
 |---|---|
-| `ficha.md` | Título, descripciones (ES y PT) y respuestas del cuestionario de contenido |
+| `ficha.md` | Título, descripciones (ES, EN y PT) y respuestas del cuestionario de contenido |
 | `seguridad-datos.md` | Respuestas del formulario «Seguridad de los datos» |
 | `capturas/` | 5 capturas de pantalla 1080×1918 y el gráfico destacado 1024×500 |
 | `assetlinks.json` | Plantilla del archivo que demuestra que la web y la app son tuyas |
 | `twa-manifest.json` | Configuración para Bubblewrap (alternativa a PWABuilder) |
-| `../../privacidad.html` | Política de privacidad pública: `https://delfos-iq.github.io/horlogerie/privacidad.html` |
+| `../../privacidad.html` | Política de privacidad pública: `https://delfos-iq.github.io/horlogerie/privacidad.html` (en inglés: `privacy.html`) |
 
 Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app servida en local).
 
@@ -58,7 +58,7 @@ Android solo abre la app a pantalla completa si la web declara que la app es suy
 
 ## 3. Play Console
 
-1. Crea la app: nombre `Rotor: rotación de relojes`, idioma predeterminado español (España), **App**, **Gratuita**.
+1. Crea la app: nombre `Rotor: rotación de relojes`, idioma predeterminado español (España), **App**, **Gratuita** (Pro va como producto integrado: ver 3 bis).
 2. Acepta *Play App Signing* al subir el primer AAB.
 3. **Ficha de Play Store**: textos de `ficha.md`, icono `icons/icon-512.png`, gráfico destacado y capturas de `capturas/`.
 4. **Contenido de la aplicación**:
@@ -71,6 +71,22 @@ Android solo abre la app a pantalla completa si la web declara que la app es suy
    - Aplicación gubernamental / financiera / de salud: no
 5. **Prueba cerrada** (obligatoria en cuentas personales creadas después del 13/11/2023): crea una pista de prueba cerrada, sube el AAB, añade **al menos 12 testers** (lista de emails de Google) y que **sigan apuntados 14 días seguidos**. Luego solicita acceso a producción desde el panel.
 6. Producción: promociona la versión de la prueba cerrada.
+
+## 3 bis. Rotor Pro (pago único, 9,99 €)
+
+La app es gratuita y Pro se desbloquea con un **producto integrado no consumible** de Play. La TWA usa la *Digital Goods API* de Chrome; el Worker v15 verifica cada compra con Google.
+
+1. **Cuenta de comerciante:** Play Console → Configuración → Perfil de pagos (sin ella no se pueden vender productos). Al ser persona física en Portugal, Google retiene el IVA de cada país; tú recibes el neto menos la comisión (15 % hasta 1 M$/año).
+2. **Envoltorio con Play Billing:** en `twa-manifest.json` ya está `"playBilling": { "enabled": true }`. Con PWABuilder: *Options → Play Billing → Enable*. Hay que generar y subir un AAB nuevo (el de la v2.4 no lo lleva).
+3. **Producto:** Play Console → Monetizar → Productos → Productos integrados → Crear: ID **`rotor_pro`** (exacto), nombre «Rotor Pro», precio 9,99 € (Play calcula el resto de monedas). Actívalo.
+4. **Cuenta de servicio para verificar compras:**
+   - Google Cloud Console → crea un proyecto (o usa uno) → habilita **Google Play Android Developer API**.
+   - IAM → Cuentas de servicio → Crear → sin roles → Claves → Añadir clave → JSON. Descarga el archivo.
+   - Play Console → Usuarios y permisos → Invitar usuario → el email de la cuenta de servicio → permisos de la app Rotor: **Ver información financiera** y **Gestionar pedidos y suscripciones**.
+   - Cloudflare → Workers → horlogerie → Settings → Variables → **Secret** `GOOGLE_SERVICE_ACCOUNT` = el contenido entero del JSON. (Si el paquete no es `com.delfosiq.rotor`, añade la variable `PLAY_PACKAGE`.)
+   - Comprueba `https://horlogerie.pedicode-app.workers.dev/health` → `"pro": true`.
+5. **Probar sin pagar:** Play Console → Configuración → Pruebas de licencias → añade tu cuenta de Google. Instala la app desde la prueba interna: Play muestra «Tarjeta de prueba, siempre se aprueba».
+6. En la web normal (fuera de Play) Pro no se puede comprar: la app lo explica y remite a Play.
 
 ## 4. Después de publicar
 

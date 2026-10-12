@@ -22,12 +22,16 @@
     "path": "./android.keystore",
     "alias": "rotor"
   },
-  "appVersionName": "2.4.0",
-  "appVersionCode": 1,
+  "appVersionName": "2.15.0",
+  "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "fallbackType": "customtabs",
-  "features": {},
+  "features": {
+    "playBilling": {
+      "enabled": true
+    }
+  },
   "alphaDependencies": {
     "enabled": false
   },

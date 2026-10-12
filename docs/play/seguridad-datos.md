@@ -1,6 +1,6 @@
 # Seguridad de los datos — respuestas para Play Console
 
-Basado en el comportamiento de la v2.9.0. Si cambias qué datos salen del dispositivo, revisa este formulario **antes** de publicar.
+Basado en el comportamiento de la v2.15.0. Si cambias qué datos salen del dispositivo, revisa este formulario **antes** de publicar.
 
 ## Recogida y uso compartido
 
@@ -19,9 +19,19 @@ Marca estos dos (y el de diagnóstico de la nota de abajo). En los dos: **recogi
 | Fotos y vídeos | **Fotos** | No |
 | Actividad en la app | **Otro contenido generado por el usuario** (relojes, notas, historial de uso, lista de deseos) | No |
 
+### Rotor Pro (compra en Play)
+
+Para verificar la compra, la app envía a nuestro Worker el *token de compra* de Google Play; el Worker lo consulta en la API de Google y no lo guarda. Declara:
+
+| Categoría | Tipo | Recogido / compartido | ¿Efímero? | Opcional | Finalidad |
+|---|---|---|---|---|---|
+| Información financiera | **Historial de compras** | Recogido, no compartido | **Sí** | Sí (solo si compras Pro) | Funciones de la app |
+
+El pago en sí lo procesa Google Play: la app nunca ve datos de tarjeta.
+
 ## Lo que **no** se recoge (no marcar)
 
-Ubicación, información personal (nombre, email, dirección…), información financiera (el precio pagado se guarda como contenido del usuario, no como dato de pago), salud, mensajes, contactos, calendario, identificadores de dispositivo o de publicidad, historial web, archivos de audio, resto de «Información y rendimiento de la app» (no hay analítica ni informes de fallos).
+Ubicación, información personal (nombre, email, dirección…), otra información financiera (el precio pagado por cada reloj se guarda como contenido del usuario, no como dato de pago), salud, mensajes, contactos, calendario, identificadores de dispositivo o de publicidad, historial web, archivos de audio, resto de «Información y rendimiento de la app» (no hay analítica ni informes de fallos).
 
 > El Worker guarda un hash de la IP (nunca la IP) durante 1 h para limitar abusos y 24 h en el registro de errores, sin vincularlo a la colección. Para ir sobre seguro, declara también **Información y rendimiento de la app → Diagnóstico**: recogido, no compartido, no opcional, finalidad «Prevención de fraude, seguridad y cumplimiento». Si añades analítica, actualiza el formulario.
 

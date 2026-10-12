@@ -9,6 +9,7 @@
  *   merge    sanitizing, tombstones, merging with the cloud
  *   backup   JSON backups
  *   wishlist the wishlist
+ *   care     Rotor Pro: maintenance log, accuracy, straps, collection value
  */
 export * from './data/persist.js';
 export * from './data/photos.js';
@@ -17,3 +18,4 @@ export * from './data/wear.js';
 export * from './data/merge.js';
 export * from './data/backup.js';
 export * from './data/wishlist.js';
+export * from './data/care.js';

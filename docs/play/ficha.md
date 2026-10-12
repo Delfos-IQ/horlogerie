@@ -30,6 +30,13 @@ QUÉ PUEDES HACER
 • Lista de deseos con precio objetivo y especificaciones.
 • Exporta tu colección a PDF con fichas, fotos e historial.
 
+ROTOR PRO (PAGO ÚNICO, SIN SUSCRIPCIÓN)
+• Historial de mantenimiento con costes; los avisos de revisión y pila se ajustan solos.
+• Precisión: apunta cuánto adelanta o atrasa y verás sus segundos al día.
+• Correas de cada reloj.
+• Valor de la colección y coste real por uso.
+• Inventario en PDF para el seguro: fotos, números de serie, compra y valor.
+
 TUS DATOS SON TUYOS
 • Sin cuentas ni registro.
 • Todo se guarda en tu móvil y funciona sin conexión.
@@ -60,6 +67,13 @@ WHAT YOU CAN DO
 • Wishlist with target price and specs.
 • Export your collection to PDF with spec pages, photos and history.
 • Light and dark themes.
+
+ROTOR PRO (ONE-TIME PURCHASE, NO SUBSCRIPTION)
+• Maintenance history with costs; service and battery reminders adjust themselves.
+• Accuracy: log how fast or slow it runs and see its seconds per day.
+• Straps for every watch.
+• Collection value and the real cost per wear.
+• Insurance inventory in PDF: photos, serial numbers, purchase details and value.
 
 YOUR DATA IS YOURS
 • No accounts, no sign-up.
