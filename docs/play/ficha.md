@@ -29,9 +29,10 @@ QUÉ PUEDES HACER
 • Historial en calendario: toca un día para ver qué llevaste o apuntarlo. Ranking de tus 10 relojes más usados, los que tienes olvidados y el detalle de cada reloj por año.
 • Lista de deseos con precio objetivo y especificaciones.
 • Exporta tu colección a PDF con fichas, fotos e historial.
+• Tema claro y oscuro. En español, inglés y portugués.
 
 ROTOR PRO (PAGO ÚNICO, SIN SUSCRIPCIÓN)
-• Historial de mantenimiento con costes; los avisos de revisión y pila se ajustan solos.
+• Historial de mantenimiento con costes y avisos en el móvil cuando toca.
 • Precisión: apunta cuánto adelanta o atrasa y verás sus segundos al día.
 • Correas de cada reloj.
 • Valor de la colección y coste real por uso.
@@ -66,10 +67,10 @@ WHAT YOU CAN DO
 • Calendar history: tap a day to see or log what you wore. Your 10 most worn watches, the forgotten ones and each watch year by year.
 • Wishlist with target price and specs.
 • Export your collection to PDF with spec pages, photos and history.
-• Light and dark themes.
+• Light and dark themes. In English, Spanish and Portuguese.
 
 ROTOR PRO (ONE-TIME PURCHASE, NO SUBSCRIPTION)
-• Maintenance history with costs; service and battery reminders adjust themselves.
+• Maintenance history with costs and phone reminders when one is due.
 • Accuracy: log how fast or slow it runs and see its seconds per day.
 • Straps for every watch.
 • Collection value and the real cost per wear.
@@ -83,7 +84,7 @@ YOUR DATA IS YOURS
 • No ads, no analytics.
 ```
 
-## Portugués (pt-PT)
+## Portugués (pt-PT) — la app ya está en portugués
 
 **Título** (26): `Rotor: rotação de relógios`
 
@@ -96,24 +97,32 @@ Rotor é o caderno da tua coleção de relógios. Regista os que tens, anota qua
 
 O QUE PODES FAZER
 • A tua coleção num relance: foto, tipo de movimento e quando o usaste pela última vez.
-• Registo de uso simples: «Usei hoje» com um toque, regista dias passados ou cronometra a sessão enquanto o usas.
+• Registo de uso sem complicações: «Hoje uso…» e um toque. Regista dias passados ou, se quiseres, mede o tempo de uso.
 • Rotação inteligente: sugere o relógio que está há mais tempo sem sair; podes marcar favoritos ou deixar algum fora da rotação.
-• Ficha técnica de cada relógio: calibre, vidro, diâmetro, espessura, resistência à água, reserva de marcha e mais. Inclui uma base de modelos de microbrands e homenagens para preencher automaticamente.
-• Custo por uso: indica quanto pagaste e vê quanto te custa cada dia em que o usas.
+• Ficha técnica de cada relógio: calibre, vidro, diâmetro, espessura, resistência à água, reserva de marcha e mais. Preenche-a a partir da página da loja ou da marca: só se copia o que a página indica, nada é inventado.
+• Custo por uso: indica quanto pagaste e vê quanto te custa cada dia em que o usas, na tua moeda.
 • Avisos de manutenção: troca de pilha nos de quartzo e revisão periódica nos mecânicos.
-• Histórico em calendário: toque num dia para ver o que usou ou registá-lo. Ranking dos 10 relógios mais usados, os que tem esquecidos e o detalhe de cada relógio por ano.
+• Histórico em calendário: toca num dia para ver o que usaste ou registá-lo. Os teus 10 relógios mais usados, os esquecidos e o detalhe de cada relógio por ano.
 • Lista de desejos com preço-alvo e especificações.
 • Exporta a coleção para PDF com fichas, fotos e histórico.
+• Tema claro e escuro. Em português, espanhol e inglês.
+
+ROTOR PRO (PAGAMENTO ÚNICO, SEM SUBSCRIÇÃO)
+• Histórico de manutenção com custos e avisos no telemóvel quando é altura.
+• Precisão: regista quanto adianta ou atrasa e vê os segundos por dia.
+• Braceletes de cada relógio.
+• Valor da coleção e custo real por uso.
+• Inventário em PDF para o seguro: fotos, números de série, compra e valor.
 
 OS TEUS DADOS SÃO TEUS
 • Sem contas nem registo.
 • Tudo fica no teu telemóvel e funciona sem ligação.
-• Cópia na nuvem opcional para usar a coleção em vários dispositivos; podes apagá-la quando quiseres.
+• Cópia na nuvem opcional, cifrada de ponta a ponta, para usar a coleção em vários dispositivos; podes apagá-la quando quiseres.
 • Cópia de segurança completa num ficheiro, com fotos incluídas.
 • Sem anúncios e sem analítica.
 ```
 
-> La app está en español e inglés; un móvil en portugués la ve en inglés. Si publicas la ficha en portugués, avisa en la primera línea («App em inglês e espanhol») o traduce la interfaz antes (el diccionario `js/i18n/en.js` sirve de plantilla para `pt.js`).
+Política de privacidad en portugués: `https://delfos-iq.github.io/horlogerie/privacidade.html` (Play solo admite una URL: deja la española como principal; las tres páginas enlazan entre sí).
 
 ---
 

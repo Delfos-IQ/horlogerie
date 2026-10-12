@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<title>Ajuda · Rotor</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --dark:#F3EEE3; --dark2:#FBF8F1; --dark3:#E8E1D2; --gold:#B8963E; --gold-light:#7E6118; --light:#1E1B16; --mid:#655D51;
+          --line:rgba(126,97,24,.24); color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --dark:#0B1220; --dark2:#141D30; --dark3:#1F2A42; --gold-light:#D4AF6A; --light:#E6E1D6; --mid:#97A0B1;
+            --line:rgba(184,150,62,.24); color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'Jost', system-ui, sans-serif;
+         font-size: 16px; line-height: 1.65; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+       letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+       margin: 36px 0 8px; }
+  p, li { color: var(--light); }
+  .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+  .box { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid var(--line); }
+  th { color: var(--gold-light); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--gold-light); }
+  code { font-size: 13px; background: var(--dark3); padding: 1px 5px; border-radius: 4px; }
+  details { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 12px 16px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 500; color: var(--light); }
+  details[open] summary { margin-bottom: 6px; }
+  .key { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--dark3); padding: 1px 6px; border-radius: 5px; }
+  .back { margin-top: 40px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ajuda</h1>
+  <div class="meta">Rotor · Cópia na nuvem, chave de recuperação e outros dispositivos · <a href="./ayuda.html" lang="es">Español</a> · <a href="./help.html" lang="en">English</a></div>
+
+  <div class="box"><p><strong>O essencial:</strong> os teus relógios vivem no teu telemóvel. Se ativares a cópia na nuvem, ficam também guardados num servidor e podes recuperá-los com a tua <strong>chave de recuperação</strong>. O Rotor não te pede email nem conta: a chave é a única coisa que identifica a tua cópia, por isso guarda-a bem.</p></div>
+
+  <h2>Registar o que usas</h2>
+  <details open><summary>Como registo o relógio de hoje?</summary>
+    <p>Em Coleção toca em <strong>Hoje uso…</strong> e escolhe o relógio. Basta um toque; outro toque desfaz. Também podes tocar em <strong>Uso-o hoje</strong> no relógio sugerido ou na ficha de qualquer relógio. Para outros dias usa <strong>Outro dia</strong>, ou toca num dia em Histórico → Calendário.</p></details>
+  <details><summary>O que é «Medir o tempo de uso»?</summary>
+    <p>É opcional. Põe a contar o tempo nesse relógio até tocares em <strong>Tirá-lo</strong>. Quase toda a gente regista só dias; o contador existe para quem quer também as horas.</p></details>
+
+  <h2>A cópia na nuvem</h2>
+  <details open><summary>O que se guarda e quando?</summary>
+    <p>Os teus relógios (com fotos e histórico de uso) e a tua lista de desejos. Guardam-se sozinhos uns segundos depois de cada alteração, ao abrir a app e quando volta a ligação. Em Definições → Estado do sistema vês quando foi a última vez.</p></details>
+  <details open><summary>Quem pode ver a minha cópia?</summary>
+    <p>Só tu. Tudo é cifrado no teu telemóvel com uma chave que vem da tua chave de recuperação, e essa chave nunca é enviada. No servidor só há texto cifrado: nem o Rotor nem a Cloudflare o podem ler. Por isso mesmo, <strong>se perderes a chave e não tiveres nenhum dispositivo com o Rotor, a cópia não pode ser recuperada</strong>.</p></details>
+  <details><summary>O que acontece se a desativar?</summary>
+    <p>Deixam de ser enviadas alterações. O que já estava na nuvem continua lá até tocares em «Apagar da nuvem».</p></details>
+
+  <h2>A tua chave de recuperação</h2>
+  <details open><summary>O que é?</summary>
+    <p>Um código de 16 caracteres, por exemplo <span class="key">7KQ2-M4XR-9TBW-2HNF</span>, criado ao ativar a nuvem. Funciona como uma palavra-passe: quem a tiver pode ver e apagar a tua cópia. As chaves criadas antes da versão 2.8 são mais compridas e continuam a funcionar; «Mudar chave» dá-te uma curta.</p></details>
+  <details><summary>Onde a guardo?</summary>
+    <p>No teu gestor de palavras-passe, ou envia-a para ti próprio com o botão «Guardar…». Está em Definições → Cópia na nuvem.</p></details>
+  <details><summary>Acho que alguém a viu</summary>
+    <p>Toca em «Mudar chave»: é criada uma chave nova e apagada a cópia guardada com a antiga. Depois volta a associar os teus outros dispositivos.</p></details>
+
+  <h2>Usar o Rotor noutro dispositivo</h2>
+  <details open><summary>Com um código de 6 caracteres (o mais rápido)</summary>
+    <p>No dispositivo que já tem os teus relógios: Definições → <strong>Associar outro dispositivo</strong>. Aparece um código como <span class="key">K7Q-M4X</span> e um QR.</p>
+    <p>No novo: Definições → <strong>Usar uma chave ou código</strong> e escreve o código, ou digitaliza o QR com a câmara. O código serve uma só vez e expira ao fim de 10 minutos.</p></details>
+  <details><summary>Com a tua chave de recuperação</summary>
+    <p>No novo dispositivo: Definições → <strong>Usar uma chave ou código</strong> e escreve a chave. O que já lá estivesse junta-se à cópia; nada é apagado.</p></details>
+
+  <h2>Mudei de telemóvel ou reinstalei a app</h2>
+  <details open><summary>Como recupero os meus relógios?</summary>
+    <p>Ao desinstalar, o telemóvel apaga os dados da app. Para os recuperar:</p>
+    <ul>
+      <li><strong>Se tinhas a nuvem ativada:</strong> abre o Rotor, toca em «Já tenho o Rotor: recuperar os meus relógios» (ou Definições → Usar uma chave ou código) e escreve a tua chave. Se ainda tens outro dispositivo com o Rotor, também serve um código de associação.</li>
+      <li><strong>Se não usavas a nuvem:</strong> precisas de uma cópia de segurança (Definições → Cópia de segurança JSON). Restaura-a em Definições → Restaurar cópia.</li>
+    </ul>
+    <p>Se tinhas a nuvem ativada mas perdeste a chave e não tens nenhum dispositivo com o Rotor, não há forma de recuperar a cópia: não sabemos de quem é.</p></details>
+
+  <h2>Cópias de segurança (JSON)</h2>
+  <details><summary>Para que servem se já uso a nuvem?</summary>
+    <p>São um ficheiro que guardas tu, independente do servidor. Se não usas a nuvem, são a única forma de não perder a tua coleção. A app lembra-te de fazer uma se passar um mês sem cópia.</p></details>
+
+  <h2>Preencher a partir de uma ligação</h2>
+  <details><summary>Como funciona?</summary>
+    <p>Colas a ligação da loja ou do site oficial e o servidor descarrega essa página pública. A app procura nela a ficha técnica (tabelas e linhas como «Diâmetro: 41 mm») e copia os dados tal como estão; não usa inteligência artificial nem preenche nada por suposição. Por baixo de cada dado vês a linha da página de onde vem, e escolhes o que aplicar.</p>
+    <p>Algumas lojas (Amazon, Chrono24…) bloqueiam a descarga automática. Nesse caso copia a tabela de especificações e cola-a em «Colar o texto da ficha»: é lida no teu telemóvel, sem ser enviada para lado nenhum.</p></details>
+
+  <h2>Rotor Pro</h2>
+  <details><summary>O que inclui e quanto custa?</summary>
+    <p>Histórico de manutenção com custos, precisão em segundos por dia, braceletes, valor da coleção e inventário em PDF para o seguro. É um pagamento único na app do Google Play, sem subscrição. O que é gratuito continua gratuito.</p></details>
+  <details><summary>Mudei de telemóvel: tenho de pagar outra vez?</summary>
+    <p>Não. Abre o Rotor a partir do Google Play com a mesma conta Google e o Pro ativa-se sozinho. Se não, Definições → Rotor Pro → «Já comprei: restaurar».</p></details>
+  <details><summary>Avisos no telemóvel</summary>
+    <p>Definições → Avisos no telemóvel (Pro). Avisa-te quando é altura de ver a pilha (2 anos), quando toca a revisão (5 anos desde a última) e quando um relógio está há um mês na caixa. É o Android que decide quando acorda a app, por isso um aviso pode chegar com umas horas de atraso. Tudo é calculado no telemóvel.</p></details>
+
+  <h2>Contacto</h2>
+  <p>Escreve para <a href="mailto:pedicode.app@gmail.com?subject=Rotor">pedicode.app@gmail.com</a>.</p>
+  <p class="back"><a href="./">← Voltar ao Rotor</a></p>
+</main>
+</body>
+</html>

@@ -26,6 +26,7 @@ import * as onboarding from './modules/onboarding.js';
 import * as billing from './billing.js';
 import * as pro from './modules/pro.js';
 import * as care from './modules/care.js';
+import * as reminders from './reminders.js';
 
 // Language and theme first: the static HTML is translated before anything is drawn
 i18n.applyTheme();
@@ -134,8 +135,27 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', e => { if (e.data?.type === 'SW_UPDATED') reloadOnce(); });
   });
 }
+// Reminders: keep the plan the service worker reads in step with the collection
+let remindTimer = null;
+const replan = () => { clearTimeout(remindTimer); remindTimer = setTimeout(reminders.syncReminderPlan, 800); };
+storage.onDataChange(replan);
+document.addEventListener('visibilitychange', () => { if (document.hidden) reminders.syncReminderPlan(); });
+
+/* Opened from a reminder: …/horlogerie/#reloj=<id> */
+function openFromHash(hash = location.hash) {
+  const m = /^#reloj=([A-Za-z0-9_-]{1,64})$/.exec(hash);
+  if (!m) return;
+  window.history.replaceState(window.history.state, '', location.pathname + location.search);
+  if (storage.getWatch(m[1])) homeDetail.openDetail(m[1], 'maint');
+}
+navigator.serviceWorker?.addEventListener('message', e => {
+  if (e.data?.type === 'OPEN_URL') openFromHash(new URL(e.data.url, location.href).hash);
+});
+window.addEventListener('hashchange', () => openFromHash());
+
 // Pro switched on or off (purchase, restore, refund): repaint what is on screen
 billing.onProChange(() => {
+  replan();
   const v = document.querySelector('.view.active')?.id?.replace('view-', '');
   if (v === 'detail' && core.ui.currentWatchId) homeDetail.openDetail(core.ui.currentWatchId);
   else if (v === 'history') history.renderHistory();
@@ -144,6 +164,12 @@ billing.onProChange(() => {
 
 window.addEventListener('load', () => {
   setTimeout(billing.recheckPro, 3000);
+  setTimeout(async () => {
+    await reminders.syncReminderPlan();
+    openFromHash();
+    // Without background sync this is the only moment due reminders can be shown
+    if (reminders.remindersOn()) navigator.serviceWorker?.controller?.postMessage({ type: 'RUN_REMINDERS' });
+  }, 1900);
   setTimeout(updates.initVersionCheck, 2000);
   setTimeout(sync.syncAuto, 1200);
 });
@@ -151,7 +177,7 @@ window.addEventListener('load', () => {
 /* ── Console and test access ──
    window.rotor exposes the modules for debugging. On localhost (tests,
    development) every exported function is also global, as before. */
-const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db, i18n, onboarding, billing, pro, care };
+const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db, i18n, onboarding, billing, pro, care, reminders };
 window.rotor = modulesApi;
 if (['localhost', '127.0.0.1'].includes(location.hostname)) {
   for (const mod of Object.values(modulesApi)) {

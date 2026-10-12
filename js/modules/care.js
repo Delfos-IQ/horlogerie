@@ -1,6 +1,6 @@
 /* ─── Rotor Pro on the watch page: maintenance log, accuracy and straps; collection value ─── */
 import { SERVICE_KINDS, accuracyStats, addAccuracyReading, addServiceEntry, addStrap, collectionValue, deleteAccuracyReading,
-  deleteServiceEntry, deleteStrap, fitStrap, getWatch, getWatches, isSafePhoto, serviceCost, wearStats } from '../storage.js';
+  deleteServiceEntry, deleteStrap, fitStrap, getWatch, getWatches, photoSrc, serviceCost, wearStats } from '../storage.js';
 import { isPro } from '../billing.js';
 import { locale, money, t } from '../i18n.js';
 import { escHtml, formatDate, showToast } from './core.js';
@@ -204,7 +204,7 @@ export function renderValue(el, openWatch) {
     <div class="section-title mt-14">${t('Por reloj')}</div>
     <div class="care-list">${rows.map(r => `
       <button class="care-row value-row" data-wid="${escHtml(r.w.id)}">
-        ${isSafePhoto(r.w.photo) ? `<img class="cal-chip" src="${r.w.photo}" alt="" style="--s:34px">` : ''}
+        ${photoSrc(r.w.id) ? `<img class="cal-chip" src="${photoSrc(r.w.id)}" alt="" style="--s:34px">` : ''}
         <div class="care-main"><b>${escHtml(r.w.brand)} ${escHtml(r.w.model)}</b>
           <small>${r.paid ? t('Pagado {p}', { p: money(r.paid, { decimals: 0 }) }) : t('Sin precio')}${r.st.daysWorn && r.paid ? ' · ' + t('{c} por uso', { c: money((r.paid + r.sc) / r.st.daysWorn) }) : ''}</small></div>
         <span class="care-val">${r.val ? money(r.val, { decimals: 0 }) : '—'}</span>

@@ -9,17 +9,19 @@
  *
  * Static HTML is translated once at boot by translateDOM(): any text node or
  * placeholder / aria-label / title / alt whose exact text is a key is replaced.
- * tools/check-i18n.mjs (CI) checks that every key used has an English entry.
+ * tools/check-i18n.mjs (CI) checks that every key used has an entry in every dictionary.
  */
 import en from './i18n/en.js';
+import pt from './i18n/pt.js';
 
 const PREFS_KEY = 'rotor_prefs_v1';
-const DICTS = { en };
+const DICTS = { en, pt };
 
 export const LANGS = [
   { id: 'auto', label: 'Automático' },
   { id: 'es',   label: 'Español' },
   { id: 'en',   label: 'English' },
+  { id: 'pt',   label: 'Português' },
 ];
 export const THEMES = [
   { id: 'auto',  label: 'Automático' },
@@ -33,7 +35,7 @@ function readPrefs() {
   let p = {};
   try { p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') || {}; } catch {}
   return {
-    lang:     ['auto', 'es', 'en'].includes(p.lang) ? p.lang : 'auto',
+    lang:     ['auto', 'es', 'en', 'pt'].includes(p.lang) ? p.lang : 'auto',
     theme:    ['auto', 'light', 'dark'].includes(p.theme) ? p.theme : 'auto',
     currency: CURRENCIES.includes(p.currency) ? p.currency : defaultCurrency(),
     onboarded: !!p.onboarded,
@@ -54,18 +56,22 @@ export function setPref(key, value) {
   if (key === 'theme') applyTheme();
 }
 
-/** Active language: 'es' or 'en' */
+/** Active language: 'es', 'en' or 'pt' */
 export function lang() {
   if (prefs.lang !== 'auto') return prefs.lang;
   const nl = ((typeof navigator !== 'undefined' && navigator.language) || 'es').toLowerCase();
-  // Spanish and the languages of Spain read the Spanish version; the rest, English
-  return /^(es|gl|ca|eu)\b/.test(nl) ? 'es' : 'en';
+  // Spanish and the languages of Spain read Spanish; Portuguese, Portuguese; the rest, English
+  if (/^(es|gl|ca|eu)\b/.test(nl)) return 'es';
+  if (/^pt\b/.test(nl)) return 'pt';
+  return 'en';
 }
 
 /** BCP-47 locale for dates and numbers */
 export function locale() {
-  if (lang() === 'es') return 'es-ES';
+  const l = lang();
+  if (l === 'es') return 'es-ES';
   const nl = (typeof navigator !== 'undefined' && navigator.language) || '';
+  if (l === 'pt') return /^pt-BR$/i.test(nl) ? 'pt-BR' : 'pt-PT';
   return /^en\b/i.test(nl) ? nl : 'en-GB';
 }
 
@@ -120,7 +126,8 @@ export function translateDOM(root = document.body) {
     const raw = n.nodeValue, key = raw.trim();
     if (key && d[key]) n.nodeValue = raw.replace(key, d[key]);
   }
-  root.querySelectorAll('[data-href-en]').forEach(a => a.setAttribute('href', a.dataset.hrefEn));
+  const hrefKey = lang() === 'pt' ? 'hrefPt' : 'hrefEn';   // help and privacy in the user's language
+  root.querySelectorAll('[data-href-en]').forEach(a => a.setAttribute('href', a.dataset[hrefKey] || a.dataset.hrefEn));
   root.querySelectorAll('*').forEach(el => {
     for (const a of ATTRS) {
       const v = el.getAttribute(a);

@@ -111,5 +111,10 @@ expect('ficha en inglés para una app en inglés', parseSpecs({ text: enSpec, la
   { caja: 'Stainless steel 316L', diametro: '38.4 mm', cristal: 'Domed sapphire (anti-reflective)', brazalete: 'Rubber',
     esfera: 'Navy blue', reserva: '41 h', movimiento: 'Automatic · Seiko NH35 · 24 jewels · hacking seconds' });
 
+// 13) Portuguese interface
+expect('ficha en portugués para una app en portugués', parseSpecs({ text: enSpec, lang: 'pt' }),
+  { caja: 'Aço inoxidável 316L', diametro: '38,4 mm', cristal: 'Safira abaulada (antirreflexo)', brazalete: 'Borracha',
+    esfera: 'Azul-marinho', reserva: '41 h', movimiento: 'Automático · Seiko NH35 · 24 rubis · com paragem dos segundos' });
+
 console.log(`--- ${ok}/${ok + ko} OK`);
 process.exit(ko ? 1 : 0);

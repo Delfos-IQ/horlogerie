@@ -1,6 +1,6 @@
 /* ─────────────────── HISTORY ─────────────────── */
 
-import { addWearDays, calendarDaysBetween, dayKey, getWatch, getWatches, isSafePhoto, removeWearDay, startOfDay, wearIntervals, wearStats, wornDayKeys } from '../storage.js';
+import { addWearDays, calendarDaysBetween, dayKey, getWatch, getWatches, photoSrc, removeWearDay, startOfDay, wearIntervals, wearStats, wornDayKeys } from '../storage.js';
 import { elapsedSince, escHtml, formatDate, navPush, navReplace, showToast, ui } from './core.js';
 import { locale, t } from '../i18n.js';
 import { openDetail, openWearSheet } from './home-detail.js';
@@ -177,8 +177,8 @@ export function renderHistoryDetail() {
     .sort((a, b) => b.days - a.days || `${a.w.brand} ${a.w.model}`.localeCompare(`${b.w.brand} ${b.w.model}`));
   body.innerHTML = yearChipsHTML() + `<div class="hw-grid">${data.map(({ w, days }) => {
     const cat = inferCategory(w);
-    const img = isSafePhoto(w.photo)
-      ? `<img src="${w.photo}" alt="" loading="lazy">`
+    const img = photoSrc(w.id)
+      ? `<img src="${photoSrc(w.id)}" alt="" loading="lazy">`
       : `<span class="hw-ini" style="--chip:${cat.color}">${escHtml(watchInitials(w))}</span>`;
     return `<button class="hw-card${days ? '' : ' unused'}" data-wid="${escHtml(w.id)}" aria-label="${escHtml(w.brand)} ${escHtml(w.model)}: ${dd(days)}">
       <span class="hw-photo">${img}<span class="hw-badge">${days}</span></span>
@@ -299,8 +299,8 @@ export function watchInitials(w) {
 }
 export function watchChip(w, size = 26) {
   const cat = inferCategory(w);
-  return isSafePhoto(w.photo)
-    ? `<img class="cal-chip" src="${w.photo}" alt="" width="${size}" height="${size}" style="--s:${size}px">`
+  return photoSrc(w.id)
+    ? `<img class="cal-chip" src="${photoSrc(w.id)}" alt="" width="${size}" height="${size}" style="--s:${size}px">`
     : `<span class="cal-chip cal-chip-txt" style="--chip:${cat.color};--s:${size}px">${escHtml(watchInitials(w))}</span>`;
 }
 

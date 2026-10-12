@@ -7,7 +7,7 @@ moneda se cambian en Ajustes; la bienvenida sale una sola vez.
 Uso (con la app servida en :8080 como indica e2e_sync.py):
   python3 tests/e2e_i18n.py
 """
-import asyncio, os, re
+import asyncio, json, os, re
 from playwright.async_api import async_playwright
 
 APP    = "http://localhost:8080/horlogerie/"
@@ -155,6 +155,42 @@ async def main():
         check("en español, la moneda elegida se mantiene", '450' in sub and '$' in sub and 'invertidos' in sub, sub)
 
         check("sin errores de JavaScript", not errs, errs[:3])
+
+        # ── Base de modelos en el idioma de la app ──
+        ctx2 = await b.new_context(locale="en-US", viewport={"width": 412, "height": 900}, service_workers='block')
+        en = await ctx2.new_page()
+        await en.goto(APP)
+        await en.wait_for_function("typeof dbSearch === 'function'")
+        hit = await en.evaluate("dbLoad().then(() => dbSearch('Berny Open Heart', 1)[0])")
+        check("base de modelos en inglés: valores traducidos", hit['specs']['cristal'] == 'Sapphire · Flat' and 'jewels' in hit['specs']['movimiento'] and 'en' not in hit, json.dumps(hit['specs'], ensure_ascii=False))
+        await ctx2.close()
+
+        # ── Portugués ──
+        ctx3 = await b.new_context(locale="pt-PT", viewport={"width": 412, "height": 900}, service_workers='block')
+        pt = await ctx3.new_page()
+        perrs = []
+        pt.on("pageerror", lambda e: perrs.append(str(e)))
+        await pt.goto(APP)
+        await pt.wait_for_function("typeof renderHome === 'function'")
+        await pt.wait_for_timeout(2200)
+        nav = await pt.text_content(".bottom-nav")
+        check("móvil en portugués → app en portugués", 'Coleção' in nav and 'Definições' in nav and 'Histórico' in nav, nav)
+        await pt.evaluate("addWatch({ brand: 'Seiko', model: 'Alpinist', type: 'automatic' }).then(w => updateWatch(w.id, { purchasePrice: 450 })).then(() => renderHome())")
+        await pt.wait_for_timeout(200)
+        sub = (await pt.text_content("#home-subtitle")).replace('\xa0', ' ')
+        check("portada en portugués con euros en formato portugués", sub.startswith('1 relógio') and '450 €' in sub and 'investidos' in sub, sub)
+        check("«Hoje uso…» en la portada", 'Hoje uso' in await pt.text_content("#today-card"))
+        hit = await pt.evaluate("dbLoad().then(() => dbSearch('Berny Open Heart', 1)[0].specs)")
+        check("base de modelos en portugués", hit['cristal'] == 'Safira · Plano' and 'rubis' in hit['movimiento'], json.dumps(hit, ensure_ascii=False))
+        await pt.evaluate("showView('settings')")
+        await pt.wait_for_timeout(400)
+        check("ayuda y privacidad enlazan a las páginas en portugués",
+              await pt.get_attribute("#view-settings a[data-href-pt*='ajuda']", "href") == './ajuda-pt.html'
+              and await pt.get_attribute("#view-settings a[data-href-pt*='privacidade']", "href") == './privacidade.html')
+        month = await pt.evaluate("showView('history'); document.getElementById('cal-title').textContent")
+        check("calendario con meses en portugués", any(m in month.lower() for m in ('janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro')), month)
+        check("sin errores de JavaScript (portugués)", not perrs, perrs[:3])
+        await ctx3.close()
         await b.close()
     ok = sum(1 for _, c in results if c)
     print(f"--- {ok}/{len(results)} OK")

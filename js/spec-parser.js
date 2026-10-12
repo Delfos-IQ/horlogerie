@@ -121,9 +121,9 @@
   function strap(v) { return pick(v, WORDS.strap) || clean(v).slice(0, 60); }
   function dialColor(v) {
     const t = clean(v);
-    const words = t.toLowerCase().split(/[\s,/]+/).filter(Boolean);
+    const words = t.toLowerCase().replace(/\bnavy blue\b/g, 'navy').split(/[\s,/]+/).filter(Boolean);
     if (words.length <= 4 && words.every(w => w in WORDS.color)) {
-      if (OUT_LANG === 'en') return cap(words.filter(w => w !== 'dial').join(' '));
+      if (OUT_LANG === 'en') return cap(t.toLowerCase().split(/[\s,/]+/).filter(w => w && w !== 'dial').join(' '));
       const out = words.map(w => WORDS.color[w]).filter(Boolean).join(' ');
       return out ? cap(out) : t;
     }
@@ -228,7 +228,7 @@
   ];
 
   /**
-   * parseSpecs({ text, title, jsonld, hostname, lang })   lang 'en' → values in English
+   * parseSpecs({ text, title, jsonld, hostname, lang })   lang 'en' | 'pt' → values in that language
    * → { brand, model, ref, type, precio, calibre, movimiento, cristal, diametro,
    *     grosor, resistencia, reserva, caja, brazalete, esfera, asas, _from: {campo: línea} }
    */
@@ -236,7 +236,7 @@
     OUT_LANG = lang;
     try {
       const res = parseSpecsEs({ text, title, jsonld });
-      return lang === 'en' ? toEnglish(res) : res;
+      return lang === 'en' ? toEnglish(res) : lang === 'pt' ? toPortuguese(res) : res;
     } finally { OUT_LANG = 'es'; }
   }
 
@@ -251,6 +251,35 @@
     [/Cuerda manual/g, 'Hand-wound'], [/\bAutomático\b/g, 'Automatic'], [/\bCuarzo\b/g, 'Quartz'],
     [/(\d+) rubíes/g, '$1 jewels'], [/con parada de segundero/g, 'hacking seconds'],
   ];
+  const PT_WORDS = [
+    [/Zafiro abombado/g, 'Safira abaulada'], [/Mineral abombado/g, 'Mineral abaulado'], [/Acrílico abombado/g, 'Acrílico abaulado'],
+    [/Hardlex abombado/g, 'Hardlex abaulado'], [/\(antirreflejos\)/g, '(antirreflexo)'],
+    [/\bZafiro\b/g, 'Safira'], [/\bTitanio\b/g, 'Titânio'], [/\bBronce\b/g, 'Bronze'], [/\bCerámica\b/g, 'Cerâmica'],
+    [/Acero inoxidable/g, 'Aço inoxidável'], [/\bLatón\b/g, 'Latão'], [/\bAleación\b/g, 'Liga'], [/\bgrado\b/g, 'grau'],
+    [/^Piel$/g, 'Pele'], [/^Caucho$/g, 'Borracha'], [/^Silicona$/g, 'Silicone'], [/Nailon \(NATO\)/g, 'Nylon (NATO)'],
+    [/^Malla$/g, 'Malha'], [/^Acero$/g, 'Aço'], [/\bCuarzo\b/g, 'Quartzo'],
+    [/(\d+) rubíes/g, '$1 rubis'], [/con parada de segundero/g, 'com paragem dos segundos'],
+  ];
+  // Dial colours: Spanish words → Portuguese (longest first)
+  const PT_COLORS = [['azul marino', 'azul-marinho'], ['verde azulado', 'verde-azulado'], ['rayos de sol', 'raiado'],
+    ['negra', 'preto'], ['blanca', 'branco'], ['plateada', 'prateado'], ['gris', 'cinzento'], ['marrón', 'castanho'], ['roja', 'vermelho'],
+    ['champán', 'champanhe'], ['dorada', 'dourado'], ['amarilla', 'amarelo'], ['naranja', 'laranja'], ['morada', 'roxo'],
+    ['salmón', 'salmão'], ['crema', 'creme'], ['marfil', 'marfim'], ['esqueletada', 'esqueleto'], ['con', 'com'], ['y', 'e']];
+  function toPortuguese(res) {
+    const out = { ...res };
+    for (const [k, v] of Object.entries(res)) {
+      if (typeof v !== 'string' || ['brand', 'model', 'ref', 'type'].includes(k)) continue;
+      let e = v;
+      for (const [re, rep] of PT_WORDS) e = e.replace(re, rep);
+      if (k === 'esfera') {
+        let low = ' ' + e.toLowerCase() + ' ';
+        for (const [es, pt] of PT_COLORS) low = low.split(' ' + es + ' ').join(' ' + pt + ' ');
+        e = cap(low.trim());
+      }
+      out[k] = e;
+    }
+    return out;
+  }
   let OUT_LANG = 'es';   // set by parseSpecs for the duration of one call
   function toEnglish(res) {
     const out = { ...res };

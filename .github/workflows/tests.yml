@@ -44,7 +44,7 @@ jobs:
 
       - name: Instalar Playwright
         run: |
-          pip install playwright==1.48.0
+          pip install playwright==1.56.0
           python -m playwright install --with-deps chromium
 
       - name: Lector de fichas (sin IA)
@@ -75,6 +75,9 @@ jobs:
 
       - name: Inglés, tema, moneda, bienvenida y ficha por secciones
         run: python tests/e2e_i18n.py
+
+      - name: Avisos en el móvil (service worker real y notificaciones)
+        run: python tests/e2e_reminders.py
 
       - name: Rotor Pro (compra en Play simulada y funciones Pro)
         run: |

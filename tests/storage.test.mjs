@@ -167,6 +167,25 @@ cases.push(async () => {
     w.serial === 'SN1' && w.currentValue === 300 && w.serviceLog.length === 1 && w.accuracy.length === 1 && w.straps.length === 1 && w.straps[0].fitted);
 });
 
+// ── Avisos (plan que lee el service worker) ──
+cases.push(async () => {
+  const now = at(2026, 10, 12);
+  const { ctx } = await load({}, now);
+  const { buildPlan } = await import('../js/reminders.js');
+  const ws = [
+    { id: 'q', brand: 'Casio', model: 'Duro', type: 'quartz', batteryChanged: at(2024, 9, 1), history: [], created: at(2024, 1, 1) },
+    { id: 'm', brand: 'Seiko', model: 'SPB', type: 'automatic', lastService: at(2023, 1, 1), purchaseDate: at(2020, 1, 1), history: [{ start: at(2026, 10, 1, 9), end: at(2026, 10, 1, 20) }], created: at(2020, 1, 1) },
+    { id: 'o', brand: 'Orient', model: 'B', type: 'automatic', rotation: false, history: [], created: at(2025, 1, 1) },
+  ];
+  const plan = buildPlan(ws, now);
+  const by = k => plan.find(p => p.key.startsWith(k));
+  t('pila: a los 24 meses del último cambio', by('battery:q').dueAt === at(2026, 9, 1));
+  t('revisión: a los 5 años de la última (no de la compra)', by('service:m').dueAt === at(2028, 1, 1));
+  t('olvidado: 30 días después del último uso', by('idle:m').dueAt === ctx.wearStats(ws[1], now).lastWorn + 30 * D && by('idle:m').dueAt > now);
+  t('fuera de rotación: sin aviso de olvido', !by('idle:o'));
+  t('la clave cambia con una revisión nueva (vuelve a avisar dentro de 5 años)', buildPlan([{ ...ws[1], lastService: at(2026, 6, 1) }], now).find(p => p.kind === 'service').key !== by('service:m').key);
+});
+
 if (process.env.CASE !== undefined) {
   await cases[Number(process.env.CASE)]();
   console.log(`#RESULT ${ok} ${ko}`);

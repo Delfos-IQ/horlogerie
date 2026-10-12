@@ -12,7 +12,7 @@
   "navigationDividerColor": "#E8E1D2",
   "navigationDividerColorDark": "#1F2A42",
   "backgroundColor": "#F3EEE3",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/horlogerie/",
   "iconUrl": "https://delfos-iq.github.io/horlogerie/icons/icon-512.png",
   "maskableIconUrl": "https://delfos-iq.github.io/horlogerie/icons/icon-maskable-512.png",

@@ -1,5 +1,5 @@
 /**
- * sw.js v6 — Network-first for app shell
+ * sw.js v7 — Network-first for app shell, plus Rotor Pro reminders
  *
  * Strategy:
  *  - HTML/JS/CSS: network-first → always get latest version
@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.15.0';
+const CACHE   = 'horlogerie-v2.16.0';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
@@ -20,9 +20,11 @@ const SHELL = [
   `${BASE}/privacidad.html`,
   `${BASE}/privacy.html`,
   `${BASE}/help.html`,
-  `${BASE}/css/app.css?v=2.15.0`,
-  `${BASE}/css/fonts.css?v=2.15.0`,
-  `${BASE}/css/icons.css?v=2.15.0`,
+  `${BASE}/privacidade.html`,
+  `${BASE}/ajuda-pt.html`,
+  `${BASE}/css/app.css?v=2.16.0`,
+  `${BASE}/css/fonts.css?v=2.16.0`,
+  `${BASE}/css/icons.css?v=2.16.0`,
   `${BASE}/css/icons/tabler-icons-6b83bdd5.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
@@ -58,15 +60,17 @@ const SHELL = [
   `${BASE}/js/modules/updates.js`,
   `${BASE}/js/i18n.js`,
   `${BASE}/js/i18n/en.js`,
-  `${BASE}/js/theme-boot.js?v=2.15.0`,
-  `${BASE}/js/spec-parser.js?v=2.15.0`,
-  `${BASE}/js/main.js?v=2.15.0`,
+  `${BASE}/js/i18n/pt.js`,
+  `${BASE}/js/theme-boot.js?v=2.16.0`,
+  `${BASE}/js/spec-parser.js?v=2.16.0`,
+  `${BASE}/js/main.js?v=2.16.0`,
   `${BASE}/js/modules/url-import.js`,
   `${BASE}/js/modules/onboarding.js`,
   `${BASE}/js/modules/pro.js`,
   `${BASE}/js/modules/care.js`,
   `${BASE}/js/billing.js`,
   `${BASE}/js/insurance.js`,
+  `${BASE}/js/reminders.js`,
   `${BASE}/js/vendor/qrcode-generator-1.4.4.js`,
   `${BASE}/brand/rotor-symbol.svg`,
   `${BASE}/manifest.json`,
@@ -184,3 +188,68 @@ async function cacheFirst(request) {
     return new Response('', { status: 503 });
   }
 }
+
+/* ── Reminders (Rotor Pro): the app leaves a plan in IndexedDB; this shows what is due ──
+   Woken by Periodic Background Sync (Chrome, installed app) or by the app itself
+   ({ type: 'RUN_REMINDERS' }). Nothing is fetched: the plan never leaves the phone. */
+const REMINDER_DB = 'rotor_reminders';
+function remindersDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(REMINDER_DB, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('kv');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function kv(db, mode, fn) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('kv', mode);
+    const r = fn(tx.objectStore('kv'));
+    tx.oncomplete = () => res(r && 'result' in r ? r.result : undefined);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function runReminders(now = Date.now()) {
+  if (self.Notification?.permission !== 'granted') return 0;
+  const db = await remindersDB();
+  const plan = (await kv(db, 'readonly', s => s.get('plan'))) || { items: [] };
+  const sent = new Set((await kv(db, 'readonly', s => s.get('sent'))) || []);
+  const due = (plan.items || []).filter(i => i.dueAt <= now && !sent.has(i.key));
+  const base = plan.url || `${BASE}/`;
+  let shown = 0;
+  for (const i of due.filter(x => x.kind !== 'idle')) {
+    await self.registration.showNotification(i.title, { body: i.body, tag: i.key, icon: `${BASE}/icons/icon-192.png`,
+      badge: `${BASE}/icons/favicon-32x32.png`, data: { url: `${base}#reloj=${encodeURIComponent(i.watchId)}` } });
+    shown++;
+  }
+  const idle = due.filter(x => x.kind === 'idle');
+  if (idle.length) {
+    const one = idle.length === 1;
+    await self.registration.showNotification(one ? idle[0].title : plan.digest?.title || 'Rotor', {
+      body: one ? idle[0].body : (plan.digest?.many || '').replace('{n}', String(idle.length)), tag: 'rotor-idle',
+      icon: `${BASE}/icons/icon-192.png`, badge: `${BASE}/icons/favicon-32x32.png`,
+      data: { url: one ? `${base}#reloj=${encodeURIComponent(idle[0].watchId)}` : base } });
+    shown++;
+  }
+  // Remember what was shown; forget keys that left the plan (a new service gives a new key)
+  const keep = new Set((plan.items || []).map(i => i.key));
+  const nextSent = [...sent].filter(k => keep.has(k)).concat(due.map(i => i.key));
+  await kv(db, 'readwrite', s => s.put(nextSent, 'sent'));
+  db.close();
+  return shown;
+}
+self.addEventListener('periodicsync', e => {
+  if (e.tag === 'rotor-reminders') e.waitUntil(runReminders());
+});
+self.addEventListener('message', e => {
+  if (e.data?.type === 'RUN_REMINDERS') e.waitUntil(runReminders(Number.isFinite(e.data.now) ? e.data.now : Date.now()).then(n => e.source?.postMessage({ type: 'REMINDERS_DONE', shown: n })));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = e.notification.data?.url || `${BASE}/`;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    const open = list.find(c => c.url.includes(BASE));
+    if (open) { open.postMessage({ type: 'OPEN_URL', url }); return open.focus(); }
+    return self.clients.openWindow(url);
+  }));
+});

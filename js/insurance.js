@@ -6,7 +6,7 @@
  * value. Then one page per watch: photo, identification, purchase, key specs and
  * the maintenance log. Values are the owner's own: the PDF says so.
  */
-import { getWatches, isSafePhoto, serviceCost } from './storage.js';
+import { getWatches, photoSrc, serviceCost } from './storage.js';
 import { formatDate, showToast, typeLabel } from './modules/core.js';
 import { drawNoPhoto, loadScript, photoToSquareJpeg, PDF_DARK, PDF_DARK2, PDF_DARK3, PDF_GOLD, PDF_GOLD_L, PDF_LIGHT, PDF_MID } from './export.js';
 import { locale, money, t, tk } from './i18n.js';
@@ -108,7 +108,7 @@ export async function generateInsurancePDF({ holder = '' } = {}) {
     cy += 8;
 
     const ph = 70;
-    const jpeg = isSafePhoto(w.photo) ? await photoToSquareJpeg(w.photo, 700) : null;
+    const jpeg = photoSrc(w.id) ? await photoToSquareJpeg(photoSrc(w.id), 700) : null;
     if (jpeg) {
       try { doc.addImage(jpeg, 'JPEG', M, cy, ph, ph, undefined, 'MEDIUM'); doc.setDrawColor(...PDF_GOLD); doc.setLineWidth(0.4); doc.rect(M, cy, ph, ph, 'S'); }
       catch { drawNoPhoto(doc, M, cy, ph, ph); }

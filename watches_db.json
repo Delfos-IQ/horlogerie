@@ -9,10 +9,10 @@
       "calibre": "Seagull ST6800S",
       "movimiento": "Automático, 21600 bph, 17 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Azul marino Sunburst",
+      "brazalete": "Acero",
+      "esfera": "Azul marino rayos de sol",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "12mm"
@@ -22,7 +22,39 @@
       "note": "AliExpress oficial / Amazon"
     },
     "_source": "local_db",
-    "notas": "Corazón abierto a las 12h"
+    "notas": "Corazón abierto a las 12h",
+    "en": {
+      "specs": {
+        "calibre": "Seagull ST6800S",
+        "movimiento": "Automatic, 21600 bph, 17 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel",
+        "esfera": "Navy sunburst",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Open heart at 12",
+      "priceNote": "Official AliExpress store / Amazon"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull ST6800S",
+        "movimiento": "Automático, 21600 bph, 17 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço",
+        "esfera": "Azul-marinho raiado",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Coração aberto às 12h",
+      "priceNote": "Loja oficial AliExpress / Amazon"
+    }
   },
   {
     "id": 2,
@@ -34,10 +66,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Negro Mate",
+      "brazalete": "Acero",
+      "esfera": "Negro mate",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "42h",
       "diametro": "42mm",
       "grosor": "13mm"
@@ -47,7 +79,39 @@
       "note": "AliExpress oficial"
     },
     "_source": "local_db",
-    "notas": "Bisel unidireccional cerámica"
+    "notas": "Bisel unidireccional cerámica",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Steel",
+        "esfera": "Matte black",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "13mm"
+      },
+      "notas": "Unidirectional ceramic bezel",
+      "priceNote": "Official AliExpress store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Aço",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "13mm"
+      },
+      "notas": "Luneta unidirecional cerâmica",
+      "priceNote": "Loja oficial AliExpress"
+    }
   },
   {
     "id": 3,
@@ -59,10 +123,10 @@
       "calibre": "Seagull ST1702",
       "movimiento": "Automático, 21600 bph, 17 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Piel Cuero marrón",
-      "esfera": "Blanco Sunray",
+      "brazalete": "Piel marrón",
+      "esfera": "Blanco rayos de sol",
       "caja": "Acero 316L",
-      "resistencia": "30m / 3 ATM",
+      "resistencia": "30 m / 3 ATM",
       "reserva": "38h",
       "diametro": "38mm",
       "grosor": "9mm"
@@ -72,7 +136,39 @@
       "note": "AliExpress oficial"
     },
     "_source": "local_db",
-    "notas": "Reloj vestir clásico"
+    "notas": "Reloj vestir clásico",
+    "en": {
+      "specs": {
+        "calibre": "Seagull ST1702",
+        "movimiento": "Automatic, 21600 bph, 17 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Brown leather",
+        "esfera": "White sunray",
+        "caja": "316L steel",
+        "resistencia": "30 m / 3 ATM",
+        "reserva": "38h",
+        "diametro": "38mm",
+        "grosor": "9mm"
+      },
+      "notas": "Classic dress watch",
+      "priceNote": "Official AliExpress store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull ST1702",
+        "movimiento": "Automático, 21600 bph, 17 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Pele castanha",
+        "esfera": "Branco raiado",
+        "caja": "Aço 316L",
+        "resistencia": "30 m / 3 ATM",
+        "reserva": "38h",
+        "diametro": "38mm",
+        "grosor": "9mm"
+      },
+      "notas": "Relógio clássico de cerimónia",
+      "priceNote": "Loja oficial AliExpress"
+    }
   },
   {
     "id": 4,
@@ -84,10 +180,10 @@
       "calibre": "Miyota 2315",
       "movimiento": "Cuarzo, 5 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Nylon NATO verde",
-      "esfera": "Verde oliva Mate",
+      "brazalete": "Nailon NATO verde",
+      "esfera": "Verde oliva mate",
       "caja": "Acero 316L",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "",
       "diametro": "40mm",
       "grosor": "10mm"
@@ -97,7 +193,39 @@
       "note": "Amazon"
     },
     "_source": "local_db",
-    "notas": "Estilo militar"
+    "notas": "Estilo militar",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 2315",
+        "movimiento": "Quartz, 5 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Green nylon NATO",
+        "esfera": "Matte olive green",
+        "caja": "316L steel",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "",
+        "diametro": "40mm",
+        "grosor": "10mm"
+      },
+      "notas": "Military style",
+      "priceNote": "Amazon"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 2315",
+        "movimiento": "Quartzo, 5 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Nylon NATO verde",
+        "esfera": "Verde-oliva mate",
+        "caja": "Aço 316L",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "",
+        "diametro": "40mm",
+        "grosor": "10mm"
+      },
+      "notas": "Estilo militar",
+      "priceNote": "Amazon"
+    }
   },
   {
     "id": 5,
@@ -109,10 +237,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Acero oyster",
-      "esfera": "Negro Mate",
+      "brazalete": "Acero oyster",
+      "esfera": "Negro mate",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "12mm"
@@ -122,7 +250,39 @@
       "note": "AliExpress oficial"
     },
     "_source": "local_db",
-    "notas": "Hommage Submariner"
+    "notas": "Homenaje a un clásico de buceo",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel oyster",
+        "esfera": "Matte black",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Homage to a classic dive watch",
+      "priceNote": "Official AliExpress store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço oyster",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Homenagem a um clássico de mergulho",
+      "priceNote": "Loja oficial AliExpress"
+    }
   },
   {
     "id": 6,
@@ -134,10 +294,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Integrado Acero",
-      "esfera": "Azul Tapicería",
+      "brazalete": "Acero integrado",
+      "esfera": "Azul tapicería",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "10mm"
@@ -147,7 +307,39 @@
       "note": "AliExpress oficial"
     },
     "_source": "local_db",
-    "notas": "Hommage Royal Oak"
+    "notas": "Homenaje a un deportivo clásico de brazalete integrado",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Integrated steel",
+        "esfera": "Blue tapisserie",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "10mm"
+      },
+      "notas": "Homage to an integrated-bracelet sports classic",
+      "priceNote": "Official AliExpress store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço integrado",
+        "esfera": "Azul tapisserie",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "10mm"
+      },
+      "notas": "Homenagem a um desportivo clássico de bracelete integrada",
+      "priceNote": "Loja oficial AliExpress"
+    }
   },
   {
     "id": 7,
@@ -159,10 +351,10 @@
       "calibre": "Seagull ST2130",
       "movimiento": "Automático, 28800 bph, 21 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Negro/Rojo Mate",
+      "brazalete": "Acero",
+      "esfera": "Negro y rojo mate",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "38h",
       "diametro": "40mm",
       "grosor": "13mm"
@@ -172,7 +364,39 @@
       "note": "AliExpress oficial"
     },
     "_source": "local_db",
-    "notas": "Bisel GMT cerámica bicolor"
+    "notas": "Bisel GMT cerámica bicolor",
+    "en": {
+      "specs": {
+        "calibre": "Seagull ST2130",
+        "movimiento": "Automatic, 28800 bph, 21 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel",
+        "esfera": "Matte black/red",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "13mm"
+      },
+      "notas": "Two-tone ceramic GMT bezel",
+      "priceNote": "Official AliExpress store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull ST2130",
+        "movimiento": "Automático, 28800 bph, 21 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço",
+        "esfera": "Preto e vermelho mate",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "13mm"
+      },
+      "notas": "Luneta GMT cerâmica bicolor",
+      "priceNote": "Loja oficial AliExpress"
+    }
   },
   {
     "id": 8,
@@ -184,10 +408,10 @@
       "calibre": "VK63",
       "movimiento": "Cuarzo",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Azul Sunburst",
+      "brazalete": "Acero",
+      "esfera": "Azul rayos de sol",
       "caja": "Acero 316L",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "",
       "diametro": "43mm",
       "grosor": "13mm"
@@ -197,7 +421,39 @@
       "note": "AliExpress oficial"
     },
     "_source": "local_db",
-    "notas": "Cronógrafo meca-quartz VK63"
+    "notas": "Cronógrafo meca-quartz VK63",
+    "en": {
+      "specs": {
+        "calibre": "VK63",
+        "movimiento": "Quartz",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel",
+        "esfera": "Blue sunburst",
+        "caja": "316L steel",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "",
+        "diametro": "43mm",
+        "grosor": "13mm"
+      },
+      "notas": "VK63 meca-quartz chronograph",
+      "priceNote": "Official AliExpress store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "VK63",
+        "movimiento": "Quartzo",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço",
+        "esfera": "Azul raiado",
+        "caja": "Aço 316L",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "",
+        "diametro": "43mm",
+        "grosor": "13mm"
+      },
+      "notas": "Cronógrafo meca-quartz VK63",
+      "priceNote": "Loja oficial AliExpress"
+    }
   },
   {
     "id": 9,
@@ -209,10 +465,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Cuero Cuero negro",
-      "esfera": "Negro Mate",
+      "brazalete": "Piel negra",
+      "esfera": "Negro mate",
       "caja": "Acero 316L",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "42h",
       "diametro": "42mm",
       "grosor": "14mm"
@@ -222,7 +478,39 @@
       "note": "AliExpress oficial"
     },
     "_source": "local_db",
-    "notas": "Estilo aviador"
+    "notas": "Estilo aviador",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Black leather",
+        "esfera": "Matte black",
+        "caja": "316L steel",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "14mm"
+      },
+      "notas": "Pilot style",
+      "priceNote": "Official AliExpress store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Pele preta",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "14mm"
+      },
+      "notas": "Estilo aviador",
+      "priceNote": "Loja oficial AliExpress"
+    }
   },
   {
     "id": 10,
@@ -234,10 +522,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Doble domo",
-      "brazalete": "Acero Jubilee",
-      "esfera": "Verde Sunburst",
+      "brazalete": "Acero jubilee",
+      "esfera": "Verde rayos de sol",
       "caja": "Acero 316L",
-      "resistencia": "300m / 30 ATM",
+      "resistencia": "300 m / 30 ATM",
       "reserva": "41h",
       "diametro": "38mm",
       "grosor": "12mm"
@@ -247,7 +535,39 @@
       "note": "San Martin oficial"
     },
     "_source": "local_db",
-    "notas": "Diver calidad superior"
+    "notas": "Buceo de calidad superior",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Double domed",
+        "brazalete": "Steel jubilee",
+        "esfera": "Green sunburst",
+        "caja": "316L steel",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "41h",
+        "diametro": "38mm",
+        "grosor": "12mm"
+      },
+      "notas": "High-quality diver",
+      "priceNote": "Official San Martin store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Dupla cúpula",
+        "brazalete": "Aço jubilee",
+        "esfera": "Verde raiado",
+        "caja": "Aço 316L",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "41h",
+        "diametro": "38mm",
+        "grosor": "12mm"
+      },
+      "notas": "Mergulho de qualidade superior",
+      "priceNote": "Loja oficial San Martin"
+    }
   },
   {
     "id": 11,
@@ -259,10 +579,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Nylon NATO",
-      "esfera": "Verde oliva Mate",
+      "brazalete": "Nailon NATO",
+      "esfera": "Verde oliva mate",
       "caja": "Titanio",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "41h",
       "diametro": "39mm",
       "grosor": "11mm"
@@ -272,7 +592,39 @@
       "note": "San Martin oficial"
     },
     "_source": "local_db",
-    "notas": "Titanio ligero"
+    "notas": "Titanio ligero",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Nylon NATO",
+        "esfera": "Matte olive green",
+        "caja": "Titanium",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "39mm",
+        "grosor": "11mm"
+      },
+      "notas": "Light titanium",
+      "priceNote": "Official San Martin store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Nylon NATO",
+        "esfera": "Verde-oliva mate",
+        "caja": "Titânio",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "39mm",
+        "grosor": "11mm"
+      },
+      "notas": "Titânio leve",
+      "priceNote": "Loja oficial San Martin"
+    }
   },
   {
     "id": 12,
@@ -284,10 +636,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Piel Cuero marrón clairo",
-      "esfera": "Blanco crema Satinado",
+      "brazalete": "Piel marrón claro",
+      "esfera": "Crema satinado",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "41h",
       "diametro": "38mm",
       "grosor": "9mm"
@@ -297,7 +649,39 @@
       "note": "San Martin oficial"
     },
     "_source": "local_db",
-    "notas": "Acabado muy cuidado"
+    "notas": "Acabado muy cuidado",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Light brown leather",
+        "esfera": "Satin cream",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "41h",
+        "diametro": "38mm",
+        "grosor": "9mm"
+      },
+      "notas": "Carefully finished",
+      "priceNote": "Official San Martin store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Pele castanha clara",
+        "esfera": "Creme acetinado",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "41h",
+        "diametro": "38mm",
+        "grosor": "9mm"
+      },
+      "notas": "Acabamento muito cuidado",
+      "priceNote": "Loja oficial San Martin"
+    }
   },
   {
     "id": 13,
@@ -309,10 +693,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Caucho Caucho negro",
-      "esfera": "Negro Mate",
+      "brazalete": "Caucho negro",
+      "esfera": "Negro mate",
       "caja": "Acero 316L + Funda cerámica",
-      "resistencia": "300m / 30 ATM",
+      "resistencia": "300 m / 30 ATM",
       "reserva": "41h",
       "diametro": "48mm",
       "grosor": "15mm"
@@ -322,7 +706,39 @@
       "note": "San Martin oficial"
     },
     "_source": "local_db",
-    "notas": "Caja shroud estilo Tuna"
+    "notas": "Caja con funda estilo Tuna",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Black rubber",
+        "esfera": "Matte black",
+        "caja": "316L steel + ceramic shroud",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "41h",
+        "diametro": "48mm",
+        "grosor": "15mm"
+      },
+      "notas": "Tuna-style shroud case",
+      "priceNote": "Official San Martin store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Borracha preta",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L + proteção cerâmica",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "41h",
+        "diametro": "48mm",
+        "grosor": "15mm"
+      },
+      "notas": "Caixa com proteção estilo Tuna",
+      "priceNote": "Loja oficial San Martin"
+    }
   },
   {
     "id": 14,
@@ -334,10 +750,10 @@
       "calibre": "Miyota 82S7",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Piel Cuero marrón",
+      "brazalete": "Piel marrón",
       "esfera": "Esqueleto",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "12mm"
@@ -347,7 +763,39 @@
       "note": "Amazon / AliExpress"
     },
     "_source": "local_db",
-    "notas": "Movimiento visible"
+    "notas": "Movimiento visible",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 82S7",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Brown leather",
+        "esfera": "Skeleton",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Visible movement",
+      "priceNote": "Amazon / AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 82S7",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Pele castanha",
+        "esfera": "Esqueleto",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Movimento visível",
+      "priceNote": "Amazon / AliExpress"
+    }
   },
   {
     "id": 15,
@@ -359,10 +807,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Azul Sunburst",
+      "brazalete": "Acero",
+      "esfera": "Azul rayos de sol",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "12mm"
@@ -372,7 +820,39 @@
       "note": "Amazon"
     },
     "_source": "local_db",
-    "notas": "Relación calidad-precio"
+    "notas": "Relación calidad-precio",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Steel",
+        "esfera": "Blue sunburst",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Value for money",
+      "priceNote": "Amazon"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Aço",
+        "esfera": "Azul raiado",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Relação qualidade-preço",
+      "priceNote": "Amazon"
+    }
   },
   {
     "id": 16,
@@ -384,10 +864,10 @@
       "calibre": "VK63",
       "movimiento": "Cuarzo",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Negro Mate",
+      "brazalete": "Acero",
+      "esfera": "Negro mate",
       "caja": "Acero 316L",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "",
       "diametro": "42mm",
       "grosor": "12mm"
@@ -397,7 +877,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Meca-quartz"
+    "notas": "Meca-quartz",
+    "en": {
+      "specs": {
+        "calibre": "VK63",
+        "movimiento": "Quartz",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel",
+        "esfera": "Matte black",
+        "caja": "316L steel",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Meca-quartz",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "VK63",
+        "movimiento": "Quartzo",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Meca-quartz",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 17,
@@ -409,10 +921,10 @@
       "calibre": "Manual – ST8000",
       "movimiento": "Automático, 21600 bph, 19 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Cuero Cuero azul",
+      "brazalete": "Piel azul",
       "esfera": "Esqueleto azul",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "50h",
       "diametro": "42mm",
       "grosor": "14mm"
@@ -422,7 +934,39 @@
       "note": "OBLVLO oficial"
     },
     "_source": "local_db",
-    "notas": "Tourbillon visible manual wind"
+    "notas": "Tourbillon visible de cuerda manual",
+    "en": {
+      "specs": {
+        "calibre": "Manual – ST8000",
+        "movimiento": "Automatic, 21600 bph, 19 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Blue leather",
+        "esfera": "Blue skeleton",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "50h",
+        "diametro": "42mm",
+        "grosor": "14mm"
+      },
+      "notas": "Visible hand-wound tourbillon",
+      "priceNote": "Official OBLVLO store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Manual – ST8000",
+        "movimiento": "Automático, 21600 bph, 19 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Pele azul",
+        "esfera": "Esqueleto azul",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "50h",
+        "diametro": "42mm",
+        "grosor": "14mm"
+      },
+      "notas": "Tourbillon visível de corda manual",
+      "priceNote": "Loja oficial OBLVLO"
+    }
   },
   {
     "id": 18,
@@ -434,10 +978,10 @@
       "calibre": "Miyota 9015",
       "movimiento": "Automático, 28800 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Azul/Verde Sunburst",
+      "brazalete": "Acero",
+      "esfera": "Azul y verde rayos de sol",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "42h",
       "diametro": "43mm",
       "grosor": "13mm"
@@ -447,7 +991,39 @@
       "note": "OBLVLO oficial"
     },
     "_source": "local_db",
-    "notas": "GMT bicolor cerámica"
+    "notas": "GMT bicolor cerámica",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automatic, 28800 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel",
+        "esfera": "Blue/green sunburst",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "43mm",
+        "grosor": "13mm"
+      },
+      "notas": "Two-tone ceramic GMT",
+      "priceNote": "Official OBLVLO store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automático, 28800 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço",
+        "esfera": "Azul e verde raiado",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "43mm",
+        "grosor": "13mm"
+      },
+      "notas": "GMT bicolor cerâmica",
+      "priceNote": "Loja oficial OBLVLO"
+    }
   },
   {
     "id": 19,
@@ -459,10 +1035,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Cuero Cuero marrón",
-      "esfera": "Azul Sunburst",
+      "brazalete": "Piel marrón",
+      "esfera": "Azul rayos de sol",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "41h",
       "diametro": "44mm",
       "grosor": "14mm"
@@ -472,7 +1048,39 @@
       "note": "OBLVLO oficial"
     },
     "_source": "local_db",
-    "notas": "Gran fecha"
+    "notas": "Gran fecha",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Brown leather",
+        "esfera": "Blue sunburst",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "44mm",
+        "grosor": "14mm"
+      },
+      "notas": "Big date",
+      "priceNote": "Official OBLVLO store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Pele castanha",
+        "esfera": "Azul raiado",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "44mm",
+        "grosor": "14mm"
+      },
+      "notas": "Data grande",
+      "priceNote": "Loja oficial OBLVLO"
+    }
   },
   {
     "id": 20,
@@ -484,10 +1092,10 @@
       "calibre": "Seagull ST19",
       "movimiento": "Manual, 18000 bph, 17 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Piel Cuero marrón",
-      "esfera": "Blanco Satinado",
+      "brazalete": "Piel marrón",
+      "esfera": "Blanco satinado",
       "caja": "Acero 316L",
-      "resistencia": "30m / 3 ATM",
+      "resistencia": "30 m / 3 ATM",
       "reserva": "44h",
       "diametro": "38mm",
       "grosor": "12mm"
@@ -497,7 +1105,39 @@
       "note": "Seagull oficial"
     },
     "_source": "local_db",
-    "notas": "Cronógrafo chino icónico reissue"
+    "notas": "Reedición de un cronógrafo chino icónico",
+    "en": {
+      "specs": {
+        "calibre": "Seagull ST19",
+        "movimiento": "Hand-wound, 18000 bph, 17 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Brown leather",
+        "esfera": "Satin white",
+        "caja": "316L steel",
+        "resistencia": "30 m / 3 ATM",
+        "reserva": "44h",
+        "diametro": "38mm",
+        "grosor": "12mm"
+      },
+      "notas": "Iconic Chinese chronograph, reissue",
+      "priceNote": "Official Seagull store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull ST19",
+        "movimiento": "Corda manual, 18000 bph, 17 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Pele castanha",
+        "esfera": "Branco acetinado",
+        "caja": "Aço 316L",
+        "resistencia": "30 m / 3 ATM",
+        "reserva": "44h",
+        "diametro": "38mm",
+        "grosor": "12mm"
+      },
+      "notas": "Reedição de um cronógrafo chinês icónico",
+      "priceNote": "Loja oficial Seagull"
+    }
   },
   {
     "id": 21,
@@ -509,10 +1149,10 @@
       "calibre": "Seagull 2801-1",
       "movimiento": "Automático, 21600 bph, 23 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Piel Cuero negro",
-      "esfera": "Blanco Satinado",
+      "brazalete": "Piel negra",
+      "esfera": "Blanco satinado",
       "caja": "Acero 316L",
-      "resistencia": "30m / 3 ATM",
+      "resistencia": "30 m / 3 ATM",
       "reserva": "38h",
       "diametro": "40mm",
       "grosor": "9mm"
@@ -522,7 +1162,39 @@
       "note": "Seagull oficial"
     },
     "_source": "local_db",
-    "notas": "Movimiento in-house"
+    "notas": "Movimiento in-house",
+    "en": {
+      "specs": {
+        "calibre": "Seagull 2801-1",
+        "movimiento": "Automatic, 21600 bph, 23 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Black leather",
+        "esfera": "Satin white",
+        "caja": "316L steel",
+        "resistencia": "30 m / 3 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "9mm"
+      },
+      "notas": "In-house movement",
+      "priceNote": "Official Seagull store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull 2801-1",
+        "movimiento": "Automático, 21600 bph, 23 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Pele preta",
+        "esfera": "Branco acetinado",
+        "caja": "Aço 316L",
+        "resistencia": "30 m / 3 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "9mm"
+      },
+      "notas": "Movimento próprio",
+      "priceNote": "Loja oficial Seagull"
+    }
   },
   {
     "id": 22,
@@ -534,10 +1206,10 @@
       "calibre": "Seagull ST2130",
       "movimiento": "Automático, 28800 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Cuero Cuero marrón",
+      "brazalete": "Piel marrón",
       "esfera": "Esqueleto",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "38h",
       "diametro": "40mm",
       "grosor": "11mm"
@@ -547,7 +1219,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Esfera decorada"
+    "notas": "Esfera decorada",
+    "en": {
+      "specs": {
+        "calibre": "Seagull ST2130",
+        "movimiento": "Automatic, 28800 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Brown leather",
+        "esfera": "Skeleton",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "11mm"
+      },
+      "notas": "Decorated dial",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull ST2130",
+        "movimiento": "Automático, 28800 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Pele castanha",
+        "esfera": "Esqueleto",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "11mm"
+      },
+      "notas": "Mostrador decorado",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 23,
@@ -559,10 +1263,10 @@
       "calibre": "Seagull ST8000",
       "movimiento": "Manual, 21600 bph, 19 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Piel Cuero negro",
+      "brazalete": "Piel negra",
       "esfera": "Esqueleto",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "",
       "diametro": "40mm",
       "grosor": "11mm"
@@ -572,7 +1276,39 @@
       "note": "Seagull oficial"
     },
     "_source": "local_db",
-    "notas": "Tourbillon manual in-house"
+    "notas": "Tourbillon manual in-house",
+    "en": {
+      "specs": {
+        "calibre": "Seagull ST8000",
+        "movimiento": "Hand-wound, 21600 bph, 19 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Black leather",
+        "esfera": "Skeleton",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "",
+        "diametro": "40mm",
+        "grosor": "11mm"
+      },
+      "notas": "In-house hand-wound tourbillon",
+      "priceNote": "Official Seagull store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull ST8000",
+        "movimiento": "Corda manual, 21600 bph, 19 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Pele preta",
+        "esfera": "Esqueleto",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "",
+        "diametro": "40mm",
+        "grosor": "11mm"
+      },
+      "notas": "Tourbillon manual próprio",
+      "priceNote": "Loja oficial Seagull"
+    }
   },
   {
     "id": 24,
@@ -584,10 +1320,10 @@
       "calibre": "Miyota 9015",
       "movimiento": "Automático, 28800 bph, 24 rubíes",
       "cristal": "Zafiro · Domo",
-      "brazalete": "Silicona Caucho azul",
-      "esfera": "Azul Gradiente",
+      "brazalete": "Silicona azul",
+      "esfera": "Azul degradado",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "42h",
       "diametro": "42mm",
       "grosor": "12mm"
@@ -597,7 +1333,39 @@
       "note": "CIGA oficial"
     },
     "_source": "local_db",
-    "notas": "Red Dot Award winner"
+    "notas": "Premio Red Dot",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automatic, 28800 bph, 24 jewels",
+        "cristal": "Sapphire · Domed",
+        "brazalete": "Blue silicone",
+        "esfera": "Blue gradient",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Red Dot Award winner",
+      "priceNote": "Official CIGA store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automático, 28800 bph, 24 rubis",
+        "cristal": "Safira · Abaulado",
+        "brazalete": "Silicone azul",
+        "esfera": "Azul degradê",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Prémio Red Dot",
+      "priceNote": "Loja oficial CIGA"
+    }
   },
   {
     "id": 25,
@@ -609,10 +1377,10 @@
       "calibre": "Miyota 9015",
       "movimiento": "Automático, 28800 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Titanio Integrado",
+      "brazalete": "Titanio integrado",
       "esfera": "Esqueleto",
       "caja": "Titanio",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "10mm"
@@ -622,7 +1390,39 @@
       "note": "CIGA oficial"
     },
     "_source": "local_db",
-    "notas": "Diseño esqueleto avant-garde"
+    "notas": "Diseño esqueleto vanguardista",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automatic, 28800 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Integrated titanium",
+        "esfera": "Skeleton",
+        "caja": "Titanium",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "10mm"
+      },
+      "notas": "Avant-garde skeleton design",
+      "priceNote": "Official CIGA store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automático, 28800 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Titânio integrado",
+        "esfera": "Esqueleto",
+        "caja": "Titânio",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "10mm"
+      },
+      "notas": "Design esqueleto vanguardista",
+      "priceNote": "Loja oficial CIGA"
+    }
   },
   {
     "id": 26,
@@ -634,10 +1434,10 @@
       "calibre": "Miyota 9015",
       "movimiento": "Automático, 28800 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Negro Mate",
+      "brazalete": "Acero",
+      "esfera": "Negro mate",
       "caja": "Acero 316L",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "42h",
       "diametro": "42mm",
       "grosor": "12mm"
@@ -647,7 +1447,39 @@
       "note": "CIGA oficial"
     },
     "_source": "local_db",
-    "notas": "Premio diseño internacional"
+    "notas": "Premio diseño internacional",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automatic, 28800 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel",
+        "esfera": "Matte black",
+        "caja": "316L steel",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "International design award",
+      "priceNote": "Official CIGA store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automático, 28800 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Prémio internacional de design",
+      "priceNote": "Loja oficial CIGA"
+    }
   },
   {
     "id": 27,
@@ -659,10 +1491,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Negro Mate",
+      "brazalete": "Acero",
+      "esfera": "Negro mate",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "12mm"
@@ -672,7 +1504,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Super luminoso"
+    "notas": "Muy luminoso",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Steel",
+        "esfera": "Matte black",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Very bright lume",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Aço",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Muito luminoso",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 28,
@@ -684,10 +1548,10 @@
       "calibre": "Seagull ST2130",
       "movimiento": "Automático, 28800 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Cuero Cuero marrón",
+      "brazalete": "Piel marrón",
       "esfera": "Esqueleto",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "38h",
       "diametro": "40mm",
       "grosor": "11mm"
@@ -697,7 +1561,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Bisel facetado"
+    "notas": "Bisel facetado",
+    "en": {
+      "specs": {
+        "calibre": "Seagull ST2130",
+        "movimiento": "Automatic, 28800 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Brown leather",
+        "esfera": "Skeleton",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "11mm"
+      },
+      "notas": "Faceted bezel",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Seagull ST2130",
+        "movimiento": "Automático, 28800 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Pele castanha",
+        "esfera": "Esqueleto",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "38h",
+        "diametro": "40mm",
+        "grosor": "11mm"
+      },
+      "notas": "Luneta facetada",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 29,
@@ -709,10 +1605,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Mineral · Plano",
-      "brazalete": "Acero Acero",
-      "esfera": "Azul/Negro Mate",
+      "brazalete": "Acero",
+      "esfera": "Azul y negro mate",
       "caja": "Acero 316L",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "42h",
       "diametro": "42mm",
       "grosor": "13mm"
@@ -722,7 +1618,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "GMT bicolor"
+    "notas": "GMT bicolor",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Mineral · Flat",
+        "brazalete": "Steel",
+        "esfera": "Matte blue/black",
+        "caja": "316L steel",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "13mm"
+      },
+      "notas": "Two-tone GMT",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Mineral · Plano",
+        "brazalete": "Aço",
+        "esfera": "Azul e preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "13mm"
+      },
+      "notas": "GMT bicolor",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 30,
@@ -734,10 +1662,10 @@
       "calibre": "Miyota 9015",
       "movimiento": "Automático, 28800 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Caucho Caucho",
-      "esfera": "Azul Mate",
+      "brazalete": "Caucho",
+      "esfera": "Azul mate",
       "caja": "Acero 316L",
-      "resistencia": "300m / 30 ATM",
+      "resistencia": "300 m / 30 ATM",
       "reserva": "42h",
       "diametro": "45mm",
       "grosor": "14mm"
@@ -747,7 +1675,39 @@
       "note": "Amazon / RT oficial"
     },
     "_source": "local_db",
-    "notas": "200m ISO diver"
+    "notas": "Buceo ISO 200 m",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automatic, 28800 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Rubber",
+        "esfera": "Matte blue",
+        "caja": "316L steel",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "42h",
+        "diametro": "45mm",
+        "grosor": "14mm"
+      },
+      "notas": "200 m ISO diver",
+      "priceNote": "Amazon / official Reef Tiger store"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 9015",
+        "movimiento": "Automático, 28800 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Borracha",
+        "esfera": "Azul mate",
+        "caja": "Aço 316L",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "42h",
+        "diametro": "45mm",
+        "grosor": "14mm"
+      },
+      "notas": "Mergulho ISO 200 m",
+      "priceNote": "Amazon / loja oficial Reef Tiger"
+    }
   },
   {
     "id": 31,
@@ -759,10 +1719,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Nylon NATO",
-      "esfera": "Verde Mate",
+      "brazalete": "Nailon NATO",
+      "esfera": "Verde mate",
       "caja": "Acero 316L",
-      "resistencia": "100m / 10 ATM",
+      "resistencia": "100 m / 10 ATM",
       "reserva": "42h",
       "diametro": "42mm",
       "grosor": "12mm"
@@ -772,7 +1732,39 @@
       "note": "Amazon"
     },
     "_source": "local_db",
-    "notas": "Campo militar"
+    "notas": "Campo militar",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Nylon NATO",
+        "esfera": "Matte green",
+        "caja": "316L steel",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Military field watch",
+      "priceNote": "Amazon"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Nylon NATO",
+        "esfera": "Verde mate",
+        "caja": "Aço 316L",
+        "resistencia": "100 m / 10 ATM",
+        "reserva": "42h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Militar de campo",
+      "priceNote": "Amazon"
+    }
   },
   {
     "id": 32,
@@ -784,10 +1776,10 @@
       "calibre": "Miyota 8215",
       "movimiento": "Automático, 21600 bph, 21 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Piel Cuero negro",
-      "esfera": "Blanco Satinado",
+      "brazalete": "Piel negra",
+      "esfera": "Blanco satinado",
       "caja": "Acero 316L",
-      "resistencia": "50m / 5 ATM",
+      "resistencia": "50 m / 5 ATM",
       "reserva": "42h",
       "diametro": "40mm",
       "grosor": "9mm"
@@ -797,7 +1789,39 @@
       "note": "Amazon"
     },
     "_source": "local_db",
-    "notas": "Reloj vestir"
+    "notas": "Reloj vestir",
+    "en": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automatic, 21600 bph, 21 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Black leather",
+        "esfera": "Satin white",
+        "caja": "316L steel",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "9mm"
+      },
+      "notas": "Dress watch",
+      "priceNote": "Amazon"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "Miyota 8215",
+        "movimiento": "Automático, 21600 bph, 21 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Pele preta",
+        "esfera": "Branco acetinado",
+        "caja": "Aço 316L",
+        "resistencia": "50 m / 5 ATM",
+        "reserva": "42h",
+        "diametro": "40mm",
+        "grosor": "9mm"
+      },
+      "notas": "Relógio clássico",
+      "priceNote": "Amazon"
+    }
   },
   {
     "id": 33,
@@ -809,10 +1833,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Caucho Caucho negro",
-      "esfera": "Negro Mate",
+      "brazalete": "Caucho negro",
+      "esfera": "Negro mate",
       "caja": "Acero 316L + Funda",
-      "resistencia": "300m / 30 ATM",
+      "resistencia": "300 m / 30 ATM",
       "reserva": "41h",
       "diametro": "48mm",
       "grosor": "15mm"
@@ -822,7 +1846,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Funda cerámica intercambiable"
+    "notas": "Funda cerámica intercambiable",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Black rubber",
+        "esfera": "Matte black",
+        "caja": "316L steel + shroud",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "41h",
+        "diametro": "48mm",
+        "grosor": "15mm"
+      },
+      "notas": "Interchangeable ceramic shroud",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Borracha preta",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L + proteção",
+        "resistencia": "300 m / 30 ATM",
+        "reserva": "41h",
+        "diametro": "48mm",
+        "grosor": "15mm"
+      },
+      "notas": "Proteção cerâmica intercambiável",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 34,
@@ -834,10 +1890,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Oyster",
-      "esfera": "Azul Mate",
+      "brazalete": "Acero oyster",
+      "esfera": "Azul mate",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "41h",
       "diametro": "40mm",
       "grosor": "12mm"
@@ -847,7 +1903,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Bisel cerámica"
+    "notas": "Bisel cerámica",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel oyster",
+        "esfera": "Matte blue",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Ceramic bezel",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço oyster",
+        "esfera": "Azul mate",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "40mm",
+        "grosor": "12mm"
+      },
+      "notas": "Luneta cerâmica",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 35,
@@ -859,10 +1947,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Domo",
-      "brazalete": "Cuero Cuero marrón",
-      "esfera": "Verde Sunburst",
+      "brazalete": "Piel marrón",
+      "esfera": "Verde rayos de sol",
       "caja": "Bronce",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "41h",
       "diametro": "42mm",
       "grosor": "14mm"
@@ -872,7 +1960,39 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Caja bronce patina"
+    "notas": "Caja de bronce que coge pátina",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Domed",
+        "brazalete": "Brown leather",
+        "esfera": "Green sunburst",
+        "caja": "Bronze",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "42mm",
+        "grosor": "14mm"
+      },
+      "notas": "Bronze case that patinates",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Abaulado",
+        "brazalete": "Pele castanha",
+        "esfera": "Verde raiado",
+        "caja": "Bronze",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "42mm",
+        "grosor": "14mm"
+      },
+      "notas": "Caixa de bronze que ganha pátina",
+      "priceNote": "AliExpress"
+    }
   },
   {
     "id": 36,
@@ -884,10 +2004,10 @@
       "calibre": "NH35A",
       "movimiento": "Automático, 21600 bph, 24 rubíes",
       "cristal": "Zafiro · Plano",
-      "brazalete": "Acero Bracelet",
-      "esfera": "Negro Mate",
+      "brazalete": "Acero",
+      "esfera": "Negro mate",
       "caja": "Acero 316L",
-      "resistencia": "200m / 20 ATM",
+      "resistencia": "200 m / 20 ATM",
       "reserva": "41h",
       "diametro": "42mm",
       "grosor": "12mm"
@@ -897,6 +2017,38 @@
       "note": "AliExpress"
     },
     "_source": "local_db",
-    "notas": "Hommage Blancpain Fifty Fathoms"
+    "notas": "Homenaje a un clásico de buceo de los años 50",
+    "en": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automatic, 21600 bph, 24 jewels",
+        "cristal": "Sapphire · Flat",
+        "brazalete": "Steel",
+        "esfera": "Matte black",
+        "caja": "316L steel",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Homage to a classic 1950s dive watch",
+      "priceNote": "AliExpress"
+    },
+    "pt": {
+      "specs": {
+        "calibre": "NH35A",
+        "movimiento": "Automático, 21600 bph, 24 rubis",
+        "cristal": "Safira · Plano",
+        "brazalete": "Aço",
+        "esfera": "Preto mate",
+        "caja": "Aço 316L",
+        "resistencia": "200 m / 20 ATM",
+        "reserva": "41h",
+        "diametro": "42mm",
+        "grosor": "12mm"
+      },
+      "notas": "Homenagem a um clássico de mergulho dos anos 50",
+      "priceNote": "AliExpress"
+    }
   }
 ]

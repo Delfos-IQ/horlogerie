@@ -1,5 +1,5 @@
 /* ─── HOME ─── */
-import { addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, isSafePhoto, maintenanceAlerts, markWornToday, removeWearDay, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
+import { addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, photoSrc, maintenanceAlerts, markWornToday, removeWearDay, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
 import { openSheet, showConfirm } from './sheet.js';
 import { dialArt, elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui } from './core.js';
 import { openEditModal } from './modals.js';
@@ -47,8 +47,8 @@ export function renderHome() {
     return `
       <div class="watch-card${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}" role="button" tabindex="0" aria-label="${name(w)}${isActive ? ' — ' + t('puesto ahora') : ''}">
         <div class="watch-img-wrap">
-          ${isSafePhoto(w.photo)
-            ? `<img src="${w.photo}" alt="" loading="lazy">`
+          ${photoSrc(w.id)
+            ? `<img src="${photoSrc(w.id)}" alt="" loading="lazy">`
             : `<div class="watch-img-placeholder">${dialArt()}</div>`}
           <div class="watch-type-badge">${typeLabel(w.type)}</div>
           ${isActive ? `<div class="active-badge">${t('Puesto')}</div>` : ''}
@@ -260,12 +260,13 @@ export function openDetail(id, tab) {
 
   const img = document.getElementById('d-img');
   const ph  = document.getElementById('d-img-placeholder');
-  if (isSafePhoto(w.photo)) {
-    img.src = w.photo; img.style.display = 'block'; ph.style.display = 'none';
+  const src = photoSrc(w.id);
+  if (src) {
+    img.src = src; img.style.display = 'block'; ph.style.display = 'none';
   } else {
     img.style.display = 'none'; ph.style.display = 'flex'; ph.innerHTML = dialArt();
   }
-  ph.parentElement?.classList.toggle('no-photo', !isSafePhoto(w.photo));
+  ph.parentElement?.classList.toggle('no-photo', !src);
 
   const wearBox = document.getElementById('d-wear-info');
   if (w.wearStart) {
@@ -407,7 +408,7 @@ export function renderUsage(w) {
   ];
   el.innerHTML = `
     <div class="usage-grid">${cells.map(c => `
-      <div class="usage-cell"><div class="usage-val${c.small ? ' is-text' : ''}">${escHtml(String(c.v))}</div><div class="usage-label">${c.l}</div></div>`).join('')}
+      <div class="usage-cell"><div class="usage-val${c.small ? ' is-text' : typeof c.v === 'string' && !/\d/.test(c.v) ? ' is-word' : ''}">${escHtml(String(c.v))}</div><div class="usage-label">${c.l}</div></div>`).join('')}
     </div>
     ${alerts.map(a => `<button class="maint-alert" data-goto="maint"><i class="ti ti-tool" aria-hidden="true"></i><span>${escHtml(alertText(a))}</span></button>`).join('')}`;
   el.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => setDetailTab('maint')));

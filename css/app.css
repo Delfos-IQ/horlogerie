@@ -1466,3 +1466,12 @@ button.care-row { cursor: pointer; }
 .vb-track span { display: block; height: 100%; background: var(--gold); border-radius: 4px; }
 .vb-val { font-variant-numeric: tabular-nums; color: var(--mid); }
 .value-row .cal-chip { flex-shrink: 0; }
+.pref-card.reminders { margin-top: 10px; }
+.pref-card.reminders .pref-row > span { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; }
+.rem-title { font-size: 14px; color: var(--light); }
+/* Four history modes must fit on small phones (and in longer languages) */
+.history-mode-toggle { overflow-x: auto; scrollbar-width: none; }
+.history-mode-toggle::-webkit-scrollbar { display: none; }
+.history-mode-btn { white-space: nowrap; flex: 1 0 auto; padding-left: 8px; padding-right: 8px; }
+@media (max-width: 400px) { .history-mode-btn i { display: none; } }
+.usage-val.is-word { font-size: 17px; line-height: 1.6; overflow-wrap: normal; }

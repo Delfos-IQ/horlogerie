@@ -6,13 +6,16 @@ import { showToast } from './core.js';
 import { renderHome } from './home-detail.js';
 import { showConfirm } from './sheet.js';
 import { renderWishlist } from './wishlist.js';
-import { renderProCard } from './pro.js';
+import { openProSheet, proMark, renderProCard } from './pro.js';
+import { disableReminders, enableReminders, reminderSupport, remindersOn } from '../reminders.js';
+import { isPro } from '../billing.js';
 
 import { APP_VERSION } from './updates.js';
 import { CURRENCIES, LANGS, THEMES, currencySymbol, locale, prefs, setPref, t } from '../i18n.js';
 
 export function renderSettings() {
   renderProCard();
+  renderRemindersCard();
   renderPrefs();
   renderCloudControls();
   renderSystemStatus();
@@ -262,4 +265,32 @@ export function handlePrefChange(key, value) {
     renderHome();
     showToast(t('Moneda: {c}. Los importes no se convierten.', { c: value }));
   }
+}
+
+/* ─── Ajustes → Avisos en el móvil (Pro) ─── */
+export function renderRemindersCard() {
+  const el = document.getElementById('reminders-card');
+  if (!el) return;
+  const sup = reminderSupport();
+  const on = remindersOn() && isPro() && sup.permission === 'granted';
+  const sub = !sup.notifications ? t('Este navegador no permite notificaciones. Los avisos se ven al abrir la app.')
+    : sup.permission === 'denied' ? t('Las notificaciones están bloqueadas para Rotor en los ajustes del móvil.')
+    : on && !sup.background ? t('Activados. Este navegador solo avisa al abrir la app, no en segundo plano.')
+    : t('Pilas, revisiones y relojes que llevan un mes en la caja. Nada sale del móvil.');
+  el.innerHTML = `<div class="pref-card reminders">
+    <label class="pref-row" for="rem-toggle">
+      <span><span class="rem-title">${t('Avisos en el móvil')} ${proMark()}</span><small class="pref-note">${sub}</small></span>
+      <input type="checkbox" id="rem-toggle" class="cloud-switch" role="switch" ${on ? 'checked' : ''} ${sup.notifications && sup.permission !== 'denied' ? '' : 'disabled'}>
+    </label>
+  </div>`;
+  el.querySelector('#rem-toggle').addEventListener('change', async e => {
+    const box = /** @type {HTMLInputElement} */ (e.target);
+    if (!isPro()) { box.checked = false; openProSheet(); return; }
+    box.disabled = true;
+    if (box.checked) {
+      const r = await enableReminders();
+      showToast(r === 'on' ? t('Avisos activados') : r === 'denied' ? t('Sin permiso para notificaciones') : t('Este navegador no permite notificaciones. Los avisos se ven al abrir la app.'));
+    } else { await disableReminders(); showToast(t('Avisos desactivados')); }
+    renderRemindersCard();
+  });
 }

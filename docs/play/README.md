@@ -8,7 +8,7 @@ Material listo en esta carpeta:
 |---|---|
 | `ficha.md` | Título, descripciones (ES, EN y PT) y respuestas del cuestionario de contenido |
 | `seguridad-datos.md` | Respuestas del formulario «Seguridad de los datos» |
-| `capturas/` | 5 capturas de pantalla 1080×1918 y el gráfico destacado 1024×500 |
+| `capturas/es`, `capturas/en`, `capturas/pt` | 7 capturas 1080×1918 y el gráfico destacado 1024×500 por idioma (Pro incluido) |
 | `assetlinks.json` | Plantilla del archivo que demuestra que la web y la app son tuyas |
 | `twa-manifest.json` | Configuración para Bubblewrap (alternativa a PWABuilder) |
 | `../../privacidad.html` | Política de privacidad pública: `https://delfos-iq.github.io/horlogerie/privacidad.html` (en inglés: `privacy.html`) |
@@ -87,6 +87,7 @@ La app es gratuita y Pro se desbloquea con un **producto integrado no consumible
    - Comprueba `https://horlogerie.pedicode-app.workers.dev/health` → `"pro": true`.
 5. **Probar sin pagar:** Play Console → Configuración → Pruebas de licencias → añade tu cuenta de Google. Instala la app desde la prueba interna: Play muestra «Tarjeta de prueba, siempre se aprueba».
 6. En la web normal (fuera de Play) Pro no se puede comprar: la app lo explica y remite a Play.
+7. **Avisos en el móvil (Pro):** el envoltorio debe llevar las notificaciones activadas (`"enableNotifications": true` en `twa-manifest.json`; en PWABuilder, *Notifications → Enable*). Android 13+ pide permiso la primera vez que el usuario activa los avisos en Ajustes. Los avisos en segundo plano usan *Periodic Background Sync* de Chrome: Android decide cuándo despierta la app (más o menos una vez al día, según el uso), así que pueden llegar con horas de retraso. Compruébalo en la prueba interna.
 
 ## 4. Después de publicar
 

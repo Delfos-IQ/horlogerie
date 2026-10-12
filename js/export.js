@@ -8,7 +8,7 @@
  *   → triggers browser download / share sheet on mobile
  */
 
-import { calendarDaysBetween, getWatches, isSafePhoto, wearIntervals, wearStats } from './storage.js';
+import { calendarDaysBetween, getWatches, photoSrc, wearIntervals, wearStats } from './storage.js';
 import { formatDate, showToast, typeLabel } from './modules/core.js';
 import { locale, t } from './i18n.js';
 
@@ -218,7 +218,7 @@ export async function drawWatchPage(doc, w, pageNum, total, W, H) {
   const photoX = 14;
   const photoY = cy;
 
-  const jpeg = isSafePhoto(w.photo) ? await photoToSquareJpeg(w.photo, 600) : null;
+  const jpeg = photoSrc(w.id) ? await photoToSquareJpeg(photoSrc(w.id), 600) : null;
   if (jpeg) {
     try {
       doc.setFillColor(...PDF_DARK2);

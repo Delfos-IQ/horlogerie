@@ -12,8 +12,15 @@ export function setNotifier(fn) { _notify = typeof fn === 'function' ? fn : () =
 export function notify(msg) { _notify(msg); }
 let _onChange = () => {};
 export function setOnChange(fn) { _onChange = typeof fn === 'function' ? fn : () => {}; }
+/** Extra listeners (reminders…), on top of the cloud upload set with setOnChange */
+const _listeners = new Set();
+/** @param {() => void} fn @returns {() => void} unsubscribe */
+export function onDataChange(fn) { _listeners.add(fn); return () => _listeners.delete(fn); }
 /** Called after every local change */
-export function changed() { _onChange(); }
+export function changed() {
+  _onChange();
+  _listeners.forEach(fn => { try { fn(); } catch {} });
+}
 /* ─── Metadata (localStorage) ─── */
 /**
  * Read JSON from localStorage without ever losing data: if the stored text

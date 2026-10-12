@@ -101,7 +101,7 @@ async def main():
         check("B importa la sesión", ok)
         nb = await names(pb)
         check("B combina: conserva su reloj y recibe el de A", nb == ['Berny Field', 'Steeldive SD1975S'], str(nb))
-        has_photo = await pb.evaluate("getWatches().find(w=>w.brand==='Steeldive')?.photo?.startsWith('data:image/')")
+        has_photo = await pb.evaluate("getPhotoDataUrl(getWatches().find(w=>w.brand==='Steeldive')?.id).then(p => !!p?.startsWith('data:image/'))")
         check("B recibe la foto", has_photo)
         if V11:
             check("v11: la lista de deseos llega a B", await pb.evaluate("getWishlist().some(i=>i.id==='wl_1')"))
@@ -141,14 +141,14 @@ async def main():
         C, pc, ec, xc = await device(b, 'C')
         await pc.evaluate("async d => await importBackup(d)", backup)
         await pc.reload(); await pc.wait_for_timeout(1500)
-        photo_c = await pc.evaluate("getWatches().find(w=>w.brand==='Steeldive')?.photo || ''")
+        photo_c = await pc.evaluate("getPhotoDataUrl(getWatches().find(w=>w.brand==='Steeldive')?.id).then(p => p || '')")
         check("restaurar copia: las fotos siguen tras recargar", photo_c.startswith('data:image/'))
         check("restaurar copia: relojes correctos", sorted(await names(pc)) == ['Pagani GMT', 'Steeldive SD1975S'])
         # malicious entries are rejected / neutralised
         evil = {"watches": [{"id": "x\"onerror=alert(1)", "brand": "<img src=x onerror=alert(1)>", "model": "M",
                              "photo": "javascript:alert(1)"}, {"brand": ""}]}
         r = await pc.evaluate("async d => await importBackup(d)", evil)
-        bad = await pc.evaluate("getWatches().filter(w => w.photo && !w.photo.startsWith('data:image/')).length")
+        bad = await pc.evaluate("getWatchesWithPhotos().then(ws => ws.filter(w => w.photo && !w.photo.startsWith('data:image/')).length)")
         ids_ok = await pc.evaluate("getWatches().every(w => /^[A-Za-z0-9_-]+$/.test(w.id))")
         check("importación: rechaza entradas inválidas y limpia ids/fotos", r['rejected'] == 1 and bad == 0 and ids_ok, json.dumps(r))
         await pc.evaluate("showView('home')")

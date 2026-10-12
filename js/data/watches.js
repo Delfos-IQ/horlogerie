@@ -3,7 +3,7 @@
  */
 import { addTombstone, isSafePhoto } from './merge.js';
 import { changed, notify, readJSON, requestPersistence, storageRecovered } from './persist.js';
-import { compressPhoto, idbDeletePhoto, idbGetAllPhotos, idbSavePhoto } from './photos.js';
+import { compressPhoto, idbDeletePhoto, idbGetAllPhotos, idbSavePhoto, loadPhotoIndex } from './photos.js';
 
 export const DB_KEY   = 'horlogerie_v3';     // localStorage key for metadata
 
@@ -36,12 +36,10 @@ export function save() {
   changed();
 }
 
-/* ─── Load photos from IDB into watch objects ─── */
+/* ─── Photos: object URLs for the screen (they stay in IndexedDB as Blobs) ─── */
 export async function loadPhotos() {
-  const all = await idbGetAllPhotos();
-  const map = {};
-  all.forEach(r => { map[r.id] = r.photo; });
-  watches.forEach(w => { if (map[w.id]) w.photo = map[w.id]; });
+  watches.forEach(w => { delete w.photo; });
+  await loadPhotoIndex();
 }
 /* ─── CRUD ─── */
 export function getWatches() { return watches; }
@@ -62,7 +60,6 @@ export async function addWatch(data) {
   if (photo) {
     const compressed = await compressPhoto(photo);
     await idbSavePhoto(id, compressed);
-    w.photo = compressed; // keep in memory for current session
   }
   watches.push(w);
   save();
@@ -80,10 +77,8 @@ export async function updateWatch(id, changes) {
     if (photo) {
       const compressed = await compressPhoto(photo);
       await idbSavePhoto(id, compressed);
-      w.photo = compressed;
     } else {
       await idbDeletePhoto(id);
-      w.photo = null;
     }
   }
   save();

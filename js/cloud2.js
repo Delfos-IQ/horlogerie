@@ -16,7 +16,7 @@
 import { CONFIG } from './api.js';
 import { t } from './i18n.js';
 import {
-  getWatchesWithPhotos, getWishlist, setWishlistSilently, getTombstones, clearTombstones,
+  getWatches, getWishlist, setWishlistSilently, getTombstones, clearTombstones, getPhotoDataUrl, photoTags,
   sanitizeWatch, sanitizeWishlistItem, itemStamp, enforceSingleActive, applyWatchList, idbDeletePhoto, readJSON,
 } from './storage.js';
 
@@ -104,6 +104,7 @@ export function forgetKey(key) {
   try { localStorage.setItem(META_KEY, JSON.stringify(all)); } catch {}
 }
 
+// Same value as data/photos.js stores with each photo (SHA-256 of the data URL)
 async function photoTag(photo) {
   if (!photo) return '';
   return hex(await crypto.subtle.digest('SHA-256', enc.encode(photo))).slice(0, 16);
@@ -122,18 +123,23 @@ export async function sync2(key, { full = false } = {}) {
   const m = full ? { rev: 0, sent: {}, photos: {} } : readMeta(key);
 
   // ── 1. Upload ──
-  const ws = await getWatchesWithPhotos();
+  // Photos are only read when they changed (the tag says so without reading them)
+  const tags = photoTags();
+  const ws = getWatches();
   const wl = getWishlist();
   const tomb = getTombstones();
   const pending = [];
   for (const w of ws) {
     const k = 'w:' + w.id, stamp = itemStamp(w);
-    const tag = await photoTag(w.photo);
+    const tag = tags.get(w.id) || '';
     const photoChanged = (m.photos[w.id] || '') !== tag;
     if (m.sent[k] === stamp && !photoChanged) continue;
-    const { photo, ...rest } = w;
+    const { photo: _p, ...rest } = w;
     const ch = { id: w.id, kind: 'w', updated: stamp, data: await encryptText(aes, JSON.stringify(rest), k) };
-    if (photoChanged) ch.photo = photo ? await encryptText(aes, photo, 'p:' + w.id) : '';
+    if (photoChanged) {
+      const photo = tag ? await getPhotoDataUrl(w.id) : null;
+      ch.photo = photo ? await encryptText(aes, photo, 'p:' + w.id) : '';
+    }
     pending.push({ ch, after: () => { m.sent[k] = stamp; m.photos[w.id] = tag; } });
   }
   for (const it of wl) {
@@ -178,8 +184,7 @@ export async function sync2(key, { full = false } = {}) {
   let received = 0;
   // Watches
   if (remoteW.size) {
-    const local = await getWatchesWithPhotos();
-    const byId = new Map(local.map(w => [w.id, w]));
+    const byId = new Map(getWatches().map(w => [w.id, { ...w }]));
     for (const [id, it] of remoteW) {
       const mine = byId.get(id);
       if (mine && itemStamp(mine) > it.updated) continue;            // ours is newer: it goes up next time
@@ -193,16 +198,20 @@ export async function sync2(key, { full = false } = {}) {
       try { w = sanitizeWatch(JSON.parse(await decryptText(aes, it.data, 'w:' + id))); } catch { continue; }
       if (!w || w.id !== id) continue;
       w.updatedAt = it.updated;
+      // Photo: new one → stored by applyWatchList; '' → removed; not sent → keep ours
+      let photoTagNow = tags.get(id) || '';
       if (it.photo !== undefined) {
-        if (it.photo) { try { w.photo = await decryptText(aes, it.photo, 'p:' + id); } catch { w.photo = mine?.photo || null; } }
-        else { w.photo = null; await idbDeletePhoto(id); }
-      } else w.photo = mine?.photo || null;
+        if (it.photo) {
+          try { w.photo = await decryptText(aes, it.photo, 'p:' + id); photoTagNow = await photoTag(w.photo); }
+          catch { w.photo = null; }
+        } else { w.photo = null; await idbDeletePhoto(id); photoTagNow = ''; }
+      } else w.photo = null;
       const fresh = sanitizeWatch({ ...w, photo: w.photo || undefined }) || w;
       fresh.updatedAt = it.updated;
       if (w.photo) fresh.photo = w.photo;
       byId.set(id, fresh);
       m.sent['w:' + id] = it.updated;
-      m.photos[id] = await photoTag(w.photo);
+      m.photos[id] = photoTagNow;
       received++;
     }
     await applyWatchList(enforceSingleActive([...byId.values()]));

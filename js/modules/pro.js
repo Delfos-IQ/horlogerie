@@ -5,7 +5,7 @@ import { escHtml, showToast } from './core.js';
 import { openSheet } from './sheet.js';
 
 export const PRO_FEATURES = [
-  ['ti-tool', tk('Historial de mantenimiento'), tk('Revisiones, pilas y reparaciones con su coste; los avisos se ajustan solos.')],
+  ['ti-tool', tk('Historial de mantenimiento'), tk('Revisiones, pilas y reparaciones con su coste, y avisos en el móvil cuando toca.')],
   ['ti-clock', tk('Precisión'), tk('Apunta cuánto adelanta o atrasa y verás sus segundos al día.')],
   ['ti-link', tk('Correas'), tk('Las correas de cada reloj y cuál lleva puesta.')],
   ['ti-chart-bar', tk('Valor de la colección'), tk('Lo que pagaste, lo que vale hoy y el coste real por uso.')],

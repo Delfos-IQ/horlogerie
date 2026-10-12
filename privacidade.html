@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<title>Privacidade · Rotor</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --dark:#F3EEE3; --dark2:#FBF8F1; --dark3:#E8E1D2; --gold:#B8963E; --gold-light:#7E6118; --light:#1E1B16; --mid:#655D51;
+          --line:rgba(126,97,24,.24); color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --dark:#0B1220; --dark2:#141D30; --dark3:#1F2A42; --gold-light:#D4AF6A; --light:#E6E1D6; --mid:#97A0B1;
+            --line:rgba(184,150,62,.24); color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--dark); color: var(--light); font-family: 'Jost', system-ui, sans-serif;
+         font-size: 16px; line-height: 1.65; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 400; font-size: 40px; color: var(--gold-light);
+       letter-spacing: 1px; margin: 0 0 4px; }
+  h2 { font-family: 'Bodoni Moda', Didot, Georgia, serif; font-weight: 500; font-size: 24px; color: var(--gold-light);
+       margin: 36px 0 8px; }
+  p, li { color: var(--light); }
+  .meta { color: var(--mid); font-size: 14px; margin-bottom: 28px; }
+  .box { background: var(--dark2); border: 0.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 0.5px solid var(--line); }
+  th { color: var(--gold-light); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--gold-light); }
+  code { font-size: 13px; background: var(--dark3); padding: 1px 5px; border-radius: 4px; }
+  .back { margin-top: 40px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacidade</h1>
+  <div class="meta">Rotor (antes Horlogerie) · Última atualização: 12 de outubro de 2026 (v2.16) · <a href="./privacidad.html" lang="es">Español</a> · <a href="./privacy.html" lang="en">English</a></div>
+
+  <div class="box">
+    <p><strong>Em resumo:</strong> a tua coleção fica guardada no teu dispositivo. Só sai dele se ativares a «Cópia na nuvem», e nesse caso é cifrada no teu dispositivo antes de ser enviada, para a poderes usar noutros dispositivos. Não há contas, nem publicidade, nem analítica, nem venda de dados. Podes apagar os teus dados da nuvem a partir da própria app.</p>
+  </div>
+
+  <h2>Quem é o responsável</h2>
+  <p>O Rotor é uma app da Delfos-IQ. Contacto para qualquer questão de privacidade: <a href="mailto:pedicode.app@gmail.com">pedicode.app@gmail.com</a>.</p>
+
+  <h2>Que dados a app trata</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>Dado</th><th>Onde fica guardado</th><th>Para quê</th></tr>
+    <tr><td>Relógios (marca, modelo, especificações, notas, preço e datas que introduzes)</td><td>No teu dispositivo. Na nuvem só se a ativares.</td><td>Mostrar a tua coleção.</td></tr>
+    <tr><td>Fotos dos teus relógios</td><td>No teu dispositivo (comprimidas). Na nuvem só se a ativares.</td><td>Mostrar a tua coleção.</td></tr>
+    <tr><td>Histórico de uso (que dias usaste cada relógio)</td><td>No teu dispositivo. Na nuvem só se a ativares.</td><td>Estatísticas e sugestões.</td></tr>
+    <tr><td>Lista de desejos</td><td>No teu dispositivo. Na nuvem só se a ativares.</td><td>Registar relógios que te interessam.</td></tr>
+    <tr><td>Chave de recuperação (código aleatório)</td><td>No teu dispositivo. O servidor só recebe valores derivados dela.</td><td>Identificar a tua cópia na nuvem sem contas nem email.</td></tr>
+    <tr><td>Código de associação (6 caracteres)</td><td>Criado no teu dispositivo; o servidor guarda um pacote cifrado durante 10 minutos no máximo e apaga-o quando é usado.</td><td>Passar a tua chave para outro dispositivo teu sem a escrever.</td></tr>
+  </table>
+  </div>
+  <p>A app não pede nem recolhe o teu nome, email, localização, contactos nem identificadores de publicidade.</p>
+
+  <h2>Cópia na nuvem (opcional)</h2>
+  <p>Vem desativada nas instalações novas. Se a ativares nas Definições, a tua coleção, fotos, histórico e lista de desejos ficam guardados num serviço próprio alojado na Cloudflare (Cloudflare, Inc., como subcontratante).</p>
+  <p><strong>Cifragem de ponta a ponta:</strong> antes de sair do teu dispositivo, cada relógio, desejo e foto é cifrado (AES-GCM de 256 bits) com uma chave derivada da tua chave de recuperação, que nunca é enviada. O servidor só guarda texto cifrado, um identificador de conta derivado da chave e a impressão digital de um código de escrita: nem nós nem a Cloudflare podemos ler a tua coleção. O que o servidor vê é quantos elementos tens, o seu tamanho e quando mudam.</p>
+  <ul>
+    <li><strong>A tua chave de recuperação funciona como uma palavra-passe:</strong> quem a tiver pode ver e apagar a tua cópia. Não a partilhes. Podes mudá-la nas Definições («Mudar chave»). Como não há contas nem email, se a perderes não a podemos recuperar por ti.</li>
+    <li><strong>Associar outro dispositivo:</strong> o teu dispositivo cifra a chave com um código de 6 caracteres que é gerado nele e nunca é enviado; o servidor guarda esse texto cifrado durante 10 minutos no máximo e apaga-o quando é usado.</li>
+    <li><strong>Eliminação:</strong> Definições → «Apagar da nuvem» elimina a tua cópia de imediato. Se desativares a cópia sem a apagar, fica guardada até a apagares.</li>
+    <li><strong>Registos técnicos:</strong> para limitar abusos, o serviço guarda durante 1 hora um contador associado a um resumo cifrado (hash) do teu endereço IP, e durante 24 horas os erros técnicos com esse mesmo resumo. Nunca o IP em claro.</li>
+    <li><strong>Transferências internacionais:</strong> a Cloudflare pode tratar dados fora do Espaço Económico Europeu com as garantias das suas cláusulas contratuais-tipo.</li>
+  </ul>
+
+  <h2>Preencher a partir de uma ligação</h2>
+  <p>Se usares «Preencher a partir de uma ligação» com uma ligação, essa ligação é enviada para o nosso serviço na Cloudflare, que descarrega a página pública e devolve o texto ao teu dispositivo, onde a app lê as especificações. Não é usada inteligência artificial nem nenhum outro serviço externo, e não é enviado nada da tua coleção, das tuas fotos nem da tua chave. O texto de cada página fica em cache durante 30 dias para não ser descarregado de novo. Se colares o texto da ficha em vez de uma ligação, é lido no teu dispositivo e não sai dele.</p>
+
+  <h2>Compras (Rotor Pro)</h2>
+  <p>O Rotor Pro compra-se através do Google Play: a Google processa o pagamento e a app nunca vê os dados do teu cartão. Para verificar a compra, a app envia para o nosso serviço na Cloudflare o código de compra dado pelo Google Play; o serviço consulta-o na API do Google Play, confirma a compra e não o guarda. O teu dispositivo fica a saber que o Pro está ativado. O nome do titular que podes escrever ao criar o inventário para o seguro só é escrito no PDF: não é guardado nem enviado.</p>
+
+  <h2>Avisos no telemóvel (Rotor Pro)</h2>
+  <p>Se os ativares, a app prepara no teu dispositivo a lista de avisos (pilhas, revisões e relógios sem uso há um mês) e é o próprio telemóvel que os mostra. Não é usado nenhum serviço externo de notificações nem sai nada do dispositivo.</p>
+
+  <h2>Terceiros</h2>
+  <p>Fora das funções opcionais descritas (cópia na nuvem, preencher a partir de uma ligação e verificação de compras do Rotor Pro), a app não comunica com serviços externos: tipos de letra, ícones e bibliotecas vêm incluídos na própria app. Os códigos QR são gerados no teu dispositivo. Não há SDK de publicidade nem de analítica.</p>
+
+  <h2>Cópias de segurança</h2>
+  <p>«Cópia de segurança (JSON)» cria um ficheiro no teu dispositivo com os teus dados e fotos. Esse ficheiro fica sob o teu controlo: a app não o envia para lado nenhum.</p>
+
+  <h2>Os teus direitos</h2>
+  <p>Podes aceder aos teus dados (estão na app e na cópia JSON), retificá-los e apagá-los a partir da própria app. Para qualquer outro pedido (RGPD: acesso, retificação, apagamento, oposição, limitação, portabilidade) escreve para o endereço de contacto. Podes também apresentar reclamação à autoridade de proteção de dados do teu país (em Portugal, a CNPD; em Espanha, a AEPD).</p>
+
+  <h2>Menores</h2>
+  <p>A app não se destina a menores de 16 anos e não recolhe conscientemente dados deles.</p>
+
+  <h2>Alterações</h2>
+  <p>Se esta política mudar, esta página e a data acima serão atualizadas. O texto de referência é a versão em espanhol.</p>
+
+  <p class="back"><a href="./">← Voltar ao Rotor</a></p>
+</main>
+</body>
+</html>

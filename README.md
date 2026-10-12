@@ -14,13 +14,15 @@ horlogerie/
 ├── index.html              Única página de la app (vistas, modales, registro del SW)
 ├── privacidad.html         Política de privacidad pública (enlazada en Ajustes y en Play)
 ├── ayuda.html              Ayuda: nube, clave de recuperación, vincular y reinstalar
-├── privacy.html, help.html Las dos anteriores en inglés (la app enlaza la del idioma activo)
+├── privacy.html, help.html Las dos anteriores en inglés; privacidade.html y ajuda-pt.html en portugués
+│                           (la app enlaza las del idioma activo)
 ├── licencias.html          Licencias de terceros (MIT y OFL)
 ├── brand/                  Logo maestro (rotor-icon.svg) y símbolo sin fondo (rotor-symbol.svg)
 ├── manifest.json           Manifest PWA (scope /horlogerie/)
 ├── sw.js                   Service worker: red primero para la app, caché para fuentes/iconos
 ├── version.json            ÚNICA fuente de la versión (ver "Publicar una versión")
-├── watches_db.json         Base local de modelos que usa el autocompletado
+├── watches_db.json         Base local de modelos (autocompletado), con bloques `en` y `pt` traducidos.
+│                           Es la fuente: data/ guarda el Excel original, ya no se regenera desde él
 ├── css/
 │   ├── app.css
 │   ├── fonts.css + fonts/  Bodoni Moda y Jost (OFL), solo latín
@@ -29,7 +31,8 @@ horlogerie/
 ├── js/
 │   ├── main.js             Entrada (módulo ES): importa todo, delegación de eventos y arranque
 │   ├── i18n.js             Idioma (es/en), tema (auto/claro/oscuro) y moneda; t('texto en español')
-│   ├── i18n/en.js          Diccionario español → inglés (tools/check-i18n.mjs vigila que esté completo)
+│   ├── i18n/en.js, pt.js   Diccionarios español → inglés y portugués (tools/check-i18n.mjs vigila que estén completos)
+│   ├── reminders.js        Pro: plan de avisos en IndexedDB que el service worker convierte en notificaciones
 │   ├── theme-boot.js       Aplica el tema elegido antes de pintar (script clásico en <head>)
 │   ├── spec-parser.js      Lector de fichas sin IA (también se prueba en Node)
 │   ├── db.js               Carga y búsqueda en watches_db.json
@@ -73,7 +76,8 @@ horlogerie/
 │   ├── e2e_cloud.py        Clave corta, vincular dispositivos, recuperar, avisos y Ajustes
 │   ├── e2e_cloud2.py       Nube 2.0 cifrada de extremo a extremo (Worker con D1)
 │   ├── e2e_pro.py          Rotor Pro: compra en Play simulada, verificación y funciones Pro
-│   └── e2e_i18n.py         Inglés, tema, moneda, bienvenida y ficha por secciones
+│   ├── e2e_i18n.py         Inglés, portugués, tema, moneda, bienvenida y ficha por secciones
+│   └── e2e_reminders.py    Avisos: service worker real, notificaciones sin duplicados, abrir la ficha
 └── tools/
     ├── bump-version.mjs    Propaga la versión de version.json al resto de archivos
     ├── build-icons.py      Regenera el subconjunto de iconos (ejecutar al usar un icono nuevo)
@@ -101,7 +105,7 @@ Desde `localhost` el Worker real rechaza las peticiones (CORS limitado a `delfos
 
 ### Idiomas
 
-Los textos se escriben en español dentro de `t('…')` (o como texto en `index.html`, que se traduce al arrancar). Para el inglés, añade la entrada en `js/i18n/en.js`; `node tools/check-i18n.mjs` falla en CI si falta alguna. Un móvil en español, gallego, catalán o euskera ve la app en español; cualquier otro, en inglés. Ajustes → Preferencias permite elegir idioma, tema y moneda (la moneda solo cambia el formato: no convierte importes). Otro idioma = otro archivo en `js/i18n/` y una línea en `DICTS` y `LANGS` de `js/i18n.js`.
+Los textos se escriben en español dentro de `t('…')` (o como texto en `index.html`, que se traduce al arrancar). Cada texto nuevo necesita su entrada en `js/i18n/en.js` y `js/i18n/pt.js`; `node tools/check-i18n.mjs` falla en CI si falta alguna o si los `{marcadores}` no coinciden. Un móvil en español, gallego, catalán o euskera ve la app en español; en portugués, en portugués; cualquier otro, en inglés. Ajustes → Preferencias permite elegir idioma, tema y moneda (la moneda solo cambia el formato: no convierte importes). Otro idioma = otro archivo en `js/i18n/` y una línea en `DICTS` y `LANGS` de `js/i18n.js`.
 
 ### Iconos
 
@@ -144,6 +148,8 @@ Enlace KV: variable `HORLOGERIE_KV` → namespace `HORLOGERIE`. El `id` del name
 - **Campos Pro (v2.15, `js/data/care.js`):** `serial`, `currentValue`, `serviceLog` `[{id, date, kind, cost?, note?}]`, `accuracy` `[{ts, offset, setAfter?}]` (segundos de adelanto/atraso; `setAfter` = puesto en hora tras leerlo) y `straps` `[{id, name, material?, width?, note?, fitted?}]`. Viajan con la nube y las copias, y `sanitizeWatch` los valida.
 - **Rotor Pro:** `js/billing.js` (Digital Goods API + PaymentRequest de Play, verificación en el Worker) guarda el estado en `localStorage` (`rotor_pro_v1`). Pruebas: `tests/e2e_pro.py` (Play y Google simulados).
 - **Preferencias:** `rotor_prefs_v1` (idioma, tema, moneda, bienvenida vista).
+- **Fotos (v2.16):** IndexedDB `horlogerie_photos`, un registro `{ id, blob, tag }` por reloj (Blob, no base64; `tag` = SHA-256 del data URL, el mismo que usa la nube para saber si cambió). Los relojes en memoria no llevan foto: la pantalla usa `photoSrc(id)` (URL `blob:`) y la nube, las copias y los PDF piden `getPhotoDataUrl(id)` solo cuando la necesitan. Los registros antiguos se convierten al arrancar.
+- **Avisos (v2.16, Pro):** IndexedDB `rotor_reminders` (`plan` con fecha y texto de cada aviso, `sent` con los ya mostrados). El service worker los muestra con *Periodic Background Sync* o al abrir la app.
 - **Fusión:** cada reloj y deseo lleva `updatedAt`. Al sincronizar gana la copia modificada más recientemente; los borrados viajan como lápidas (`horlogerie_tombstones_v1`).
 - **Copia de seguridad:** Ajustes → Copia de seguridad (JSON, formato v3): relojes con fotos, historial y lista de deseos. Restaurar combina con lo que ya hay; no borra nada.
 
@@ -160,3 +166,4 @@ Segunda auditoría (v2.9) y plan F6–F10:
 - F8 nube 2.0 cifrada de extremo a extremo (Worker v14 + D1): v2.13.0.
 - F9 idioma y uso («Hoy llevo…», ficha por secciones, inglés, tema, moneda, bienvenida): v2.14.0.
 - F10 Rotor Pro, pago único (Worker v15 + Play Billing): v2.15.0. Falta configurar Play y el secreto del Worker.
+- Pendientes técnicos: fotos como Blob, avisos en el móvil, base de modelos traducida, portugués y capturas nuevas: v2.16.0.

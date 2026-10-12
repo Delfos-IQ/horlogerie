@@ -1,6 +1,6 @@
 /* ─── ADD / EDIT MODAL ─── */
 import { dbGet, dbLoad, dbSearch } from '../db.js';
-import { addWatch, compressPhoto, getWatch, updateWatch } from '../storage.js';
+import { addWatch, compressPhoto, getWatch, photoSrc, updateWatch } from '../storage.js';
 import { escHtml, showToast, ui } from './core.js';
 import { openDetail, renderHome } from './home-detail.js';
 import { importEnabled, showImportedPreview } from './url-import.js';
@@ -61,7 +61,7 @@ export function openEditModal(id, opts = {}) {
   const w = getWatch(id);
   if (!w) return;
   ui.editingWatchId   = id;
-  ui.editingPhotoData = w.photo || null;
+  ui.editingPhotoData = null;   // a new photo chosen in the modal (the current one stays in IndexedDB)
   window._pendingDbSpecs = null;
   window._pendingDbPrice = null;
   document.getElementById('modal-title-text').textContent = t('Editar reloj');
@@ -73,7 +73,7 @@ export function openEditModal(id, opts = {}) {
   document.getElementById('f-notes').value  = w.notes || '';
   setMaintFields(w);
   const prev = document.getElementById('photo-preview');
-  if (w.photo) { prev.src = w.photo; prev.style.display = 'block'; }
+  if (photoSrc(id)) { prev.src = photoSrc(id); prev.style.display = 'block'; }
   else { prev.style.display = 'none'; }
   // Hide URL import and DB search when editing — specs already exist
   const urlSec = document.getElementById('url-import-section');
@@ -185,7 +185,7 @@ export async function saveWatch() {
     if (ui.editingWatchId) {
       // Only send the photo if it changed: updateWatch recompresses whatever it gets
       const changes = { brand, model, ref, type, notes, ...maint };
-      if (ui.editingPhotoData !== (getWatch(ui.editingWatchId)?.photo || null)) changes.photo = ui.editingPhotoData;
+      if (ui.editingPhotoData) changes.photo = ui.editingPhotoData;
       await updateWatch(ui.editingWatchId, changes);
       if (window._pendingDbSpecs) await updateWatch(ui.editingWatchId, pendingSpecChanges(getWatch(ui.editingWatchId)));
       closeAddModal();

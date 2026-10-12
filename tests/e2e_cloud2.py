@@ -87,7 +87,7 @@ async def main():
         await bb.fill("#link-input", key)
         await bb.click("#link-go")
         await bb.wait_for_function("getWatches().length === 2", timeout=15000)
-        has_photo = await bb.evaluate(f"getWatch('{wa}').photo?.startsWith('data:image/')")
+        has_photo = await bb.evaluate(f"getPhotoDataUrl('{wa}').then(p => !!p?.startsWith('data:image/'))")
         check("con la clave, otro móvil recibe relojes, foto y lista de deseos",
               has_photo and await bb.evaluate("getWishlist().length") == 1)
 

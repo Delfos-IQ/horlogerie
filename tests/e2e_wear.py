@@ -56,6 +56,30 @@ async def main():
         }""")
         A, B, Q, N = ids
 
+        # ── Fotos como Blob (v2.16) ──
+        await page.evaluate("showView('home')")
+        await page.wait_for_timeout(200)
+        mem = await page.evaluate("id => 'photo' in getWatch(id)", A)
+        src = await page.get_attribute(f".watch-card[data-id='{A}'] img", "src")
+        loaded = await page.evaluate(f"() => document.querySelector(\".watch-card[data-id='{A}'] img\").naturalWidth")
+        check("la foto no vive en memoria: se muestra desde el Blob (blob:) con la CSP real", not mem and src.startswith('blob:') and loaded > 0, f"{mem} {src[:20]} {loaded}")
+        rec = await page.evaluate("""id => new Promise(r => { const q = indexedDB.open('horlogerie_photos');
+          q.onsuccess = () => { const g = q.result.transaction('photos').objectStore('photos').get(id); g.onsuccess = () => r({ blob: g.result.blob instanceof Blob, size: g.result.blob?.size, tag: g.result.tag, old: 'photo' in g.result }); }; })""", A)
+        durl = await page.evaluate("id => getPhotoDataUrl(id)", A)
+        check("se guarda como Blob (un tercio menos que en base64) con su huella", rec['blob'] and not rec['old'] and rec['tag'] and rec['size'] < len(durl) * 0.8, str(rec))
+        # A record written by an older version ({ id, photo: 'data:…' }) is converted on start
+        await page.evaluate("""([id, durl]) => new Promise(r => { const q = indexedDB.open('horlogerie_photos');
+          q.onsuccess = () => { const t = q.result.transaction('photos', 'readwrite'); t.objectStore('photos').put({ id, photo: durl }); t.oncomplete = r; }; })""", [B, durl])
+        await page.evaluate("loadPhotos().then(() => renderHome())")
+        await page.wait_for_timeout(200)
+        migrated = await page.evaluate("""id => new Promise(r => { const q = indexedDB.open('horlogerie_photos');
+          q.onsuccess = () => { const g = q.result.transaction('photos').objectStore('photos').get(id); g.onsuccess = () => r(g.result.blob instanceof Blob && !('photo' in g.result)); }; })""", B)
+        same = await page.evaluate("([a, b]) => Promise.all([getPhotoDataUrl(a), getPhotoDataUrl(b)]).then(([x, y]) => x === y)", [A, B])
+        check("las fotos de versiones anteriores se convierten al arrancar, sin cambiar ni un byte", migrated and same)
+        check("la huella coincide con la de la nube (no se vuelve a subir ninguna foto)",
+              await page.evaluate("([a, b]) => { const t = photoTags(); return t.get(a) === t.get(b) && t.get(a).length === 16; }", [A, B]))
+        await page.evaluate("id => idbDeletePhoto(id).then(() => renderHome())", B)
+
         # ── Días de calendario ──
         r1 = await page.evaluate("id => markWornToday(id)", A)
         r2 = await page.evaluate("id => markWornToday(id)", A)
