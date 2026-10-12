@@ -36,6 +36,11 @@ export default {
         "p": "Abraham-Louis Perrelet devises a pocket watch that winds itself with its wearer’s steps. It is the ancestor of every automatic."
       },
       {
+        "y": "1801",
+        "h": "Breguet’s tourbillon",
+        "p": "Abraham-Louis Breguet patents the tourbillon in Paris: the escapement and balance turn inside a cage, usually once a minute, to even out the effect of gravity on pocket watches, which spent the day upright. It remains one of the great symbols of fine watchmaking."
+      },
+      {
         "y": "1931",
         "h": "The 360-degree rotor",
         "p": "Rolex brings the freely turning rotor to the wrist, the principle that still drives almost every automatic. That same year, Longines and Charles Lindbergh create a watch for navigating in mid-flight."

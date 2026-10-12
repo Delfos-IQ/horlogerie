@@ -36,6 +36,11 @@ export default {
         "p": "Abraham-Louis Perrelet cria um relógio de bolso que se dá corda com os passos de quem o usa. É o antepassado de todos os automáticos."
       },
       {
+        "y": "1801",
+        "h": "O turbilhão de Breguet",
+        "p": "Abraham-Louis Breguet patenteia em Paris o turbilhão: o escape e o balanço giram dentro de uma gaiola, normalmente uma volta por minuto, para compensar o efeito da gravidade nos relógios de bolso, que passavam o dia na vertical. Continua a ser um dos grandes símbolos da alta relojoaria."
+      },
+      {
         "y": "1931",
         "h": "O rotor de 360 graus",
         "p": "A Rolex leva ao pulso o rotor que gira livremente, o princípio que ainda move quase todos os automáticos. Nesse ano, a Longines cria com Charles Lindbergh um relógio para navegar em pleno voo."

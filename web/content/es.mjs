@@ -36,6 +36,11 @@ export default {
         "p": "Abraham-Louis Perrelet idea un reloj de bolsillo que se da cuerda con los pasos de quien lo lleva. Es el antepasado de todos los automáticos."
       },
       {
+        "y": "1801",
+        "h": "El tourbillon de Breguet",
+        "p": "Abraham-Louis Breguet patenta en París el tourbillon: el escape y el volante giran dentro de una jaula, normalmente una vuelta por minuto, para compensar el efecto de la gravedad en los relojes de bolsillo, que pasaban el día en posición vertical. Hoy sigue siendo uno de los grandes símbolos de la alta relojería."
+      },
+      {
         "y": "1931",
         "h": "El rotor de 360 grados",
         "p": "Rolex lleva a la muñeca el rotor que gira libremente, el principio que aún mueve casi todos los automáticos. Ese año, Longines crea con Charles Lindbergh un reloj para navegar en pleno vuelo."
