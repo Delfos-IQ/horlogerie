@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.17.0';
+const CACHE   = 'horlogerie-v2.17.1';
 const BASE    = '/horlogerie';
 
 // Files to pre-cache on install
@@ -22,10 +22,10 @@ const SHELL = [
   `${BASE}/help.html`,
   `${BASE}/privacidade.html`,
   `${BASE}/ajuda-pt.html`,
-  `${BASE}/css/app.css?v=2.17.0`,
-  `${BASE}/css/fonts.css?v=2.17.0`,
-  `${BASE}/css/icons.css?v=2.17.0`,
-  `${BASE}/css/icons/tabler-icons-6b83bdd5.woff2`,
+  `${BASE}/css/app.css?v=2.17.1`,
+  `${BASE}/css/fonts.css?v=2.17.1`,
+  `${BASE}/css/icons.css?v=2.17.1`,
+  `${BASE}/css/icons/tabler-icons-b6b6e829.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-600-normal.woff2`,
@@ -61,9 +61,9 @@ const SHELL = [
   `${BASE}/js/i18n.js`,
   `${BASE}/js/i18n/en.js`,
   `${BASE}/js/i18n/pt.js`,
-  `${BASE}/js/theme-boot.js?v=2.17.0`,
-  `${BASE}/js/spec-parser.js?v=2.17.0`,
-  `${BASE}/js/main.js?v=2.17.0`,
+  `${BASE}/js/theme-boot.js?v=2.17.1`,
+  `${BASE}/js/spec-parser.js?v=2.17.1`,
+  `${BASE}/js/main.js?v=2.17.1`,
   `${BASE}/js/modules/url-import.js`,
   `${BASE}/js/modules/onboarding.js`,
   `${BASE}/js/modules/pro.js`,

@@ -661,4 +661,8 @@ export default {
   "{w} lleva un mes en la caja.": "O {w} está há um mês na caixa.",
   "Relojes olvidados": "Relógios esquecidos",
   "{n} relojes llevan más de un mes en la caja. Toca para ver cuál te toca.": "{n} relógios estão há mais de um mês na caixa. Toca para ver qual é a vez.",
+  "Web de Rotor": "Site do Rotor",
+  "Novedades, blog y preguntas frecuentes": "Novidades, blog e perguntas frequentes",
+  "Términos de uso": "Termos de utilização",
+  "Ir a la web de Rotor": "Ir para o site do Rotor",
 };

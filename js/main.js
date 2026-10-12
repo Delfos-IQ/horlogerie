@@ -31,6 +31,13 @@ import * as reminders from './reminders.js';
 // Language and theme first: the static HTML is translated before anything is drawn
 i18n.applyTheme();
 i18n.translateDOM();
+
+// Logo and name lead to the Rotor website in the browser. In the installed app
+// (Play or added to the home screen) they are not links: leaving the app by
+// tapping the logo would be a surprise. Settings → About keeps the web link.
+const installed = window.matchMedia?.('(display-mode: standalone)').matches
+  || navigator.standalone === true || document.referrer.startsWith('android-app://');
+if (installed) document.querySelectorAll('[data-web-brand]').forEach(a => { a.removeAttribute('href'); a.removeAttribute('title'); });
 storage.setNotifier(msg => core.showToast(i18n.t(msg)));
 
 /* ── Actions available to data-action="…" (and data-arg) ── */

@@ -1,5 +1,5 @@
 {
-  "version": "2.17.0",
+  "version": "2.17.1",
   "date": "2026-10-12",
-  "notes": "La app se adapta a tableta y ordenador: navegación lateral, más columnas, ficha con la foto al lado y ventanas centradas."
+  "notes": "El logo y el nombre llevan a la web de Rotor (en el navegador). Ajustes → Acerca de: web y términos de uso."
 }

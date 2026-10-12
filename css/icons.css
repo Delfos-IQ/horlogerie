@@ -1,5 +1,5 @@
 /*!
- * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (67 iconos)
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (68 iconos)
  * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
  * No editar a mano: vuelve a ejecutar el script.
  */
@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("./icons/tabler-icons-6b83bdd5.woff2") format("woff2");
+  src: url("./icons/tabler-icons-b6b6e829.woff2") format("woff2");
 }
 .ti {
   font-family: "tabler-icons" !important;
@@ -53,6 +53,7 @@
 .ti-edit:before { content: "\ea98"; }
 .ti-external-link:before { content: "\ea99"; }
 .ti-eye:before { content: "\ea9a"; }
+.ti-file-text:before { content: "\eaa2"; }
 .ti-file-type-pdf:before { content: "\fb10"; }
 .ti-hand-finger:before { content: "\ee94"; }
 .ti-heart:before { content: "\eabe"; }
