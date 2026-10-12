@@ -5,7 +5,9 @@
  *
  * Los textos se marcan con tk() y se traducen con t() donde se muestran.
  */
-import { tk } from '../i18n.js';
+/* Marks text for translation (tools/check-i18n.mjs finds it); translated with t() where shown.
+   Kept local so the data layer does not depend on i18n.js. */
+const tk = s => s;
 
 /** @type {{ id: string, label: string, items: { id: string, label: string, icon: string }[] }[]} */
 export const MOMENT_GROUPS = [
