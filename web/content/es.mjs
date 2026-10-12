@@ -92,6 +92,11 @@ export default {
         "k": "piedra",
         "h": "La piedra",
         "p": "Malaquita, lapislázuli, ónix: cada lámina de piedra natural es única, así que no hay dos esferas iguales."
+      },
+      {
+        "k": "luna",
+        "h": "La luna",
+        "p": "Las esferas con fase lunar muestran en qué punto de su ciclo de 29,5 días está la luna. Un disco de 59 dientes avanza un paso cada día y solo se desvía un día cada dos años y ocho meses."
       }
     ]
   },

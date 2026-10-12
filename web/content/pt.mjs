@@ -92,6 +92,11 @@ export default {
         "k": "piedra",
         "h": "A pedra",
         "p": "Malaquite, lápis-lazúli, ónix: cada lâmina de pedra natural é única, por isso não há dois mostradores iguais."
+      },
+      {
+        "k": "luna",
+        "h": "A lua",
+        "p": "Os mostradores com fase lunar mostram em que ponto do seu ciclo de 29,5 dias está a lua. Um disco de 59 dentes avança um passo por dia e só se desvia um dia a cada dois anos e oito meses."
       }
     ]
   },

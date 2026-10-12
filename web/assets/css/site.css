@@ -214,7 +214,8 @@ section { padding: clamp(56px, 8vw, 100px) 0; }
 }
 
 /* ── Esferas: pequeñas esferas pintadas con CSS ── */
-.dials { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.dials { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 1080px) { .dials { gap: 18px; } }
 @media (max-width: 960px) { .dials { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .dials { grid-template-columns: 1fr; } }
 .dial-card p { color: var(--mid); font-size: .97rem; margin: 0; }
@@ -229,4 +230,6 @@ section { padding: clamp(56px, 8vw, 100px) 0; }
   background: radial-gradient(circle at 30% 25%, #fff 0 2px, transparent 3px) 0 0 / 11px 11px, radial-gradient(circle at 70% 60%, #fff 0 1.5px, transparent 2.5px) 0 0 / 13px 13px, radial-gradient(circle at 40% 35%, #F7F8FA, #DCE1E8); }
 .d-meteorito { background: repeating-linear-gradient(60deg, rgba(255,255,255,.18) 0 1px, transparent 1px 7px), repeating-linear-gradient(-30deg, rgba(0,0,0,.25) 0 2px, transparent 2px 11px), radial-gradient(circle at 35% 30%, #9AA0A8, #4B5058 75%); }
 .d-piedra { background: repeating-radial-gradient(circle at 20% 80%, #1F6B4A 0 5px, #2E8A5F 5px 9px, #14513A 9px 14px); }
+.d-luna { --hand: #E6C98A; background: radial-gradient(circle at 50% 74%, #F0D99A 0 10px, #B8963E 11px, transparent 12px), radial-gradient(circle at 25% 30%, #fff 0 1px, transparent 2px) 0 0 / 23px 19px, radial-gradient(circle at 70% 60%, rgba(255,255,255,.7) 0 1px, transparent 2px) 0 0 / 17px 21px, radial-gradient(circle at 40% 30%, #22345C, #0B1220 75%); }
 .brands-note { margin-top: 30px; font-size: .85rem; }
+@media (min-width: 961px) and (max-width: 1080px) { .dial { width: 112px; } }

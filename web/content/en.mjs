@@ -92,6 +92,11 @@ export default {
         "k": "piedra",
         "h": "Stone",
         "p": "Malachite, lapis lazuli, onyx: every slice of natural stone is unique, so no two dials are alike."
+      },
+      {
+        "k": "luna",
+        "h": "The moon",
+        "p": "Moonphase dials show where the moon is in its 29.5-day cycle. A 59-tooth disc moves on one step a day and drifts by just one day every two years and eight months."
       }
     ]
   },
