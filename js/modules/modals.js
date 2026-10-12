@@ -1,6 +1,6 @@
 /* ─── ADD / EDIT MODAL ─── */
 import { dbGet, dbLoad, dbSearch } from '../db.js';
-import { addWatch, compressPhoto, getWatch, photoSrc, updateWatch } from '../storage.js';
+import { MOMENT_GROUPS, addWatch, cleanMoments, compressPhoto, getWatch, photoSrc, updateWatch } from '../storage.js';
 import { escHtml, showToast, ui } from './core.js';
 import { openDetail, renderHome } from './home-detail.js';
 import { importEnabled, showImportedPreview } from './url-import.js';
@@ -20,6 +20,7 @@ export function openAddModal() {
   document.getElementById('f-ref').value    = '';
   document.getElementById('f-type').value   = 'automatic';
   document.getElementById('f-notes').value  = '';
+  renderMomentsPicker([]);
   setMaintFields({});
   document.getElementById('photo-preview').style.display = 'none';
 
@@ -71,6 +72,7 @@ export function openEditModal(id, opts = {}) {
   document.getElementById('f-ref').value    = w.ref || '';
   document.getElementById('f-type').value   = w.type;
   document.getElementById('f-notes').value  = w.notes || '';
+  renderMomentsPicker(w.moments || []);
   setMaintFields(w);
   const prev = document.getElementById('photo-preview');
   if (photoSrc(id)) { prev.src = photoSrc(id); prev.style.display = 'block'; }
@@ -173,6 +175,7 @@ export async function saveWatch() {
   const ref   = document.getElementById('f-ref').value.trim();
   const type  = document.getElementById('f-type').value;
   const notes = document.getElementById('f-notes').value.trim();
+  const moments = readMomentsPicker();
   const maint = readMaintFields();
   if (!brand) { showToast(t('Introduce la marca')); return; }
   if (maint === null) return;
@@ -184,7 +187,7 @@ export async function saveWatch() {
   try {
     if (ui.editingWatchId) {
       // Only send the photo if it changed: updateWatch recompresses whatever it gets
-      const changes = { brand, model, ref, type, notes, ...maint };
+      const changes = { brand, model, ref, type, notes, moments, ...maint };
       if (ui.editingPhotoData) changes.photo = ui.editingPhotoData;
       await updateWatch(ui.editingWatchId, changes);
       if (window._pendingDbSpecs) await updateWatch(ui.editingWatchId, pendingSpecChanges(getWatch(ui.editingWatchId)));
@@ -194,6 +197,7 @@ export async function saveWatch() {
     } else {
       const newW = await addWatch({ brand, model, ref, type, notes, photo: ui.editingPhotoData });
       if (newW && Object.values(maint).some(v => v !== null)) await updateWatch(newW.id, maint);
+      if (newW && moments.length) await updateWatch(newW.id, { moments });
       // No specs chosen: try the local model database automatically
       let autoFilled = false;
       if (!window._pendingDbSpecs && typeof dbGet === 'function') {
@@ -281,4 +285,22 @@ export function pendingSpecChanges(w) {
   if (window._pendingDbPrice?.value) changes.price = window._pendingDbPrice;
   if (window._pendingSourceUrl) changes.sourceUrl = window._pendingSourceUrl;
   return changes;
+}
+
+
+/* ─── Momentos: ocasión, ánimo y estación (toggle chips) ─── */
+export function renderMomentsPicker(selected) {
+  const box = document.getElementById('f-moments');
+  if (!box) return;
+  const on = new Set(selected);
+  box.innerHTML = MOMENT_GROUPS.map(g => `
+    <div class="moments-group"><span class="moments-group-label">${t(g.label)}</span>
+      ${g.items.map(m => `<button type="button" class="moment-chip" data-moment="${m.id}" aria-pressed="${on.has(m.id)}">
+        <i class="ti ${m.icon}" aria-hidden="true"></i>${t(m.label)}</button>`).join('')}
+    </div>`).join('');
+  box.querySelectorAll('.moment-chip').forEach(b => b.addEventListener('click', () =>
+    b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'))));
+}
+export function readMomentsPicker() {
+  return cleanMoments([...document.querySelectorAll('#f-moments .moment-chip[aria-pressed="true"]')].map(b => b.dataset.moment));
 }

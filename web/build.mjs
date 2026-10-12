@@ -45,6 +45,7 @@ const ICON = {
   list: '<path d="M9 6h11M9 12h11M9 18h11M5 6v.01M5 12v.01M5 18v.01"/>',
   heart: '<path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6a5 5 0 1 1 7.5 6.6"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="16" r="1"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/>',
+  sparkles: '<path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2-2a2 2 0 0 1-2-2a2 2 0 0 1-2 2zm0-12a2 2 0 0 1 2 2a2 2 0 0 1 2-2a2 2 0 0 1-2-2a2 2 0 0 1-2 2zM9 18a6 6 0 0 1 6-6a6 6 0 0 1-6-6a6 6 0 0 1-6 6a6 6 0 0 1 6 6z"/>',
   'wifi-off': '<path d="M12 18h.01M9.17 15.17a4 4 0 0 1 5.66 0M6.34 12.34a8 8 0 0 1 4.16-2.2M13.8 10.2a8 8 0 0 1 3.86 2.14M3.5 9.5a12 12 0 0 1 3.1-2.1M10.4 6.1A12 12 0 0 1 20.5 9.5M3 3l18 18"/>',
 };
 const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
@@ -109,6 +110,7 @@ function header(c, alternates) {
 <a class="brand" href="${home}" aria-label="Rotor">${logo('lg-top')}<span>ROTOR</span></a>
 <nav class="nav" aria-label="${c.nav.story}">
 <a class="hide-sm" href="${home}#idea">${c.nav.story}</a>
+<a class="hide-sm" href="${home}#historia">${c.nav.history}</a>
 <a class="hide-sm" href="${home}#funciones">${c.nav.features}</a>
 <a class="hide-sm" href="${home}#pro">${c.nav.pro}</a>
 <a href="${url(c.path + 'blog/')}">${c.nav.blog}</a>
@@ -163,11 +165,26 @@ function home(c, posts) {
 
 <section id="idea"><div class="wrap story">
   <div class="prose">
-    <p class="eyebrow">${esc(c.story.eyebrow)}</p>
+    ${c.story.eyebrow ? `<p class="eyebrow">${esc(c.story.eyebrow)}</p>` : ''}
     <h2>${esc(c.story.h2)}</h2>
     ${c.story.p.map(p => `<p>${esc(p)}</p>`).join('\n    ')}
   </div>
   ${shot(c, '5-historial', c.story.alt)}
+</div></section>
+
+<section id="historia" class="alt"><div class="wrap">
+  <div class="head"><p class="eyebrow">${esc(c.history.eyebrow)}</p><h2>${esc(c.history.h2)}</h2><p class="lead">${esc(c.history.lead)}</p></div>
+  <ol class="timeline">${c.history.items.map(i => `
+    <li><span class="t-year">${esc(i.y)}</span><div><h3>${esc(i.h)}</h3><p>${esc(i.p)}</p></div></li>`).join('')}
+  </ol>
+</div></section>
+
+<section><div class="wrap">
+  <div class="head"><p class="eyebrow">${esc(c.dials.eyebrow)}</p><h2>${esc(c.dials.h2)}</h2><p class="lead">${esc(c.dials.lead)}</p></div>
+  <div class="dials">${c.dials.items.map(d => `
+    <div class="dial-card"><div class="dial d-${d.k}" aria-hidden="true"><i></i></div><h3>${esc(d.h)}</h3><p>${esc(d.p)}</p></div>`).join('')}
+  </div>
+  <p class="note brands-note">${esc(c.history.note)}</p>
 </div></section>
 
 <section class="alt"><div class="wrap">

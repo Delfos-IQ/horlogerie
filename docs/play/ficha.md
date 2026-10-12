@@ -12,7 +12,7 @@ No uses nombres de marcas de terceros (Rolex, Submariner, Royal Oak…) ni en lo
 
 **Título** (26): `Rotor: rotación de relojes`
 
-**Descripción breve** (77): `Qué reloj te pusiste, cuál toca hoy y cuánto te cuesta cada uso. Sin cuentas.`
+**Descripción breve** (77): `Elige el reloj según tu día y recuerda cuándo llevaste cada uno. Sin cuentas.`
 
 **Descripción completa:**
 
@@ -22,7 +22,8 @@ Rotor es el cuaderno de tu colección de relojes. Apunta los que tienes, registr
 QUÉ PUEDES HACER
 • Tu colección de un vistazo: foto, tipo de movimiento y cuándo lo llevaste por última vez.
 • Registro de uso sin complicaciones: «Hoy llevo…» y un toque; apunta días pasados o, si quieres, cronometra el tiempo puesto.
-• Rotación inteligente: te sugiere el reloj que más tiempo lleva sin salir, y puedes marcar favoritos o dejar alguno fuera de rotación.
+• Según tu día: marca cada reloj con sus momentos (ocasión, ánimo, estación) y Rotor te propone el que encaja con tu día; también te recuerda el que más tiempo lleva en la caja. Puedes marcar favoritos o dejar alguno fuera de rotación.
+• Una bienvenida distinta cada vez que abres la app, con un hecho de la historia de la relojería.
 • Ficha técnica de cada reloj: calibre, cristal, diámetro, grosor, resistencia al agua, reserva de marcha y más. Incluye una base de modelos de microbrands y homenajes para autocompletar.
 • Coste por uso: añade lo que pagaste y verás cuánto te sale cada día que lo llevas.
 • Avisos de mantenimiento: cambio de pila en los de cuarzo y revisión periódica en los mecánicos.
@@ -50,7 +51,7 @@ TUS DATOS SON TUYOS
 
 **Título** (25): `Rotor: watch rotation log`
 
-**Descripción breve** (77): `Which watch you wore, which one is due today, what each wear costs. No login.`
+**Descripción breve** (76): `Pick a watch to suit your day and remember when you wore each one. No login.`
 
 **Descripción completa:**
 
@@ -60,7 +61,8 @@ Rotor is the notebook for your watch collection. Log the watches you own, record
 WHAT YOU CAN DO
 • Your collection at a glance: photo, movement type and when you last wore it.
 • Effortless wear log: “Today I wear…” and one tap. Log past days or, if you like, time how long you wear it.
-• Smart rotation: suggests the watch that has gone longest without wrist time. Mark favourites or take a watch out of rotation.
+• To suit your day: tag each watch with its moments (occasion, mood, season) and Rotor suggests the one that fits your day; it also reminds you which has spent longest in the box. Mark favourites or take a watch out of rotation.
+• A different welcome every time you open the app, with a fact from watchmaking history.
 • Spec sheet for every watch: calibre, crystal, diameter, thickness, water resistance, power reserve and more. Fill it in from a shop or brand page: only what the page states is copied, nothing is guessed.
 • Cost per wear: enter what you paid and see what each day on the wrist costs you, in your currency.
 • Maintenance reminders: battery changes for quartz, regular service for mechanical watches.
@@ -88,7 +90,7 @@ YOUR DATA IS YOURS
 
 **Título** (26): `Rotor: rotação de relógios`
 
-**Descripción breve** (71): `Que relógio usaste, qual usar hoje e quanto custa cada uso. Sem contas.`
+**Descripción breve** (79): `Escolhe o relógio conforme o teu dia e lembra quando usaste cada um. Sem conta.`
 
 **Descripción completa:**
 
@@ -98,7 +100,8 @@ Rotor é o caderno da tua coleção de relógios. Regista os que tens, anota qua
 O QUE PODES FAZER
 • A tua coleção num relance: foto, tipo de movimento e quando o usaste pela última vez.
 • Registo de uso sem complicações: «Hoje uso…» e um toque. Regista dias passados ou, se quiseres, mede o tempo de uso.
-• Rotação inteligente: sugere o relógio que está há mais tempo sem sair; podes marcar favoritos ou deixar algum fora da rotação.
+• Conforme o teu dia: marca cada relógio com os seus momentos (ocasião, estado de espírito, estação) e o Rotor propõe-te o que combina com o teu dia; também te lembra o que está há mais tempo na caixa. Podes marcar favoritos ou deixar algum fora da rotação.
+• Boas-vindas diferentes sempre que abres a app, com um facto da história da relojoaria.
 • Ficha técnica de cada relógio: calibre, vidro, diâmetro, espessura, resistência à água, reserva de marcha e mais. Preenche-a a partir da página da loja ou da marca: só se copia o que a página indica, nada é inventado.
 • Custo por uso: indica quanto pagaste e vê quanto te custa cada dia em que o usas, na tua moeda.
 • Avisos de manutenção: troca de pilha nos de quartzo e revisão periódica nos mecânicos.

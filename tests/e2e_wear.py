@@ -130,7 +130,7 @@ async def main():
         # «Hoy llevo…»: the sheet puts the one that is due first
         await page.click("#today-change")
         first = await page.inner_text(".today-pick >> nth=0")
-        check("«Hoy llevo…» pone primero el que toca", 'Orient' in first and 'Te toca' in first, first)
+        check("«Hoy llevo…» pone primero el que lleva más tiempo en la caja", 'Orient' in first and 'Más tiempo en la caja' in first, first)
         await page.keyboard.press("Escape")
         await page.evaluate("getWatches().forEach(w => removeWearDay(w.id, Date.now())); showView('home')")
         await page.wait_for_timeout(100)
@@ -138,7 +138,7 @@ async def main():
         check("sin nada apuntado hoy, la portada pregunta qué reloj llevas", 'Hoy llevo' in today_txt, today_txt)
         rec = await page.inner_text("#recommendation-banner")
         check("recomienda el que nunca se ha puesto, sin el aviso alarmista del aceite",
-              'Todavía no lo has llevado' in rec and 'aceite' not in rec.lower() and 'toca ponerse' in rec.lower(), rec)
+              'Todavía no lo has llevado' in rec and 'aceite' not in rec.lower() and 'para hoy' in rec.lower(), rec)
         top = await page.evaluate("rankWatchesForRotation(getWatches())[0].watch.id")
         await page.click("#rec-wear")
         await page.wait_for_timeout(100)

@@ -22,9 +22,9 @@ SPECS = {
   "pt": {"cristal": "Safira", "caja": "Aço 316L", "acrylic": "Acrílico", "note": "Limpeza, óleos e juntas"},
 }
 GRAPHIC = {
-  "es": ("Qué reloj te pusiste, cuál toca hoy y cuánto te cuesta cada uso.", "Rotación de relojes · Sin cuentas · Sin conexión"),
-  "en": ("Which watch you wore, which one is due today and what each wear costs.", "Watch rotation · No login · Works offline"),
-  "pt": ("Que relógio usaste, qual usar hoje e quanto custa cada uso.", "Rotação de relógios · Sem contas · Sem ligação"),
+  "es": ("Elige el reloj según tu día y recuerda cuándo llevaste cada uno.", "Para tu colección · Sin cuentas · Sin conexión"),
+  "en": ("Pick a watch to suit your day and remember when you wore each one.", "For your collection · No login · Works offline"),
+  "pt": ("Escolhe o relógio conforme o teu dia e lembra quando usaste cada um.", "Para a tua coleção · Sem conta · Sem ligação"),
 }
 THEME = os.environ.get("THEME", "light")
 APP = "http://localhost:8080/horlogerie/"
@@ -81,6 +81,10 @@ DEMO = """async (S) => {
   addAccuracyReading(a, { ts: now - 5 * D, offset: 22 });
   addAccuracyReading(a, { ts: now - 1 * D, offset: 41 });
   addStrap(a, { name: 'Steel', width: '22 mm' });
+  // Momentos: ocasión, ánimo y estación
+  const mo = [[a, ['mar', 'deporte', 'verano', 'atrevido']], [b, ['evento', 'clasico', 'vintage', 'otono']],
+              [c, ['finde', 'viaje', 'discreto', 'otono']], [d, ['deporte', 'trabajo', 'discreto']], [e, ['viaje', 'trabajo', 'atrevido']]];
+  for (const [id, moments] of mo) await updateWatch(id, { moments });
   return { a, b, c, d, e, f };
 }"""
 
@@ -98,7 +102,7 @@ async def capture(b, lang):
     await page.wait_for_function("typeof wearStats === 'function'")
     await page.wait_for_timeout(2300)
     ids = await page.evaluate(DEMO, SPECS[lang])
-    await page.evaluate("document.getElementById('intro')?.remove(); showView('home')")
+    await page.evaluate("document.getElementById('intro')?.remove(); showView('home'); document.querySelector('.insp-close')?.click()")
     await page.wait_for_timeout(400)
     shots = []
     async def shot(name):

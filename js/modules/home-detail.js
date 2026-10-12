@@ -1,12 +1,13 @@
 /* ─── HOME ─── */
-import { addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, photoSrc, maintenanceAlerts, markWornToday, removeWearDay, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
+import { MOMENTS, currentSeason, momentById, addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, photoSrc, maintenanceAlerts, markWornToday, removeWearDay, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
 import { openSheet, showConfirm } from './sheet.js';
 import { dialArt, elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui } from './core.js';
 import { openEditModal } from './modals.js';
 import { intervalsHTML, renderHistory, watchChip } from './history.js';
 import { renderBackupReminder } from './settings.js';
 import { importEnabled, importIntoWatch } from './url-import.js';
-import { locale, money, t } from '../i18n.js';
+import { lang, locale, money, t } from '../i18n.js';
+import { INSPIRATION } from '../data/inspiration.js';
 import { renderCare, renderStraps } from './care.js';
 
 const name = w => `${escHtml(w.brand)} ${escHtml(w.model)}`;
@@ -27,6 +28,7 @@ export function renderHome() {
       : (ws.length === 1 ? t('1 reloj') : t('{n} relojes', { n: ws.length }))
         + (spent ? ' · ' + t('{v} invertidos', { v: money(spent, { decimals: 0 }) }) : '');
   }
+  renderInspiration();
   if (typeof renderBackupReminder === 'function') renderBackupReminder();
 
   renderToday(ws, activeW);
@@ -129,7 +131,7 @@ export function openTodaySheet() {
       const on = todayIds.has(w.id);
       return `<button class="today-pick${on ? ' on' : ''}" data-id="${escHtml(w.id)}" aria-pressed="${on}">
         ${watchChip(w, 40)}
-        <span class="today-pick-txt"><b>${name(w)}</b><small>${w.id === dueId ? `<em>${t('Te toca')}</em> · ` : ''}${escHtml(shortLastWorn(w))}</small></span>
+        <span class="today-pick-txt"><b>${name(w)}</b><small>${w.id === dueId ? `<em>${t('Más tiempo en la caja')}</em> · ` : ''}${escHtml(shortLastWorn(w))}</small></span>
         <i class="ti ${on ? 'ti-circle-check' : 'ti-circle'}" aria-hidden="true"></i>
       </button>`;
     };
@@ -153,32 +155,92 @@ export function openTodaySheet() {
   paint();
 }
 
+/* ─── Welcome: a different watch-history fact (or idea) every time the app opens ───
+   Chosen once per opening, never the same as the previous one; × hides it until next time. */
+const INSP_KEY = 'rotor_inspiration_last';
+let _insp = null, _inspClosed = false;
+function pickInspiration() {
+  let last = -1;
+  try { last = Number(localStorage.getItem(INSP_KEY) ?? -1); } catch {}
+  let i = Math.floor(Math.random() * INSPIRATION.length);
+  if (i === last) i = (i + 1) % INSPIRATION.length;
+  try { localStorage.setItem(INSP_KEY, String(i)); } catch {}
+  return INSPIRATION[i];
+}
+export function renderInspiration() {
+  const el = document.getElementById('inspiration-card');
+  if (!el) return;
+  if (_inspClosed) { el.innerHTML = ''; return; }
+  _insp ||= pickInspiration();
+  const text = _insp[lang()] || _insp.es;
+  el.innerHTML = `<aside class="insp-card" aria-label="${t('Historia de la relojería')}">
+    <div class="insp-year" aria-hidden="true">${_insp.y ? escHtml(_insp.y) : '<i class="ti ti-sparkles"></i>'}</div>
+    <p class="insp-text">${escHtml(text)}</p>
+    <button type="button" class="insp-close" aria-label="${t('Cerrar')}"><i class="ti ti-x" aria-hidden="true"></i></button>
+  </aside>`;
+  el.querySelector('.insp-close').addEventListener('click', () => { _inspClosed = true; el.innerHTML = ''; });
+}
+
 /* ─── Recommendation banner ───
-   Rotation, not urgency: suggest the watch that has gone longest without
-   wrist time, among those "en rotación". Favourites win ties.
+   No «el que toca»: the collector wears what inspires them today. Rotor proposes
+   watches for the chosen moment (occasion, mood, season), puts the ones that suit
+   the current season first and reminds which one has been in the box the longest.
    Hidden once something is logged for today. */
+let _moment = null;   // chip chosen in this session (not kept: every opening starts fresh)
+
 export function renderRecommendation(ws, activeW) {
   const banner = document.getElementById('recommendation-banner');
   if (!banner) return;
   if (activeW || wornTodayList(ws).length) { banner.innerHTML = ''; return; }
 
-  const ranked = rankWatchesForRotation(ws).filter(r => r.stats.daysSinceLast !== 0);
-  if (!ranked.length) { banner.innerHTML = ''; return; }
+  const pool = rankWatchesForRotation(ws).filter(r => r.stats.daysSinceLast !== 0);
+  if (!pool.length) { banner.innerHTML = ''; return; }
 
-  const [top, ...rest] = ranked;
+  const used = MOMENTS.filter(m => pool.some(r => r.watch.moments?.includes(m.id)));
+  if (_moment && !used.some(m => m.id === _moment)) _moment = null;
+  const season = currentSeason();
+  const fitsSeason = r => (r.watch.moments?.includes(season) ? 1 : 0);
+
+  let list, label;
+  if (_moment) {
+    list = pool.filter(r => r.watch.moments?.includes(_moment));
+    label = t('Para «{m}»', { m: t(momentById(_moment).label) });
+  } else {
+    list = [...pool].sort((a, b) => fitsSeason(b) - fitsSeason(a));   // stable: idle order kept inside
+    label = list.some(fitsSeason) ? t('Para hoy · {s}', { s: t(momentById(season).label).toLowerCase() }) : t('Para hoy');
+  }
+  const idlest = pool[0];
+
+  const chips = used.length
+    ? `<div class="rec-moods" role="group" aria-label="${t('¿Qué te apetece hoy?')}">
+        <span class="rec-moods-q">${t('¿Qué te apetece hoy?')}</span>
+        <div class="rec-chips">${used.map(m => `<button type="button" class="rec-chip" data-moment="${m.id}" aria-pressed="${m.id === _moment}">
+          <i class="ti ${m.icon}" aria-hidden="true"></i>${t(m.label)}</button>`).join('')}</div>
+      </div>`
+    : (ws.length >= 2 ? `<div class="rec-hint"><i class="ti ti-sparkles" aria-hidden="true"></i>${t('Marca en cada reloj sus momentos (ocasión, ánimo, estación) y Rotor te propondrá opciones según tu día.')}</div>` : '');
+
+  if (!list.length) {
+    banner.innerHTML = chips;
+    bindChips(banner, ws, activeW);
+    return;
+  }
+  const [top, ...rest] = list;
   const w = top.watch;
   const others = rest.slice(0, 2).map(r => name(r.watch));
-  banner.innerHTML = `
+  const showIdle = idlest && idlest.watch.id !== w.id;
+  banner.innerHTML = `${chips}
     <div class="recommendation-card" role="button" tabindex="0" aria-label="${t('Recomendación')}: ${name(w)}">
-      <div class="rec-icon"><i class="ti ti-refresh" aria-hidden="true"></i></div>
+      <div class="rec-icon"><i class="ti ${_moment ? momentById(_moment).icon : 'ti-sparkles'}" aria-hidden="true"></i></div>
       <div class="rec-body">
-        <div class="rec-label">${t('Toca ponerse')}</div>
+        <div class="rec-label">${label}</div>
         <div class="rec-watch">${name(w)}${w.favorite ? ` <i class="ti ti-star" aria-label="${t('Favorito')}"></i>` : ''}</div>
         <div class="rec-reason">${formatLastWorn(top.stats)}</div>
-        ${others.length ? `<div class="rec-others">${t('Después')}: ${others.join(' · ')}</div>` : ''}
+        ${others.length ? `<div class="rec-others">${t('También')}: ${others.join(' · ')}</div>` : ''}
       </div>
       <button class="rec-wear" id="rec-wear" aria-label="${t('Lo llevo hoy')}: ${name(w)}"><i class="ti ti-check" aria-hidden="true"></i><span>${t('Lo llevo hoy')}</span></button>
-    </div>`;
+    </div>
+    ${showIdle ? `<button type="button" class="rec-idle" id="rec-idle"><i class="ti ti-hourglass" aria-hidden="true"></i>
+      <span>${t('Más tiempo en la caja')}: <b>${name(idlest.watch)}</b> · ${formatLastWorn(idlest.stats).toLowerCase()}</span></button>` : ''}`;
   const card = banner.querySelector('.recommendation-card');
   card.addEventListener('click', () => openDetail(w.id));
   card.addEventListener('keydown', e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(w.id); } });
@@ -188,6 +250,15 @@ export function renderRecommendation(ws, activeW) {
     showToast(t('Apuntado: hoy llevas el {w}', { w: `${w.brand} ${w.model}` }));
     renderHome();
   });
+  banner.querySelector('#rec-idle')?.addEventListener('click', () => openDetail(idlest.watch.id));
+  bindChips(banner, ws, activeW);
+}
+function bindChips(banner, ws, activeW) {
+  banner.querySelectorAll('.rec-chip').forEach(b => b.addEventListener('click', () => {
+    _moment = _moment === b.dataset.moment ? null : b.dataset.moment;
+    renderRecommendation(ws, activeW);
+    banner.querySelector(`.rec-chip[data-moment="${b.dataset.moment}"]`)?.focus();
+  }));
 }
 
 /**

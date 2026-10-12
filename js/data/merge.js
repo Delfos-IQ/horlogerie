@@ -2,6 +2,7 @@
  * data/merge.js — Validation and merging: sanitizing anything that comes from outside (cloud, backups), tombstones for deletions and per-item merge.
  */
 import { readJSON } from './persist.js';
+import { cleanMoments } from './moments.js';
 
 /* ═══════════════════════════════════════
    TOMBSTONES — ids deleted locally that the cloud still has to hear about.
@@ -124,6 +125,8 @@ export function sanitizeWatch(raw) {
   if (_num(raw.updatedAt)) w.updatedAt = raw.updatedAt;
   if (typeof raw.favorite === 'boolean') w.favorite = raw.favorite;
   if (typeof raw.rotation === 'boolean') w.rotation = raw.rotation;
+  const moments = cleanMoments(raw.moments);
+  if (moments.length) w.moments = moments;
   for (const k of ['purchasePrice', 'purchaseDate', 'lastService', 'batteryChanged']) {
     if (_num(raw[k])) w[k] = raw[k];
   }

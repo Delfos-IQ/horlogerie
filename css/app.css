@@ -1538,3 +1538,33 @@ button.care-row { cursor: pointer; }
 a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold); }
 .rail-brand { display: none; }
 @media (min-width: 1024px) { .rail-brand { display: flex; } }
+
+/* ══ Momentos (v2.18): elegir el reloj del día por ocasión, ánimo y estación ══ */
+.rec-moods { margin: 12px 16px 0; }
+.rec-moods-q { display: block; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 8px; }
+.rec-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rec-chips::-webkit-scrollbar { display: none; }
+.rec-chip, .moment-chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 13px; border-radius: 999px;
+  border: 0.5px solid var(--glass-border); background: var(--dark2); color: var(--light); font: 400 13px var(--font-body); cursor: pointer; }
+.rec-chip i, .moment-chip i { font-size: 15px; color: var(--gold-light); }
+.rec-chip[aria-pressed="true"], .moment-chip[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--on-gold); }
+.rec-chip[aria-pressed="true"] i, .moment-chip[aria-pressed="true"] i { color: var(--on-gold); }
+.rec-hint { margin: 12px 16px 0; font-size: 12.5px; line-height: 1.5; color: var(--mid); display: flex; gap: 8px; align-items: flex-start; }
+.rec-hint i { color: var(--gold-light); font-size: 16px; margin-top: 1px; }
+.rec-idle { display: flex; align-items: center; gap: 8px; width: calc(100% - 32px); margin: 8px 16px 0; padding: 8px 4px; background: none; border: 0;
+  text-align: left; font: 400 12.5px var(--font-body); color: var(--mid); cursor: pointer; }
+.rec-idle i { color: var(--gold-light); font-size: 15px; }
+.rec-idle b { color: var(--light); font-weight: 500; }
+.moments-picker { display: flex; flex-direction: column; gap: 10px; }
+.moments-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.moments-group-label { flex-basis: 100%; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mid); }
+.moment-chip { min-height: 34px; font-size: 12.5px; }
+/* Bienvenida: un hecho de la historia de la relojería en cada apertura */
+.insp-card { position: relative; display: flex; gap: 12px; align-items: flex-start; margin: 12px 16px 0; padding: 12px 40px 12px 14px;
+  border-radius: var(--radius); background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 12%, var(--dark2)), var(--dark2));
+  border: 0.5px solid var(--glass-border); }
+.insp-year { flex: 0 0 auto; min-width: 44px; font-family: var(--font-display); font-size: 20px; line-height: 1.2; color: var(--gold-light); }
+.insp-year i { font-size: 20px; }
+.insp-text { margin: 0; font-size: 13px; line-height: 1.55; color: var(--light); }
+.insp-close { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0; background: none; color: var(--mid); cursor: pointer; border-radius: 50%; }
+.insp-close:hover { color: var(--light); }

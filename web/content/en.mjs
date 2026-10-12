@@ -3,26 +3,92 @@ export default {
   lang: 'en', locale: 'en_GB', path: 'en/',
   meta: {
     title: 'Rotor · Which watch to wear today · App for your watch collection',
-    description: 'Rotor tells you which watch to wear today, when you last wore each one and when a battery or service is due. No account, no ads, encrypted cloud. Free; Pro for €5.99.',
+    description: 'Rotor helps you choose today’s watch by how you feel and the occasion, and remembers when you last wore each one. No account, no ads, encrypted cloud. Free; Pro for €5.99.',
   },
-  nav: { story: 'The idea', features: 'Features', pro: 'Pro', blog: 'Blog', open: 'Open Rotor' },
+  nav: { story: 'The rotor', history: 'History', features: 'Features', pro: 'Pro', blog: 'Blog', open: 'Open Rotor' },
   hero: {
     eyebrow: 'For your watch collection',
     h1: 'No watch should stop in a drawer.',
-    lead: 'Rotor tells you which watch to wear today, when you last wore each one and when it needs a battery or a service. No account, no ads.',
+    lead: "Rotor helps you choose today’s watch by how you feel and the occasion, and remembers when you last wore each one. No account, no ads.",
     cta: 'Open Rotor for free',
     cta2: 'Try it on Android',
     note: 'Works in the browser on your computer or phone. The Android app is in closed testing before it reaches Google Play.',
   },
   story: {
-    eyebrow: 'The idea',
-    h2: 'A rotor only turns when the watch is on your wrist.',
-    p: [
-      'An automatic watch has no battery. It winds itself with the movement of your wrist: inside, a half-moon-shaped part, the rotor, swings with every gesture and tightens the mainspring.',
-      'Leave it in the box for a couple of days and it stops. With three watches it is easy to remember which one is next. With eight, you end up wearing the same two and the rest sit still for months.',
-      'That is where Rotor came from: wanting to know how many watches I had, when I had last worn each one and which one was next. Now it does that for you, without spreadsheets.',
+    "eyebrow": "",
+    "h2": "A rotor only turns when the watch is on your wrist.",
+    "p": [
+      "Inside an automatic watch, a half-moon-shaped weight, the rotor, swings with every movement of your wrist and slowly tightens the mainspring. The mainspring releases its mechanical energy through a train of wheels to the escape wheel, which hands it over in small impulses to the balance: a ring that oscillates several times a second and sets the pace of time. No battery. Just your movement and more than two centuries of engineering.",
+      "Leave it in the box for a few days and the mainspring unwinds and the watch stops. With three watches it is easy for all of them to get some wrist time. With eight, you end up wearing the same two while the rest wait for months in silence.",
+      "But a watch lover does not wear “the one that is due”. They wear the one that inspires them that day: the diver for a Saturday by the sea, the dress watch for a dinner, the green dial because autumn is coming. Mood, occasion and season choose the piece.",
+      "That is why Rotor exists. Every time you open it, it suggests the best options for how you feel and what your day holds, and reminds you which watches have been waiting longest in the box."
     ],
-    alt: 'Wear history calendar in Rotor',
+    "alt": "Wear history calendar in Rotor"
+  },
+  history: {
+    "eyebrow": "History",
+    "h2": "More than a watch: engineering and memory on your wrist.",
+    "lead": "An automatic watch is a small work of engineering and a piece of history. Wearing one means wearing the work of those who devised it: watches that were once symbols of progress, of precision, or of an industry that had to reinvent itself.",
+    "items": [
+      {
+        "y": "1770",
+        "h": "Winding by movement",
+        "p": "Abraham-Louis Perrelet devises a pocket watch that winds itself with its wearer’s steps. It is the ancestor of every automatic."
+      },
+      {
+        "y": "1931",
+        "h": "The 360-degree rotor",
+        "p": "Rolex brings the freely turning rotor to the wrist, the principle that still drives almost every automatic. That same year, Longines and Charles Lindbergh create a watch for navigating in mid-flight."
+      },
+      {
+        "y": "1938",
+        "h": "For pilots in gloves",
+        "p": "Oris introduces its Big Crown, with a crown you can turn without taking your gloves off. In Pforzheim, Laco has been making unmistakably legible pilot watches since 1925."
+      },
+      {
+        "y": "1953",
+        "h": "Into the deep",
+        "p": "The great dive watches are born: the Blancpain Fifty Fathoms, the Rolex Submariner and the Zodiac Sea Wolf. In 1965 Seiko’s first diver arrives, and it will end up in Antarctica."
+      },
+      {
+        "y": "1969",
+        "h": "The Moon and quartz",
+        "p": "An Omega Speedmaster walks on the Moon, the first automatic chronographs arrive and, at Christmas, Seiko puts the Astron on sale: the first quartz wristwatch."
+      },
+      {
+        "y": "1970–1984",
+        "h": "Reinvention",
+        "p": "The quartz crisis wipes out two in three Swiss watchmaking jobs. The brands that reinvent themselves survive, and the automatic stops being a tool and becomes what it is today: a choice."
+      }
+    ],
+    "note": "The brands mentioned belong to their owners. Rotor is an independent project and is not affiliated with any of them."
+  },
+  dials: {
+    "eyebrow": "Dials",
+    "h2": "A dial tells a story too.",
+    "lead": "Many dials stand for a place or an idea. Choosing one or another also says how you feel today.",
+    "items": [
+      {
+        "k": "mar",
+        "h": "The sea",
+        "p": "Deep blues, engraved waves and diving bezels: watches made for the water that bring summer to your wrist even on dry land."
+      },
+      {
+        "k": "nieve",
+        "h": "Forest and snow",
+        "p": "Grand Seiko turned the snow of Shinshu into a dial with its “Snowflake”, and the birch forest around its Shizukuishi studio with its “White Birch”."
+      },
+      {
+        "k": "meteorito",
+        "h": "The sky",
+        "p": "Meteorite dials, often cut from the Gibeon meteorite from Namibia, show a pattern that took millions of years to form. Aventurine, with its sparkle, recalls a starry sky."
+      },
+      {
+        "k": "piedra",
+        "h": "Stone",
+        "p": "Malachite, lapis lazuli, onyx: every slice of natural stone is unique, so no two dials are alike."
+      }
+    ]
   },
   how: {
     eyebrow: 'How it works',
@@ -30,14 +96,14 @@ export default {
     steps: [
       { h: 'Add your watches', p: 'Type the brand and model, or paste a link from a shop or the official site: Rotor finds the specifications and you choose what to keep.', img: '3-ficha', alt: 'Watch specifications in Rotor' },
       { h: 'Log the one you wear', p: 'One tap on “Today I wear…”. Forgot a day? Add it later in the calendar.', img: '2-hoy-llevo', alt: 'Picking today’s watch in Rotor' },
-      { h: 'Rotor tells you the next one', p: 'Every day it suggests the watch that has gone longest without leaving the box, among the ones in your rotation.', img: '1-coleccion', alt: 'Rotor suggesting the next watch to wear' },
+      { h: 'Rotor suggests today’s watch', p: 'Choose how you feel or the occasion, and Rotor suggests the watches that suit it best. It also reminds you which one has been in the box the longest.', img: '1-coleccion', alt: 'Today’s suggestions in Rotor' },
     ],
   },
   features: {
     eyebrow: 'Free',
     h2: 'What you get without paying anything.',
     items: [
-      { icon: 'refresh', h: 'Today’s rotation', p: 'The watch that has been idle the longest, plus the next two. Favourites break ties.' },
+      { icon: 'sparkles', h: 'To suit your day', p: 'By occasion, mood or season: Rotor suggests the watch that fits and reminds you of the one that has been in the box the longest.' },
       { icon: 'calendar', h: 'History and calendar', p: 'What you wore each day, how much you use each watch and which ones get forgotten.' },
       { icon: 'list', h: 'Specifications', p: 'Calibre, diameter, water resistance, crystal… Copied as-is from the page you paste, with nothing made up.' },
       { icon: 'heart', h: 'Wishlist', p: 'The watches you would like to own, with their price and specifications.' },

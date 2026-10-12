@@ -1,5 +1,5 @@
 /*!
- * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (68 iconos)
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (80 iconos)
  * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
  * No editar a mano: vuelve a ejecutar el script.
  */
@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("./icons/tabler-icons-b6b6e829.woff2") format("woff2");
+  src: url("./icons/tabler-icons-0b9250ab.woff2") format("woff2");
 }
 .ti {
   font-family: "tabler-icons" !important;
@@ -25,6 +25,7 @@
 .ti-arrow-left:before { content: "\ea19"; }
 .ti-arrow-up-circle:before { content: "\ea20"; }
 .ti-ban:before { content: "\ea2e"; }
+.ti-briefcase:before { content: "\ea46"; }
 .ti-calendar-month:before { content: "\fd2f"; }
 .ti-calendar-plus:before { content: "\ebba"; }
 .ti-calendar-stats:before { content: "\ee20"; }
@@ -41,6 +42,7 @@
 .ti-cloud:before { content: "\ea76"; }
 .ti-cloud-download:before { content: "\ea71"; }
 .ti-cloud-x:before { content: "\f85d"; }
+.ti-coffee:before { content: "\ef0e"; }
 .ti-coin:before { content: "\eb82"; }
 .ti-copy:before { content: "\ea7a"; }
 .ti-crown:before { content: "\ed12"; }
@@ -53,22 +55,29 @@
 .ti-edit:before { content: "\ea98"; }
 .ti-external-link:before { content: "\ea99"; }
 .ti-eye:before { content: "\ea9a"; }
+.ti-feather:before { content: "\ee8b"; }
 .ti-file-text:before { content: "\eaa2"; }
 .ti-file-type-pdf:before { content: "\fb10"; }
+.ti-flame:before { content: "\ec2c"; }
+.ti-glass-full:before { content: "\eab7"; }
 .ti-hand-finger:before { content: "\ee94"; }
 .ti-heart:before { content: "\eabe"; }
 .ti-help-circle:before { content: "\f91d"; }
+.ti-hourglass:before { content: "\ef93"; }
 .ti-info-circle:before { content: "\eac5"; }
 .ti-key:before { content: "\eac7"; }
 .ti-layout-grid:before { content: "\edba"; }
+.ti-leaf:before { content: "\ed4f"; }
 .ti-license:before { content: "\ebc0"; }
 .ti-link:before { content: "\eade"; }
 .ti-list-details:before { content: "\ef40"; }
 .ti-lock:before { content: "\eae2"; }
 .ti-mail:before { content: "\eae5"; }
+.ti-mountain:before { content: "\ef97"; }
 .ti-pencil:before { content: "\eb04"; }
 .ti-photo:before { content: "\eb0a"; }
 .ti-plane:before { content: "\eb6f"; }
+.ti-plant:before { content: "\ed50"; }
 .ti-player-play:before { content: "\ed46"; }
 .ti-player-stop:before { content: "\ed4a"; }
 .ti-plus:before { content: "\eb0b"; }
@@ -79,8 +88,11 @@
 .ti-share:before { content: "\eb21"; }
 .ti-shield-exclamation:before { content: "\f9c6"; }
 .ti-shield-lock:before { content: "\ed58"; }
+.ti-snowflake:before { content: "\ec0b"; }
+.ti-sparkles:before { content: "\f6d7"; }
 .ti-star:before { content: "\eb2e"; }
 .ti-stopwatch:before { content: "\ff9b"; }
+.ti-sun:before { content: "\eb30"; }
 .ti-switch-horizontal:before { content: "\eb31"; }
 .ti-tag:before { content: "\10096"; }
 .ti-tie:before { content: "\f07e"; }

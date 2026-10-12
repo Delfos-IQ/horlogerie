@@ -71,8 +71,9 @@ async def main():
         check("un solo botón de actualizar (en Estado del sistema)",
               await a.locator("#view-settings [data-action='checkForUpdate']").count() == 1)
         links = await a.eval_on_selector_all(".about-links a", "as => as.map(a => a.getAttribute('href'))")
-        check("Acerca de: ayuda, privacidad, licencias y contacto",
-              links == ['./ayuda.html', './privacidad.html', './licencias.html', 'mailto:pedicode.app@gmail.com?subject=Rotor'], str(links))
+        check("Acerca de: ayuda, privacidad, web, términos, licencias y contacto",
+              links == ['./ayuda.html', './privacidad.html', 'https://rotor.pedicode-app.workers.dev/',
+                        'https://rotor.pedicode-app.workers.dev/terminos.html', './licencias.html', 'mailto:pedicode.app@gmail.com?subject=Rotor'], str(links))
         vsub = await a.inner_text("#status-version-sub")
         check("versión con fecha de publicación", vsub.startswith('Publicada el'), vsub)
         check("con la nube apagada no hay botón de sincronizar", await a.evaluate("document.getElementById('status-sync-btn').hidden"))

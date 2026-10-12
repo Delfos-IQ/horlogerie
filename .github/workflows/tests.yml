@@ -76,6 +76,9 @@ jobs:
       - name: Nube, clave corta y vincular dispositivos
         run: python tests/e2e_cloud.py 8712
 
+      - name: Momentos (ocasión, ánimo, estación) y bienvenida con historia
+        run: python tests/e2e_moments.py
+
       - name: Inglés, tema, moneda, bienvenida y ficha por secciones
         run: python tests/e2e_i18n.py
 
