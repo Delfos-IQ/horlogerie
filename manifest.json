@@ -2,33 +2,33 @@
   "name": "Rotor — rotación de relojes",
   "short_name": "Rotor",
   "description": "Lleva la cuenta de tu colección de relojes: cuál te pusiste y cuándo, cuál toca ahora, fichas técnicas, coste por uso y avisos de pila y revisión.",
-  "start_url": "/horlogerie/",
-  "scope": "/horlogerie/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F3EEE3",
   "theme_color": "#F3EEE3",
   "icons": [
     {
-      "src": "/horlogerie/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/horlogerie/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/horlogerie/icons/icon-maskable-192.png",
+      "src": "icons/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/horlogerie/icons/icon-maskable-512.png",
+      "src": "icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -39,7 +39,7 @@
     "utilities"
   ],
   "lang": "es",
-  "id": "/horlogerie/",
+  "id": "./",
   "dir": "ltr",
   "prefer_related_applications": false
 }

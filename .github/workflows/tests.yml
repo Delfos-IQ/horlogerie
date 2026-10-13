@@ -82,6 +82,12 @@ jobs:
       - name: Inglés, tema, moneda, bienvenida y ficha por secciones
         run: python tests/e2e_i18n.py
 
+      - name: La app dentro de la web (/app/, la que abre Google Play), también sin conexión
+        run: |
+          PORT=8091 node web/tools/preview.mjs > /tmp/web.log 2>&1 &
+          sleep 1
+          python tests/e2e_webapp.py
+
       - name: Avisos en el móvil (service worker real y notificaciones)
         run: python tests/e2e_reminders.py
 

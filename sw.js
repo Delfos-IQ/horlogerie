@@ -9,7 +9,9 @@
  */
 
 const CACHE   = 'horlogerie-v2.18.0';
-const BASE    = '/horlogerie';
+// '/horlogerie' on GitHub Pages, '/app' on the Rotor website: taken from where the SW lives
+const BASE    = new URL(self.registration.scope).pathname.replace(/\/$/, '');
+const API_HOST = 'horlogerie.pedicode-app.workers.dev';
 
 // Files to pre-cache on install
 const SHELL = [
@@ -125,7 +127,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
   // 1. API calls + version.json — always network, never cache
-  if (url.hostname.includes('workers.dev') ||
+  if (url.hostname === API_HOST ||
       url.pathname.endsWith('/version.json')) {
     e.respondWith(fetch(e.request).catch(() =>
       new Response(JSON.stringify({ error: 'Offline' }), {
@@ -145,7 +147,7 @@ self.addEventListener('fetch', e => {
   }
 
   // 3. App shell (HTML, JS, CSS, JSON) — network-first
-  //    → Always fetches latest from GitHub Pages
+  //    → Always fetches the latest version
   //    → Falls back to cache if offline
   e.respondWith(networkFirst(e.request));
 });

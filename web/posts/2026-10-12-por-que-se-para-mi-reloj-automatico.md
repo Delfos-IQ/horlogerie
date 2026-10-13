@@ -52,4 +52,4 @@ Un enrollador es una caja con motor que mueve el reloj para que no se pare. Tien
 
 Si tienes varios relojes, la manera natural de que ninguno pase meses parado es ponértelos por turnos. El problema es acordarse: con cinco o seis relojes, uno tiende a repetir siempre los mismos.
 
-Para eso hicimos [Rotor](https://delfos-iq.github.io/horlogerie/): apuntas con un toque el reloj que llevas y cada mañana te sugiere el que lleva más tiempo sin salir de la caja. Así cada reloj vuelve a la muñeca antes de que se te olvide que lo tienes.
+Para eso hicimos [Rotor](https://rotor.pedicode-app.workers.dev/app/): apuntas con un toque el reloj que llevas y cada mañana te sugiere el que lleva más tiempo sin salir de la caja. Así cada reloj vuelve a la muñeca antes de que se te olvide que lo tienes.

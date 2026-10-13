@@ -66,8 +66,8 @@
 
 /* ── Origins ── */
 const ALLOWED_ORIGINS = [
-  'https://delfos-iq.github.io',
-  // Add your custom domain here if you set one up
+  'https://delfos-iq.github.io',          // the app on GitHub Pages (/horlogerie/)
+  'https://rotor.pedicode-app.workers.dev', // the app inside the Rotor website (/app/), opened by the Play app
 ];
 
 
@@ -148,7 +148,7 @@ export default {
       if (pathname === '/v2/pair/claim' && method === 'POST')   return await handleV2PairClaim(request, env, origin);
       if (pathname === '/v2/pro/verify' && method === 'POST')   return await handleProVerify(request, env, origin);
       if (pathname === '/health'      || pathname === '/')    return corsResponse({
-        status: 'ok', version: '15.0', kv: !!env.HORLOGERIE_KV, db: !!env.DB,
+        status: 'ok', version: '15.1', kv: !!env.HORLOGERIE_KV, db: !!env.DB,
         caps: { userHeader: true, wishlist: true, importUrl: true, importSource: true, shortKey: true, pairing: true,
                 v2: !!env.DB, e2e: !!env.DB, pairingV2: !!env.HORLOGERIE_KV, pro: !!env.GOOGLE_SERVICE_ACCOUNT },
       }, 200, origin);

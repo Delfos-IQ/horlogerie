@@ -15,7 +15,7 @@ const OUT = join(ROOT, 'dist');
 const ORIGIN = 'https://rotor.pedicode-app.workers.dev';   // la web, servida por Cloudflare como ScudoWeb
 const BASE = '/';
 const SITE = ORIGIN + BASE;
-const APP = 'https://delfos-iq.github.io/horlogerie/';
+const APP = ORIGIN + '/app/';                      // la app vive dentro de la web (y la app de Play abre esta dirección)
 const PLAY = '';                                   // ← cuando Rotor esté publicado en Google Play, pon aquí su enlace
 const EMAIL = 'pedicode.app@gmail.com';
 const LANGS = { es, en, pt };
@@ -417,5 +417,17 @@ write('404.html', page({ c: es, title: 'Página no encontrada · Rotor', descrip
   body: `<section class="page-head"><div class="wrap"><h1>Esta página no existe</h1><p class="lead">Puede que el enlace esté mal o que el artículo se haya movido.</p>
 <div class="btns"><a class="btn btn-gold" href="${url()}">Ir a la portada</a><a class="btn btn-line" href="${url('blog/')}">Ver el blog</a></div></div></section>` }));
 
+/* ── la app, en /app/ (la misma que GitHub Pages; sus rutas son relativas) ── */
+const APP_FILES = ['index.html', 'ayuda.html', 'help.html', 'ajuda-pt.html', 'privacidad.html', 'privacy.html', 'privacidade.html',
+  'licencias.html', 'manifest.json', 'sw.js', 'version.json', 'watches_db.json', 'favicon.ico', 'css', 'js', 'icons', 'brand'];
+for (const f of APP_FILES) cpSync(join(APP_SRC, f), join(OUT, 'app', f), { recursive: true });
+
+/* ── Digital Asset Links: la app de Play demuestra que esta web es suya (sin esto, se ve la barra del navegador) ── */
+const links = JSON.parse(readFileSync(join(APP_SRC, 'docs/play/assetlinks.json'), 'utf8'));
+const FP = /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/;
+const ready = links.every(l => l.target.sha256_cert_fingerprints.every(f => FP.test(f)));
+if (ready) write('.well-known/assetlinks.json', JSON.stringify(links, null, 2));
+else console.log('· assetlinks.json sin publicar: faltan las huellas SHA-256 en docs/play/assetlinks.json');
+
 const pending = all.filter(p => p.draft || p.date > today).map(p => `${p.file} (${p.draft ? 'borrador' : 'programado para ' + p.date})`);
-console.log(`✓ Web generada en dist/: 3 portadas, ${posts.length} artículo(s)` + (pending.length ? `; sin publicar: ${pending.join(', ')}` : ''));
+console.log(`✓ Web generada en dist/: 3 portadas, la app en /app/, ${posts.length} artículo(s)` + (pending.length ? `; sin publicar: ${pending.join(', ')}` : ''));

@@ -1,6 +1,6 @@
 {
   "packageId": "com.delfosiq.rotor",
-  "host": "delfos-iq.github.io",
+  "host": "rotor.pedicode-app.workers.dev",
   "name": "Rotor",
   "launcherName": "Rotor",
   "display": "standalone",
@@ -13,17 +13,17 @@
   "navigationDividerColorDark": "#1F2A42",
   "backgroundColor": "#F3EEE3",
   "enableNotifications": true,
-  "startUrl": "/horlogerie/",
-  "iconUrl": "https://delfos-iq.github.io/horlogerie/icons/icon-512.png",
-  "maskableIconUrl": "https://delfos-iq.github.io/horlogerie/icons/icon-maskable-512.png",
-  "webManifestUrl": "https://delfos-iq.github.io/horlogerie/manifest.json",
+  "startUrl": "/app/",
+  "iconUrl": "https://rotor.pedicode-app.workers.dev/app/icons/icon-512.png",
+  "maskableIconUrl": "https://rotor.pedicode-app.workers.dev/app/icons/icon-maskable-512.png",
+  "webManifestUrl": "https://rotor.pedicode-app.workers.dev/app/manifest.json",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
     "alias": "rotor"
   },
-  "appVersionName": "2.15.0",
-  "appVersionCode": 2,
+  "appVersionName": "2.18.0",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "fallbackType": "customtabs",
@@ -38,7 +38,7 @@
   "enableSiteSettingsShortcut": false,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://delfos-iq.github.io/horlogerie/",
+  "fullScopeUrl": "https://rotor.pedicode-app.workers.dev/app/",
   "minSdkVersion": 21,
   "orientationLock": true
 }

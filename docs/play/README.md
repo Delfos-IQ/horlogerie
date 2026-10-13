@@ -1,6 +1,8 @@
 # Publicar Rotor en Google Play
 
-Guía paso a paso para empaquetar la PWA (nombre visible: **Rotor**; la URL sigue siendo `/horlogerie/`) como app Android (TWA, *Trusted Web Activity*) y publicarla. La app sigue viviendo en `https://delfos-iq.github.io/horlogerie/`: la TWA es un envoltorio que la abre a pantalla completa, sin barra del navegador. Cada `git push` actualiza también la app de Play, sin volver a subir nada (salvo cambios del envoltorio).
+Guía paso a paso para empaquetar la PWA **Rotor** como app Android (TWA, *Trusted Web Activity*) y publicarla. La app de Play abre **`https://rotor.pedicode-app.workers.dev/app/`**: la app dentro de la web de Rotor, en el mismo repositorio (ver `web/README.md`). La TWA es un envoltorio que la abre a pantalla completa, sin barra del navegador. Cada `git push` actualiza también la app de Play, sin volver a subir nada (salvo cambios del envoltorio).
+
+Esa dirección es gratuita y no caduca. Un dominio propio, si lo compras, va solo para la web (escaparate): si algún día lo dejas, la app de Play y los datos de los usuarios no se enteran. **No cambies nunca el host de la app de Play a un dominio comprado.** La copia de GitHub Pages (`https://delfos-iq.github.io/horlogerie/`) sigue funcionando para quien la use desde el navegador.
 
 Material listo en esta carpeta:
 
@@ -11,7 +13,7 @@ Material listo en esta carpeta:
 | `capturas/es`, `capturas/en`, `capturas/pt` | 7 capturas 1080×1918 y el gráfico destacado 1024×500 por idioma (Pro incluido) |
 | `assetlinks.json` | Plantilla del archivo que demuestra que la web y la app son tuyas |
 | `twa-manifest.json` | Configuración para Bubblewrap (alternativa a PWABuilder) |
-| `../../privacidad.html` | Política de privacidad pública: `https://delfos-iq.github.io/horlogerie/privacidad.html` (en inglés: `privacy.html`) |
+| `../../privacidad.html` | Política de privacidad pública: `https://rotor.pedicode-app.workers.dev/privacidad.html` (en inglés: `privacy.html`) |
 
 Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app servida en local).
 
@@ -26,7 +28,7 @@ Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app ser
 
 **Opción recomendada: PWABuilder** (web, sin instalar nada)
 
-1. Abre https://www.pwabuilder.com e introduce `https://delfos-iq.github.io/horlogerie/`.
+1. Abre https://www.pwabuilder.com e introduce `https://rotor.pedicode-app.workers.dev/app/`. (O usa `twa-manifest.json` con Bubblewrap, que ya trae todo: host, colores, notificaciones y Play Billing.)
 2. *Package for stores* → **Android** → *Generate package* → *Options*:
    - Package ID: `com.delfosiq.rotor`
    - App name: `Rotor` · Short name: `Rotor`
@@ -46,15 +48,13 @@ bubblewrap build      # pide crear la clave de firma la primera vez
 
 ## 2. Digital Asset Links (sin esto se ve la barra del navegador)
 
-Android solo abre la app a pantalla completa si la web declara que la app es suya, en la **raíz del dominio**: `https://delfos-iq.github.io/.well-known/assetlinks.json`. La app está en `/horlogerie/`, así que hace falta un repositorio aparte:
+Android solo abre la app a pantalla completa si la web declara que la app es suya, en la raíz del dominio: `https://rotor.pedicode-app.workers.dev/.well-known/assetlinks.json`. Ya no hace falta otro repositorio: la web lo publica sola.
 
-1. En la organización Delfos-IQ crea un repositorio **público** llamado exactamente `delfos-iq.github.io`.
-2. Añade:
-   - `.nojekyll` (vacío; sin él GitHub Pages ignora las carpetas que empiezan por punto)
-   - `.well-known/assetlinks.json` con el contenido de `assetlinks.json` de esta carpeta, cambiando:
-     - `package_name` por tu Package ID
-     - `sha256_cert_fingerprints` por **las dos** huellas: la de tu clave de subida (sale en el ZIP de PWABuilder) y la de *Play App Signing* (Play Console → Configuración → Integridad de la app → Firma de apps, después del paso 3).
-3. Settings → Pages → Deploy from branch `main`. Comprueba que `https://delfos-iq.github.io/.well-known/assetlinks.json` responde.
+1. Rellena en `docs/play/assetlinks.json` **las dos** huellas SHA-256 (no son secretas):
+   - la de tu **clave de subida**: sale en el ZIP de PWABuilder, o con `keytool -list -v -keystore android.keystore -alias rotor`;
+   - la de **Play App Signing**: Play Console → Rotor → Configuración → Integridad de la app → Firma de apps → «Huella digital del certificado SHA-256».
+2. Haz `git push`. La web solo publica el archivo cuando las dos huellas tienen el formato correcto (`AA:BB:…`, 32 pares).
+3. Comprueba que `https://rotor.pedicode-app.workers.dev/.well-known/assetlinks.json` responde, y con la [herramienta de Google](https://developers.google.com/digital-asset-links/tools/generator).
 
 ## 3. Play Console
 
@@ -62,7 +62,7 @@ Android solo abre la app a pantalla completa si la web declara que la app es suy
 2. Acepta *Play App Signing* al subir el primer AAB.
 3. **Ficha de Play Store**: textos de `ficha.md`, icono `icons/icon-512.png`, gráfico destacado y capturas de `capturas/`.
 4. **Contenido de la aplicación**:
-   - Política de privacidad: `https://delfos-iq.github.io/horlogerie/privacidad.html`
+   - Política de privacidad: `https://rotor.pedicode-app.workers.dev/privacidad.html`
    - Anuncios: no
    - Acceso a la app: sin restricciones (no hay inicio de sesión)
    - Clasificación de contenido: respuestas en `ficha.md`

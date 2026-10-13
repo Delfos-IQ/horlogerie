@@ -120,9 +120,10 @@ storage.loadPhotos().then(() => {
   else if (!location.hash.startsWith('#vincular=')) setTimeout(() => onboarding.maybeShowOnboarding(), 1900);   // after the splash
 });
 
-// Service workers registered outside /horlogerie/ by very old versions
+// Service workers registered outside the app folder (/horlogerie/ or /app/) by very old versions
+const APP_SCOPE = new URL('./', location.href).href;
 navigator.serviceWorker?.getRegistrations?.()
-  .then(regs => regs.filter(r => !r.scope.includes('/horlogerie/')).forEach(r => r.unregister()))
+  .then(regs => regs.filter(r => r.scope !== APP_SCOPE).forEach(r => r.unregister()))
   .catch(() => {});
 
 if ('serviceWorker' in navigator) {
@@ -135,7 +136,7 @@ if ('serviceWorker' in navigator) {
       reloading = true;
       window.location.reload();
     };
-    navigator.serviceWorker.register('./sw.js', { scope: '/horlogerie/' })
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
       .then(reg => reg.update())
       .catch(() => {});
     navigator.serviceWorker.addEventListener('controllerchange', reloadOnce);

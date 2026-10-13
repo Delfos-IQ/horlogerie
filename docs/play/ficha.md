@@ -125,7 +125,7 @@ OS TEUS DADOS SÃO TEUS
 • Sem anúncios e sem analítica.
 ```
 
-Política de privacidad en portugués: `https://delfos-iq.github.io/horlogerie/privacidade.html` (Play solo admite una URL: deja la española como principal; las tres páginas enlazan entre sí).
+Política de privacidad en portugués: `https://rotor.pedicode-app.workers.dev/privacidade.html` (Play solo admite una URL: deja la española como principal; las tres páginas enlazan entre sí).
 
 ---
 
@@ -134,7 +134,7 @@ Política de privacidad en portugués: `https://delfos-iq.github.io/horlogerie/p
 - Categoría: **Estilo de vida**
 - Etiquetas sugeridas: Colecciones, Organizador, Productividad
 - Email de contacto público: el mismo de la política de privacidad
-- Sitio web: `https://delfos-iq.github.io/horlogerie/`
+- Sitio web: `https://rotor.pedicode-app.workers.dev/` (cuando compres el dominio, pon aquí el dominio: si un día caduca, solo se rompe este enlace)
 
 ## Cuestionario de clasificación de contenido (IARC)
 

@@ -2,8 +2,11 @@
 
 Funciona igual que ScudoWeb: esta carpeta vive en el mismo repositorio que la app y Cloudflare
 la publica sola en **https://rotor.pedicode-app.workers.dev** cada vez que hay un cambio en `main`
-(tarda 1–2 minutos). La app sigue en https://delfos-iq.github.io/horlogerie/, que es la que usa
-la app de Google Play.
+(tarda 1–2 minutos). La app va dentro, en **https://rotor.pedicode-app.workers.dev/app/**: es la
+dirección que abre la app de Google Play. `build.mjs` copia la app de la raíz del repositorio a
+`dist/app/` y publica `dist/.well-known/assetlinks.json` (desde `docs/play/assetlinks.json`) cuando
+tiene las huellas de la firma. Si algún día pones un dominio propio a la web, la app sigue en esta
+dirección: el dominio puede caducar sin romper la app.
 
 - `content/es.mjs`, `en.mjs`, `pt.mjs` — textos de la portada.
 - `posts/` — artículos del blog, uno por archivo.
