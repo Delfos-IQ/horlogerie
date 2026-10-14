@@ -1,7 +1,6 @@
 ---
 titulo: ¿Por qué se para mi reloj automático? Reserva de marcha y rotación
 descripcion: Un automático se para tras uno o tres días en la caja. Qué es la reserva de marcha, cómo ponerlo en hora sin estropear la fecha y si merece la pena un enrollador.
-idioma: es
 autor: Rotor
 ia: sí
 ---

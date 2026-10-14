@@ -1,10 +1,9 @@
 ---
 titulo: The quartz crisis: how automatic watches survived
+slug: the-quartz-crisis
 descripcion: In 1969 a Japanese quartz watch exposed the limits of mechanical watchmaking. What really happened in Switzerland, who bet on automatics, and why we still wear them.
-idioma: en
 autor: Rotor
 ia: sí
-traducciones: es=crisis-del-cuarzo, pt=crise-do-quartzo
 ---
 
 On 25 December 1969, Seiko put the Quartz-Astron 35SQ on sale in Tokyo: the first quartz wristwatch. It cost 450,000 yen, roughly the price of a mid-sized car, and according to Seiko it drifted about ±5 seconds a month. A good mechanical watch of the day could drift that much in a single day.

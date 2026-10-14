@@ -1,7 +1,6 @@
 ---
 titulo: Escribe aquí el título del artículo
 descripcion: Una o dos frases que resuman el artículo. Es lo que sale en Google y al compartirlo.
-idioma: es
 autor: Dani
 ia: no
 borrador: sí

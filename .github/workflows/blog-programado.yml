@@ -24,14 +24,14 @@ jobs:
         run: |
           today=$(date -u +%F)
           found=""
-          for f in web/posts/*.md; do
-            name=$(basename "$f")
-            case "$name" in _*) continue ;; esac
+          for f in web/posts/*/*.md; do
+            dir=$(basename "$(dirname "$f")")
+            case "$dir" in _*) continue ;; esac
             head=$(awk 'NR==1 && /^---/ {inside=1; next} inside && /^---/ {exit} inside {print}' "$f")
             date=$(printf '%s\n' "$head" | sed -n 's/^fecha:[[:space:]]*//p' | head -1)
-            [ -z "$date" ] && date="${name:0:10}"
+            [ -z "$date" ] && date="${dir:0:10}"
             if printf '%s\n' "$head" | grep -qiE '^borrador:[[:space:]]*(s[ií]|yes|true)'; then continue; fi
-            [ "$date" = "$today" ] && found="$found $name"
+            [ "$date" = "$today" ] && found="$found $dir/$(basename "$f")"
           done
           echo "today=$today" >> "$GITHUB_OUTPUT"
           echo "found=$found" >> "$GITHUB_OUTPUT"

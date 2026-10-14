@@ -255,37 +255,57 @@ ${mine.length ? `
 }
 
 /* ── blog ── */
-function parsePost(file) {
-  const raw = readFileSync(join(ROOT, 'posts', file), 'utf8').replace(/^\uFEFF/, '');
+// Cada artículo es una carpeta: posts/AAAA-MM-DD-titulo/ con es.md, pt.md y/o en.md (y sus fotos en img/).
+// Los archivos de una misma carpeta son traducciones entre sí. Fecha y nombre salen de la carpeta;
+// «slug:» en la cabecera da otra dirección a una traducción (p. ej. pt: crise-do-quartzo).
+function parsePost(dir, file) {
+  const rel = `${dir}/${file}`;
+  const raw = readFileSync(join(ROOT, 'posts', dir, file), 'utf8').replace(/^\uFEFF/, '');
   const m = raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
-  if (!m) throw new Error(`${file}: falta la cabecera entre --- y ---`);
+  if (!m) throw new Error(`${rel}: falta la cabecera entre --- y ---`);
   const meta = {};
   for (const line of m[1].split('\n')) {
     const kv = line.match(/^\s*([a-zA-Záéíóúñ_]+)\s*:\s*(.*?)\s*$/);
     if (kv) meta[kv[1].toLowerCase()] = kv[2].replace(/^["']|["']$/g, '');
   }
-  const fm = file.match(/^(\d{4}-\d{2}-\d{2})-(.+)\.md$/);
-  if (!fm) throw new Error(`${file}: el nombre debe ser AAAA-MM-DD-titulo-del-articulo.md`);
-  const lang = (meta.idioma || 'es').slice(0, 2).toLowerCase();
-  if (!LANGS[lang]) throw new Error(`${file}: idioma debe ser es, en o pt`);
-  if (!meta.titulo) throw new Error(`${file}: falta «titulo:»`);
+  const fm = dir.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/);
+  if (!fm) throw new Error(`posts/${dir}: la carpeta debe llamarse AAAA-MM-DD-titulo-del-articulo`);
+  const lang = file.replace(/\.md$/, '');
+  if (!LANGS[lang]) throw new Error(`${rel}: el archivo debe llamarse es.md, en.md o pt.md`);
+  if (meta.idioma && meta.idioma.slice(0, 2).toLowerCase() !== lang) throw new Error(`${rel}: «idioma: ${meta.idioma}» no coincide con el nombre del archivo`);
+  if (!meta.titulo) throw new Error(`${rel}: falta «titulo:»`);
+  const slug = (meta.slug || fm[2]).trim();
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) throw new Error(`${rel}: «slug: ${slug}» solo puede llevar minúsculas sin tildes, números y guiones`);
   const words = m[2].split(/\s+/).filter(Boolean).length;
-  const translations = {};
-  for (const part of (meta.traducciones || '').split(',')) {
-    const t = part.trim().match(/^(es|en|pt)\s*=\s*(\S+)$/);
-    if (t) translations[t[1]] = t[2];
-  }
   return {
-    file, slug: fm[2], date: meta.fecha || fm[1], lang, title: meta.titulo,
+    file: rel, dir, slug, date: meta.fecha || fm[1], lang, title: meta.titulo,
     description: meta.descripcion || meta.resumen || '', author: meta.autor || 'Rotor',
     ai: /^(s[ií]|yes|true|asistido)$/i.test(meta.ia || ''), draft: /^(s[ií]|yes|true)$/i.test(meta.borrador || ''),
-    minutes: Math.max(1, Math.round(words / 220)), md: m[2], translations,
+    minutes: Math.max(1, Math.round(words / 220)), md: m[2], translations: {},
   };
 }
 
-function renderMd(md) {
+const ORDER = ['es', 'pt', 'en'];
+function loadPosts() {
+  const base = join(ROOT, 'posts');
+  const out = [];
+  for (const entry of readdirSync(base, { withFileTypes: true })) {
+    if (entry.name.startsWith('_') || entry.name.startsWith('.')) continue;
+    if (!entry.isDirectory()) {
+      if (entry.name.endsWith('.md')) throw new Error(`posts/${entry.name}: cada artículo va en su carpeta (posts/AAAA-MM-DD-titulo/es.md). Mira posts/_plantilla/`);
+      continue;
+    }
+    const group = readdirSync(join(base, entry.name)).filter(f => f.endsWith('.md')).map(f => parsePost(entry.name, f))
+      .sort((a, b) => ORDER.indexOf(a.lang) - ORDER.indexOf(b.lang));
+    for (const p of group) for (const q of group) if (q !== p) p.translations[q.lang] = q.slug;
+    out.push(...group);
+  }
+  return out;
+}
+
+function renderMd(md, dir) {
   let html = marked.parse(md, { gfm: true });
-  html = html.replace(/<img src="(?:\.\/)?img\//g, `<img loading="lazy" decoding="async" src="${url('blog/img/')}`)
+  html = html.replace(/<img src="(?:\.\/)?img\//g, `<img loading="lazy" decoding="async" src="${url(`blog/img/${dir}/`)}`)
              .replace(/<img (?!loading)/g, '<img loading="lazy" decoding="async" ')
              .replace(/<a href="(https?:\/\/(?!delfos-iq\.github\.io)[^"]+)"/g, '<a href="$1" rel="noopener" target="_blank"');
   return html;
@@ -300,7 +320,7 @@ function postPage(p, posts) {
 <p class="meta"><a href="${url(c.path + 'blog/')}">${esc(c.blog.back)}</a></p>
 <h1>${esc(p.title)}</h1>
 <p class="meta"><span>${c.blog.by} ${esc(p.author)}</span><time datetime="${p.date}">${fmtDate(p.date, p.lang)}</time><span>${p.minutes} ${c.blog.min}</span></p>
-<div class="body">${renderMd(p.md)}</div>
+<div class="body">${renderMd(p.md, p.dir)}</div>
 ${p.ai ? `<p class="ai-note">${esc(c.blog.ai)}</p>` : ''}
 <aside class="post-cta"><h2>${esc(c.blog.ctaH)}</h2><p>${esc(c.blog.ctaP)}</p>
 <div class="btns"><a class="btn btn-gold" href="${APP}">${esc(c.final.cta)}</a></div></aside>
@@ -397,10 +417,13 @@ rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 cpSync(join(ROOT, 'assets'), join(OUT, 'assets'), { recursive: true });
 cpSync(join(ROOT, 'favicon.ico'), join(OUT, 'favicon.ico'));
-if (existsSync(join(ROOT, 'posts/img'))) cpSync(join(ROOT, 'posts/img'), join(OUT, 'blog/img'), { recursive: true });
+for (const d of readdirSync(join(ROOT, 'posts'))) {
+  const img = join(ROOT, 'posts', d, 'img');
+  if (!d.startsWith('_') && existsSync(img)) cpSync(img, join(OUT, 'blog/img', d), { recursive: true });
+}
 
 const today = new Date().toISOString().slice(0, 10);
-const all = readdirSync(join(ROOT, 'posts')).filter(f => f.endsWith('.md') && !f.startsWith('_')).map(parsePost);
+const all = loadPosts();
 const posts = all.filter(p => !p.draft && p.date <= today).sort((a, b) => b.date.localeCompare(a.date));
 const slugs = new Set();
 for (const p of posts) { if (slugs.has(p.slug)) throw new Error(`Hay dos artículos con el mismo nombre: ${p.slug}`); slugs.add(p.slug); }

@@ -1,10 +1,8 @@
 ---
 titulo: La crisis del cuarzo: cómo sobrevivieron los relojes automáticos
 descripcion: En 1969 un reloj de cuarzo japonés dejó en evidencia a la relojería mecánica. Qué pasó de verdad en Suiza, quién apostó por los automáticos y por qué hoy seguimos llevándolos.
-idioma: es
 autor: Rotor
 ia: sí
-traducciones: pt=crise-do-quartzo, en=the-quartz-crisis
 ---
 
 El 25 de diciembre de 1969, Seiko puso a la venta en Tokio el Quartz-Astron 35SQ, el primer reloj de pulsera de cuarzo. Costaba 450.000 yenes, más o menos lo que un coche mediano, y según la marca se desviaba unos ±5 segundos al mes. Un buen reloj mecánico de entonces podía desviarse esa cantidad en un solo día.
