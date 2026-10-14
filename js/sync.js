@@ -526,6 +526,7 @@ export async function pairClaim(code) {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
   const data = await res.json().catch(() => ({}));
   if (res.status === 429) throw new Error(t('Demasiados intentos. Prueba dentro de una hora.'));
+  if (res.status === 404) throw new Error(t('Este código no es válido, ya se usó o ha caducado. Cada código sirve para un solo dispositivo: genera otro en el dispositivo que ya tiene tu colección.'));
   if (!res.ok || !data.userId) throw new Error(apiError(data) || t('Código no válido o caducado'));
   return importSession(data.userId);
 }

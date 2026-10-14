@@ -115,7 +115,9 @@ export async function openPairSheet() {
       <div class="pair-code" id="pair-code" aria-label="${t('Código')} ${data.code.split('').join(' ')}">${fmtPairCode(data.code)}</div>
       <div class="pair-timer" id="pair-timer"></div>
       <div class="pair-qr">${qrSvg(link)}</div>
-      <p class="sheet-hint">${t('O escanea el QR con la cámara del otro móvil. Sirve una sola vez y caduca en 10 minutos.')}</p>`;
+      <p class="sheet-hint">${t('O escanea el QR con la cámara del otro móvil.')}</p>
+      <p class="sheet-hint">${t('Cada código sirve para <b>un solo dispositivo</b> y caduca en 10 minutos. ¿Tienes más dispositivos? Genera un código para cada uno.')} <button class="link-btn" id="pair-new">${t('Generar otro')}</button></p>`;
+    body.querySelector('#pair-new').addEventListener('click', generate);
     const tick = () => {
       const left = Math.max(0, Math.round((data.expiresAt - Date.now()) / 1000));
       const tm = body.querySelector('#pair-timer');
@@ -139,7 +141,7 @@ export async function openPairSheet() {
 export function openLinkSheet(prefill = '') {
   const { $, close } = sessionSheet(`
     <div class="modal-title">${t('Usar una clave o código')}</div>
-    <div class="sheet-text">${t('Escribe el <b>código de 6 caracteres</b> que ves en tu otro dispositivo, o tu <b>clave de recuperación</b>. Lo que ya tengas aquí se combina con lo de la nube: no se borra nada.')}</div>
+    <div class="sheet-text">${t('Escribe el <b>código de 6 caracteres</b> que ves en tu otro dispositivo (cada código vale para un solo dispositivo), o tu <b>clave de recuperación</b>. Lo que ya tengas aquí se combina con lo de la nube: no se borra nada.')}</div>
     <div class="form-field">
       <label class="form-label" for="link-input">${t('Código o clave')}</label>
       <input class="form-input mono-input" id="link-input" autocomplete="off" autocapitalize="characters" spellcheck="false"

@@ -105,6 +105,9 @@ async def main():
         check("y un QR con el enlace (generado en el dispositivo)", await a.locator(".pair-qr svg").count() == 1)
         check("cuenta atrás de 10 minutos", (await a.inner_text("#pair-timer")).startswith('Caduca en 9:') or
               (await a.inner_text("#pair-timer")).startswith('Caduca en 10:'))
+        hint = await a.inner_text("#pair-body")
+        check("avisa de que cada código sirve para un solo dispositivo, con «Generar otro»",
+              'un solo dispositivo' in hint and await a.locator("#pair-new").count() == 1, hint[-160:])
         if SHOTS: await a.screenshot(path=f"{SHOTS}/vincular.png")
         await a.click("[data-close]")
 
@@ -113,7 +116,7 @@ async def main():
         await bb.fill("#link-input", "zzzzzz")
         await bb.click("#link-go"); await bb.wait_for_timeout(600)
         st = await bb.inner_text("#link-status")
-        check("un código erróneo se explica y no hace nada", 'no válido' in st.lower() and await bb.evaluate("getWatches().length") == 0, st)
+        check("un código erróneo se explica y no hace nada", 'no es válido' in st.lower() and 'un solo dispositivo' in st and await bb.evaluate("getWatches().length") == 0, st)
         await bb.fill("#link-input", shown.lower())
         await bb.click("#link-go")
         await bb.wait_for_function("getWatches().length === 2", timeout=8000)
@@ -122,6 +125,12 @@ async def main():
               await bb.evaluate("getSessionId()") == key and await bb.evaluate("isCloudEnabled()"))
         r = await bb.evaluate(f"""fetch('{WORKER}/pair/claim', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{code:'{code}'}})}}).then(r => r.status)""")
         check("el código solo sirve una vez", r == 404, str(r))
+        cr, rb, er = await device(b)
+        await rb.click(".empty-recover")
+        await rb.fill("#link-input", shown)
+        await rb.click("#link-go"); await rb.wait_for_timeout(800)
+        st = await rb.inner_text("#link-status")
+        check("reusar un código en un tercer dispositivo explica que es de un solo uso", 'ya se usó' in st and 'un solo dispositivo' in st, st)
 
         # ── Reinstalar: recuperar con la clave (sin guiones y en minúsculas) ──
         cc, c, ec = await device(b)
