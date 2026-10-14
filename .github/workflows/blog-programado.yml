@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: '20 5 * * *'   # 05:20 UTC (06:20 en Lisboa en invierno)
   workflow_dispatch:
+    inputs:
+      fecha:
+        description: 'Para probar: haz como si hoy fuera esta fecha (AAAA-MM-DD). Vacío = hoy.'
+        required: false
 
 permissions:
   contents: write
@@ -22,7 +26,8 @@ jobs:
       - name: ¿Hay artículos para hoy?
         id: hoy
         run: |
-          today=$(date -u +%F)
+          today="${{ inputs.fecha }}"
+          [ -z "$today" ] && today=$(date -u +%F)
           found=""
           for f in web/posts/*/*.md; do
             dir=$(basename "$(dirname "$f")")
@@ -42,5 +47,5 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git commit --allow-empty -m "Blog: publicar artículos del ${{ steps.hoy.outputs.today }}"
+          git commit --allow-empty -m "Blog: publicar artículos del ${{ steps.hoy.outputs.today }}${{ inputs.fecha && ' (prueba manual)' || '' }}"
           git push
