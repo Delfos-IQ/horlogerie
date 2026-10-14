@@ -12,7 +12,7 @@
  */
 
 import { getWatch, updateWatch } from '../storage.js';
-import { CONFIG, FEATURES } from '../api.js';
+import { CONFIG, FEATURES, apiError } from '../api.js';
 import { workerCaps } from '../sync.js';
 import { openSheet } from './sheet.js';
 import { escHtml, showToast, ui } from './core.js';
@@ -48,7 +48,7 @@ export async function requestPage(url) {
   if (res.status === 429) return { _blocked: true, _message: t('Demasiadas lecturas seguidas. Espera una hora o pega el texto de la ficha.') };
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
-    return { _blocked: true, _message: e.error || `Error ${res.status}` };
+    return { _blocked: true, _message: apiError(e) || `Error ${res.status}` };
   }
   return res.json();
 }

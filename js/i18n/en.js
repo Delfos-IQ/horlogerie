@@ -290,6 +290,7 @@ export default {
   "v{a} → v{b} disponible": "v{a} → v{b} available",
   "Publicada el {d}": "Released on {d}",
   "Nueva del {d}": "New, from {d}",
+  "No se pudo conectar con el servidor de Rotor. Revisa la conexión e inténtalo de nuevo.": "Could not reach the Rotor server. Check your connection and try again.",
   "Sin conexión para comprobar": "Offline: unable to check",
   "1 reloj en este dispositivo": "1 watch on this device",
   "{n} relojes en este dispositivo": "{n} watches on this device",

@@ -14,7 +14,7 @@
  */
 
 import { setOnChange, applyWatchList, clearTombstones, enforceSingleActive, getTombstones, getWatches, getWatchesWithPhotos, getWishlist, mergeById, readJSON, sanitizeWatch, sanitizeWishlistItem, setWishlistSilently } from './storage.js';
-import { CONFIG } from './api.js';
+import { CONFIG, apiError, errText } from './api.js';
 import { sync2, account2, delete2, forgetKey, pairCreate2, pairClaim2 } from './cloud2.js';
 import { showToast } from './modules/core.js';
 import { locale, t } from './i18n.js';
@@ -233,7 +233,7 @@ export async function _syncPush(forceFull) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       if (res.status === 413) showToast(t('La nube está llena (máx. 3 MB). Tus datos siguen en este dispositivo.'), 6000);
-      throw new Error(err.error || `HTTP ${res.status}`);
+      throw new Error(apiError(err) || `HTTP ${res.status}`);
     }
     const data = await res.json();
 
@@ -254,7 +254,7 @@ export async function _syncPush(forceFull) {
     return true;
 
   } catch (e) {
-    setSyncUI('error', e.message);
+    setSyncUI('error', errText(e));
     console.warn('[sync] push failed:', e.message);
     return false;
   }
@@ -313,7 +313,7 @@ export async function syncPullV1(silent = false) {
     return true;
 
   } catch (e) {
-    if (!silent) setSyncUI('error', e.message);
+    if (!silent) setSyncUI('error', errText(e));
     console.warn('[sync] pull failed:', e.message);
     return false;
   }
@@ -337,8 +337,8 @@ export async function importSessionV1(userId) {
     showToast(t('Sesión importada correctamente'));
     return true;
   } catch (e) {
-    setSyncUI('error', e.message);
-    showToast(t('Error: {e}', { e: e.message }));
+    setSyncUI('error', errText(e));
+    showToast(t('Error: {e}', { e: errText(e) }));
     return false;
   }
 }
@@ -377,7 +377,7 @@ async function v2Round(full, silent) {
     setSyncUI('ok', r.sent || r.received ? `${t('Al día')} · ${t('{s} enviado(s), {r} recibido(s)', { s: r.sent, r: r.received })}` : t('Al día'));
     return r;
   } catch (e) {
-    setSyncUI('error', e.status === 403 ? t('La clave no coincide con la copia de la nube') : e.message);
+    setSyncUI('error', e.status === 403 ? t('La clave no coincide con la copia de la nube') : errText(e));
     console.warn('[sync] v2 failed:', e.message);
     return null;
   }
@@ -418,8 +418,8 @@ export async function importSession(userId) {
     showToast(t('Colección recuperada'));
     return true;
   } catch (e) {
-    setSyncUI('error', e.message);
-    showToast(e.message);
+    setSyncUI('error', errText(e));
+    showToast(errText(e));
     return false;
   }
 }
@@ -463,7 +463,7 @@ export async function rotateSessionKey() {
   const wl = getWishlist();
   const res = await syncApi('/sync/push', { method: 'POST', userId: newId,
     body: { watches: ws, mode: 'full', deletedIds: [], wishlist: wl } });
-  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(apiError(await res.json().catch(() => ({}))) || `HTTP ${res.status}`);
   const data = await res.json();
   setSyncMeta({ userId: newId, lastPush: data.updatedAt, watchHashes: {}, photoHashes: {}, keySavedAt: null,
                 wishlistHash: null, syncedIds: ws.map(w => w.id), syncedWishlistIds: wl.map(i => i.id) });
@@ -514,7 +514,7 @@ export async function pairCreate() {
     res = await syncApi('/pair/create', { method: 'POST', body: {} });
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(apiError(data) || `HTTP ${res.status}`);
   return data;
 }
 
@@ -526,7 +526,7 @@ export async function pairClaim(code) {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
   const data = await res.json().catch(() => ({}));
   if (res.status === 429) throw new Error(t('Demasiados intentos. Prueba dentro de una hora.'));
-  if (!res.ok || !data.userId) throw new Error(data.error || t('Código no válido o caducado'));
+  if (!res.ok || !data.userId) throw new Error(apiError(data) || t('Código no válido o caducado'));
   return importSession(data.userId);
 }
 

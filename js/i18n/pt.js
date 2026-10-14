@@ -290,6 +290,7 @@ export default {
   "v{a} → v{b} disponible": "v{a} → v{b} disponível",
   "Publicada el {d}": "Publicada a {d}",
   "Nueva del {d}": "Nova, de {d}",
+  "No se pudo conectar con el servidor de Rotor. Revisa la conexión e inténtalo de nuevo.": "Não foi possível ligar ao servidor do Rotor. Verifica a ligação e tenta outra vez.",
   "Sin conexión para comprobar": "Sem ligação para verificar",
   "1 reloj en este dispositivo": "1 relógio neste dispositivo",
   "{n} relojes en este dispositivo": "{n} relógios neste dispositivo",

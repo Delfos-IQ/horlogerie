@@ -9,6 +9,7 @@
    - "Usar una clave o código" accepts either and merges the cloud copy here.
 ══════════════════════════════════════════════════════ */
 
+import { errText } from '../api.js';
 import { getWatches } from '../storage.js';
 import { deleteCloudData, getSessionId, getSyncMeta, importSession, isCloudEnabled, normalizeKey, normalizePairCode, pairClaim, pairCreate, rotateSessionKey, setCloudEnabled, setSyncMeta } from '../sync.js';
 import { escHtml, showToast } from './core.js';
@@ -104,7 +105,7 @@ export async function openPairSheet() {
     let data;
     try { data = await pairCreate(); }
     catch (e) {
-      body.innerHTML = `<p>${escHtml(e.message)}.</p><p>${t('Mientras tanto, puedes escribir tu clave de recuperación en el otro dispositivo:')}</p>
+      body.innerHTML = `<p>${escHtml(errText(e))}.</p><p>${t('Mientras tanto, puedes escribir tu clave de recuperación en el otro dispositivo:')}</p>
         <div class="cloud-key big">${escHtml(getSessionId())}</div>`;
       return;
     }
@@ -165,7 +166,7 @@ export function openLinkSheet(prefill = '') {
     say(code ? t('Comprobando el código…') : t('Buscando tu colección en la nube…'));
     let ok = false;
     try { ok = code ? await pairClaim(code) : await importSession(key); }
-    catch (e) { say(e.message, 'err'); }
+    catch (e) { say(errText(e), 'err'); }
     go.disabled = false; go.textContent = t('Recuperar');
     if (!ok) { if (!status.textContent || status.style.color.includes('mid')) say(t('No se encontró ninguna colección con esa clave.'), 'err'); return; }
     close();

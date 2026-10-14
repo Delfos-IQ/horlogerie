@@ -14,7 +14,7 @@
  * accepted for a one-off 5,99 € purchase: the server check stops casual token reuse,
  * and nothing secret or shared depends on Pro.
  */
-import { CONFIG } from './api.js';
+import { CONFIG, apiError } from './api.js';
 import { locale } from './i18n.js';
 
 export const PRO_SKU = 'rotor_pro';
@@ -63,7 +63,7 @@ async function verify(token) {
     body: JSON.stringify({ sku: PRO_SKU, token }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(apiError(data) || `HTTP ${res.status}`);
   return data;
 }
 function activate(token, r) {

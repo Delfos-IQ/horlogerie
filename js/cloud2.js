@@ -13,7 +13,7 @@
  * el último envío y se reciben los que tienen revisión mayor que la última
  * vista. Gana el sello más reciente, elemento a elemento.
  */
-import { CONFIG } from './api.js';
+import { CONFIG, apiError } from './api.js';
 import { t } from './i18n.js';
 import {
   getWatches, getWishlist, setWishlistSilently, getTombstones, clearTombstones, getPhotoDataUrl, photoTags,
@@ -80,7 +80,7 @@ async function api(path, key, { method = 'GET', body } = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = new Error(data.error || `HTTP ${res.status}`);
+    const err = new Error(apiError(data) || `HTTP ${res.status}`);
     err.status = res.status;
     throw err;
   }
@@ -267,7 +267,7 @@ export async function pairCreate2(key) {
   const blob = await encryptText(aes, canonicalKey(key), 'pair');
   const res = await fetch(`${CONFIG.WORKER_URL}/v2/pair`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lookup, blob }) });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(apiError(data) || `HTTP ${res.status}`);
   return { code, expiresAt: data.expiresAt };
 }
 /** Swap a code for the recovery key */
@@ -276,7 +276,7 @@ export async function pairClaim2(code) {
   const res = await fetch(`${CONFIG.WORKER_URL}/v2/pair/claim`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lookup }) });
   const data = await res.json().catch(() => ({}));
   if (res.status === 429) throw new Error(t('Demasiados intentos. Prueba dentro de una hora.'));
-  if (!res.ok || !data.blob) throw new Error(data.error || t('Código no válido o caducado'));
+  if (!res.ok || !data.blob) throw new Error(apiError(data) || t('Código no válido o caducado'));
   return decryptText(aes, data.blob, 'pair');
 }
 
