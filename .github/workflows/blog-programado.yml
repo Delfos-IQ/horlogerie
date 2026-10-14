@@ -1,0 +1,46 @@
+name: Publicar artículos programados
+
+# Cloudflare solo reconstruye la web cuando hay un commit en main. Un artículo con fecha
+# futura no sale hasta el primer despliegue a partir de ese día. Este workflow mira cada
+# mañana si hay algún artículo (no borrador) con la fecha de hoy y, si lo hay, sube un
+# commit vacío para que Cloudflare publique la web.
+on:
+  schedule:
+    - cron: '20 5 * * *'   # 05:20 UTC (06:20 en Lisboa en invierno)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ¿Hay artículos para hoy?
+        id: hoy
+        run: |
+          today=$(date -u +%F)
+          found=""
+          for f in web/posts/*.md; do
+            name=$(basename "$f")
+            case "$name" in _*) continue ;; esac
+            head=$(awk 'NR==1 && /^---/ {inside=1; next} inside && /^---/ {exit} inside {print}' "$f")
+            date=$(printf '%s\n' "$head" | sed -n 's/^fecha:[[:space:]]*//p' | head -1)
+            [ -z "$date" ] && date="${name:0:10}"
+            if printf '%s\n' "$head" | grep -qiE '^borrador:[[:space:]]*(s[ií]|yes|true)'; then continue; fi
+            [ "$date" = "$today" ] && found="$found $name"
+          done
+          echo "today=$today" >> "$GITHUB_OUTPUT"
+          echo "found=$found" >> "$GITHUB_OUTPUT"
+          echo "Artículos para $today:${found:- ninguno}"
+
+      - name: Commit vacío para que Cloudflare despliegue
+        if: steps.hoy.outputs.found != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "Blog: publicar artículos del ${{ steps.hoy.outputs.today }}"
+          git push

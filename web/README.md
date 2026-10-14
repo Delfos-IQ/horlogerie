@@ -36,6 +36,8 @@ borrador: sí          # opcional: mientras ponga «sí», no se publica
 
 - **Fecha futura:** el artículo no sale hasta esa fecha, y se publica en el primer despliegue
   a partir de ese día (cualquier cambio en el repositorio lo despliega).
+  El workflow «Publicar artículos programados» (`.github/workflows/blog-programado.yml`) lo hace
+  solo: cada mañana, si hay un artículo con la fecha de hoy, sube un commit vacío para desplegar.
 - **Traducciones:** si escribes el mismo artículo en otro idioma, añade en ambos
   `traducciones: en=slug-en, pt=slug-pt`.
 - **Fotos:** súbelas a `posts/img/` (.webp o .jpg, menos de 300 KB) y úsalas así:
