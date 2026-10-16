@@ -114,6 +114,37 @@ async def main():
         check("sin errores de JavaScript (ordenador)", not errs, errs[:3])
         await ctx.close()
 
+        # ── Aviso de navegador: Mi Browser, Instagram… (Chrome no lo ve) ──
+        MI = ("Mozilla/5.0 (Linux; U; Android 14; es-es; 23078PND5G Build/UKQ1.230804.001) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/112.0.5615.136 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.10.1-gn")
+        IG = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+              "Mobile/15E148 Instagram 340.0.0.22.109 (iPhone15,3; iOS 17_5; es_ES; es)")
+        ctx = await b.new_context(**p.devices['Pixel 7'], locale="es-ES", service_workers="block", bypass_csp=True)
+        page = await ctx.new_page()
+        await boot(page)
+        check("en Chrome no hay aviso de navegador", await page.evaluate("document.getElementById('browser-notice').hidden"))
+        await ctx.close()
+        ctx = await b.new_context(**{**p.devices['Pixel 7'], 'user_agent': MI}, locale="es-ES", service_workers="block", bypass_csp=True)
+        page = await ctx.new_page()
+        await boot(page)
+        txt = await page.text_content("#browser-notice") or ''
+        href = await page.get_attribute("#browser-notice .bn-open", "href") or ''
+        check("en Mi Browser: aviso «Rotor va mejor en Chrome»", 'Mi Browser' in txt and 'Chrome' in txt, txt[:90])
+        check("  con «Abrir en Chrome» (misma página, en Chrome)",
+              href.startswith("intent://localhost:8080/horlogerie/") and "package=com.android.chrome" in href, href[:120])
+        await page.click("#browser-notice .bn-ok")
+        check("  «Entendido» lo oculta", await page.evaluate("document.getElementById('browser-notice').hidden"))
+        await boot(page)
+        check("  y no vuelve a salir", await page.evaluate("document.getElementById('browser-notice').hidden"))
+        await ctx.close()
+        ctx = await b.new_context(locale="en-GB", user_agent=IG, viewport={"width": 390, "height": 844}, service_workers="block", bypass_csp=True)
+        page = await ctx.new_page()
+        await boot(page)
+        txt = await page.text_content("#browser-notice") or ''
+        check("dentro de Instagram (iPhone, en inglés): avisa sin botón de Chrome",
+              'inside Instagram' in txt and await page.locator("#browser-notice .bn-open").count() == 0, txt[:90])
+        await ctx.close()
+
         # ── Desde la web: la app abre en el idioma de la página (si no has elegido otro) ──
         ctx = await b.new_context(locale="es-ES", service_workers="block", bypass_csp=True)
         page = await ctx.new_page()

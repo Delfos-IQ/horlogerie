@@ -25,7 +25,8 @@ const LANGS = { es, en, pt };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const write = (rel, data) => { const p = join(OUT, rel); mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, data); };
 const hash = rel => createHash('sha256').update(readFileSync(join(ROOT, rel))).digest('hex').slice(0, 8);
-const ASSET_V = { css: hash('assets/css/site.css'), js: hash('assets/js/rotor.js') };
+const ASSET_V = { css: hash('assets/css/site.css'), js: hash('assets/js/rotor.js'),
+  notice: createHash('sha256').update(readFileSync(join(ROOT, 'assets/js/notice.js'))).update(readFileSync(join(ROOT, '../js/browser-check.js'))).digest('hex').slice(0, 8) };
 const url = (path = '') => BASE + path;
 const abs = (path = '') => SITE + path;
 const fmtDate = (d, lang) => new Date(d + 'T12:00:00Z').toLocaleDateString({ es: 'es-ES', en: 'en-GB', pt: 'pt-PT' }[lang], { day: 'numeric', month: 'long', year: 'numeric' });
@@ -87,10 +88,12 @@ ${xdef}
 <link rel="stylesheet" href="${url('assets/css/site.css')}?v=${ASSET_V.css}">
 ${jsonld.map(j => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('\n')}
 <script src="${url('assets/js/rotor.js')}?v=${ASSET_V.js}" defer></script>
+<script type="module" src="${url('assets/js/notice.js')}?v=${ASSET_V.notice}"></script>
 </head>
 <body>
 <a class="skip" href="#main">${{ es: 'Saltar al contenido', en: 'Skip to content', pt: 'Saltar para o conteúdo' }[c.lang]}</a>
 ${header(c, alternates)}
+<div id="browser-notice" class="bn-wrap" hidden></div>
 <main id="main">
 ${body}
 </main>
@@ -418,6 +421,7 @@ rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 cpSync(join(ROOT, 'assets'), join(OUT, 'assets'), { recursive: true });
 cpSync(join(ROOT, 'favicon.ico'), join(OUT, 'favicon.ico'));
+cpSync(join(APP_SRC, 'js/browser-check.js'), join(OUT, 'assets/js/browser-check.js'));   // the notice shared with the app
 for (const d of readdirSync(join(ROOT, 'posts'))) {
   const img = join(ROOT, 'posts', d, 'img');
   if (!d.startsWith('_') && existsSync(img)) cpSync(img, join(OUT, 'blog/img', d), { recursive: true });

@@ -28,6 +28,7 @@ import * as pro from './modules/pro.js';
 import * as care from './modules/care.js';
 import * as reminders from './reminders.js';
 import * as moved from './modules/moved.js';
+import { mountBrowserNotice } from './browser-check.js';
 
 // Language and theme first: the static HTML is translated before anything is drawn
 i18n.applyTheme();
@@ -117,7 +118,8 @@ setTimeout(() => {
 
 storage.loadPhotos().then(() => {
   homeDetail.renderHome(); core.updateFab('home');
-  if (moved.checkMoved()) return;   // old address: forward to the new one (bringing the watches)
+  if (moved.checkMoved()) return;
+  mountBrowserNotice(document.getElementById('browser-notice'), i18n.lang());   // old address: forward to the new one (bringing the watches)
   if (storage.getWatches().length) storage.requestPersistence();
   else if (!location.hash.startsWith('#vincular=')) setTimeout(() => onboarding.maybeShowOnboarding(), 1900);   // after the splash
 });

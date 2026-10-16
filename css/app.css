@@ -1575,3 +1575,11 @@ a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold
 .insp-close:hover { color: var(--light); }
 .moved-card { border-color: var(--gold); }
 .moved-link { background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--gold-light); text-decoration: none; }
+
+/* ===== BROWSER NOTICE (Mi Browser, Samsung Internet…, or inside Instagram & co.) ===== */
+.bn { margin: 12px 16px 0; padding: 12px 14px; border: 0.5px solid var(--gold); border-radius: var(--radius); background: var(--dark3); }
+.bn-title { margin: 0 0 4px; font-size: 14px; font-weight: 500; color: var(--light); }
+.bn-text { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mid); }
+.bn-actions { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.bn-open { font-size: 13px; font-weight: 500; color: var(--gold-light); text-decoration: none; padding: 6px 4px; }
+.bn-ok { font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 999px; border: 0.5px solid var(--glass-border); background: none; color: var(--light); cursor: pointer; }

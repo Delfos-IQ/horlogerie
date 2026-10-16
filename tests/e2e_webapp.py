@@ -58,6 +58,21 @@ async def main():
         check("assetlinks: solo se publica con huellas reales", r.status in (200, 404))
 
         check("sin errores de JavaScript", not errs, errs[:3])
+
+        # ── Aviso de navegador en la web, compartido con la app ──
+        MI = ("Mozilla/5.0 (Linux; U; Android 14; pt-pt; 23078PND5G Build/UKQ1.230804.001) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/112.0.5615.136 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.10.1-gn")
+        c2 = await b.new_context(user_agent=MI, viewport={"width": 390, "height": 844})
+        w = await c2.new_page()
+        await w.goto(SITE + "pt/")
+        await w.wait_for_selector("#browser-notice .bn", timeout=5000)
+        txt = await w.text_content("#browser-notice")
+        check("web en Mi Browser: aviso en el idioma de la página", 'Mi Browser' in txt and 'Chrome' in txt and 'navegador' in txt, txt[:80])
+        await w.click("#browser-notice .bn-ok")
+        await w.goto(APP)
+        await w.wait_for_function("typeof renderHome === 'function'")
+        check("tras «Entendido» en la web, la app no lo repite", await w.evaluate("document.getElementById('browser-notice').hidden"))
+        await c2.close()
         await b.close()
     ok = sum(1 for _, c in results if c)
     print(f"--- {ok}/{len(results)} OK")
