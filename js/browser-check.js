@@ -6,7 +6,8 @@
  *     camera and gallery, the back gesture and reminders work better in Chrome → «Abrir en Chrome».
  *   - Browsers inside other apps (Instagram, Facebook, TikTok…): what is saved there can be lost.
  *
- * «Entendido» hides it for good in that browser (one key per kind of browser).
+ * «Entendido» hides it for a month (REMIND_DAYS); then it comes back as a reminder. Meanwhile a
+ * short line stays in Ajustes → Estado del sistema (app) and in the footer (website).
  * No imports: plain module, texts in es / en / pt here.
  */
 const IN_APP = [['Instagram', /Instagram/], ['Facebook', /FBAN|FBAV|FB_IAB/], ['TikTok', /musical_ly|BytedanceWebview|TikTok/],
@@ -38,19 +39,53 @@ const TEXT = {
         android: 'Rotor funciona en {b}, pero instalar la app, la cámara y la galería, el gesto «atrás» y los avisos funcionan mejor en Chrome. Tus relojes se guardan en cada navegador por separado: si cambias, tráelos con tu clave o un código.',
         inappTitle: 'Estás dentro de {b}',
         inapp: 'Lo que guardes aquí puede perderse al cerrar. Abre Rotor en tu navegador (menú ⋯ → «Abrir en el navegador») para instalarlo y guardar tus relojes.',
-        open: 'Abrir en Chrome', ok: 'Entendido' },
+        open: 'Abrir en Chrome', ok: 'Entendido', label: 'Navegador',
+        inappTip: 'ábrelo en tu navegador para no perder tus relojes' },
   en: { another: 'another app', androidTitle: 'Rotor works best in Chrome',
         android: 'Rotor works in {b}, but installing the app, camera and gallery, the back gesture and reminders work better in Chrome. Each browser keeps its own watches: if you switch, bring them over with your key or a code.',
         inappTitle: 'You are inside {b}',
         inapp: 'What you save here may be lost when you close it. Open Rotor in your browser (⋯ menu → «Open in browser») to install it and keep your watches.',
-        open: 'Open in Chrome', ok: 'Got it' },
+        open: 'Open in Chrome', ok: 'Got it', label: 'Browser',
+        inappTip: 'open it in your browser so you do not lose your watches' },
   pt: { another: 'outra app', androidTitle: 'O Rotor funciona melhor no Chrome',
         android: 'O Rotor funciona no {b}, mas instalar a app, a câmara e a galeria, o gesto «voltar» e os avisos funcionam melhor no Chrome. Cada navegador guarda os seus relógios: se mudares, traz-os com a tua chave ou um código.',
         inappTitle: 'Estás dentro do {b}',
         inapp: 'O que guardares aqui pode perder-se ao fechar. Abre o Rotor no teu navegador (menu ⋯ → «Abrir no navegador») para o instalar e guardar os teus relógios.',
-        open: 'Abrir no Chrome', ok: 'Entendido' },
+        open: 'Abrir no Chrome', ok: 'Entendido', label: 'Navegador',
+        inappTip: 'abre-o no teu navegador para não perderes os teus relógios' },
 };
-const KEY = 'rotor_browser_notice';   // «kind:name» already acknowledged
+const KEY = 'rotor_browser_notice';   // { id: 'kind:name', at: when «Entendido» was pressed }
+export const REMIND_DAYS = 30;
+
+function acknowledged(id, now = Date.now()) {
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY) || 'null');
+    return !!v && v.id === id && now - v.at < REMIND_DAYS * 864e5;
+  } catch { return false; }
+}
+
+/**
+ * Short line for Ajustes (app) or the footer (website): «Mi Browser · Rotor va mejor en Chrome · Abrir en Chrome».
+ * @param {HTMLElement|null} el  @param {string} lang  @param {{ label?: boolean }} [o]
+ */
+export function fillBrowserLine(el, lang = 'es', { label = false } = {}, ua) {
+  if (!el) return false;
+  const b = detectBrowser(ua);
+  if (!b) return false;
+  const tx = TEXT[lang] || TEXT.es;
+  const name = b.name || tx.another;
+  el.textContent = '';
+  const text = document.createElement('span');
+  text.textContent = `${label ? tx.label + ': ' : ''}${name} · ${b.kind === 'inapp' ? tx.inappTip : tx.androidTitle}`;
+  el.append(text);
+  if (b.android) {
+    const open = document.createElement('a'); open.className = 'bn-open';
+    open.href = chromeUrl(); open.textContent = tx.open;
+    el.append(' · ', open);
+  }
+  el.hidden = false;
+  return true;
+}
 
 /**
  * Fill `el` with the notice (if this browser needs one and it was not acknowledged).
@@ -63,7 +98,7 @@ export function mountBrowserNotice(el, lang = 'es', ua) {
   const b = detectBrowser(ua);
   if (!b) return false;
   const id = `${b.kind}:${b.name}`;
-  try { if (localStorage.getItem(KEY) === id) return false; } catch {}
+  if (acknowledged(id)) return false;
   const tx = TEXT[lang] || TEXT.es;
   const name = b.name || tx.another;
   const fill = s => s.replace('{b}', name);
@@ -83,7 +118,7 @@ export function mountBrowserNotice(el, lang = 'es', ua) {
   }
   const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'bn-ok'; ok.textContent = tx.ok;
   ok.addEventListener('click', () => {
-    try { localStorage.setItem(KEY, id); } catch {}
+    try { localStorage.setItem(KEY, JSON.stringify({ id, at: Date.now() })); } catch {}
     el.hidden = true; el.textContent = '';
   });
   actions.append(ok);

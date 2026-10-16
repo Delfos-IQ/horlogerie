@@ -311,6 +311,7 @@ export default {
   "Ahora no": "Agora não",
   "Preparando…": "A preparar…",
   "No se pudo activar la copia en la nube": "Não foi possível ativar a cópia na nuvem",
+  "Navegador": "Navegador",
   "Sin conexión para comprobar": "Sem ligação para verificar",
   "1 reloj en este dispositivo": "1 relógio neste dispositivo",
   "{n} relojes en este dispositivo": "{n} relógios neste dispositivo",

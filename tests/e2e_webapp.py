@@ -68,6 +68,8 @@ async def main():
         await w.wait_for_selector("#browser-notice .bn", timeout=5000)
         txt = await w.text_content("#browser-notice")
         check("web en Mi Browser: aviso en el idioma de la página", 'Mi Browser' in txt and 'Chrome' in txt and 'navegador' in txt, txt[:80])
+        foot = await w.text_content("#browser-foot") or ''
+        check("y una línea fija en el pie de la web", 'Navegador: Mi Browser' in foot and 'Abrir no Chrome' in foot, foot)
         await w.click("#browser-notice .bn-ok")
         await w.goto(APP)
         await w.wait_for_function("typeof renderHome === 'function'")

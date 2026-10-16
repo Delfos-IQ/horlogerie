@@ -131,7 +131,8 @@ function footer(c) {
 <a href="${url(c.helpUrl)}">${c.foot.help}</a>
 <a href="mailto:${EMAIL}">${c.foot.contact}</a>
 <a href="${url('feed.xml')}">${c.foot.rss}</a>
-</nav></div></footer>`;
+</nav>
+<p class="foot-browser" id="browser-foot" hidden></p></div></footer>`;
 }
 
 function langHint(c, alternates) {
