@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.19.0';
+const CACHE   = 'horlogerie-v2.19.1';
 // '/horlogerie' on GitHub Pages, '/app' on the Rotor website: taken from where the SW lives
 const BASE    = new URL(self.registration.scope).pathname.replace(/\/$/, '');
 const API_HOST = 'horlogerie.pedicode-app.workers.dev';
@@ -24,9 +24,9 @@ const SHELL = [
   `${BASE}/help.html`,
   `${BASE}/privacidade.html`,
   `${BASE}/ajuda-pt.html`,
-  `${BASE}/css/app.css?v=2.19.0`,
-  `${BASE}/css/fonts.css?v=2.19.0`,
-  `${BASE}/css/icons.css?v=2.19.0`,
+  `${BASE}/css/app.css?v=2.19.1`,
+  `${BASE}/css/fonts.css?v=2.19.1`,
+  `${BASE}/css/icons.css?v=2.19.1`,
   `${BASE}/css/icons/tabler-icons-0b9250ab.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
@@ -65,13 +65,14 @@ const SHELL = [
   `${BASE}/js/i18n.js`,
   `${BASE}/js/i18n/en.js`,
   `${BASE}/js/i18n/pt.js`,
-  `${BASE}/js/theme-boot.js?v=2.19.0`,
-  `${BASE}/js/spec-parser.js?v=2.19.0`,
-  `${BASE}/js/main.js?v=2.19.0`,
+  `${BASE}/js/theme-boot.js?v=2.19.1`,
+  `${BASE}/js/spec-parser.js?v=2.19.1`,
+  `${BASE}/js/main.js?v=2.19.1`,
   `${BASE}/js/modules/url-import.js`,
   `${BASE}/js/modules/onboarding.js`,
   `${BASE}/js/modules/pro.js`,
   `${BASE}/js/modules/care.js`,
+  `${BASE}/js/modules/moved.js`,
   `${BASE}/js/billing.js`,
   `${BASE}/js/insurance.js`,
   `${BASE}/js/reminders.js`,

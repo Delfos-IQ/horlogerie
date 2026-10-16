@@ -88,8 +88,14 @@ jobs:
           sleep 1
           python tests/e2e_webapp.py
 
-      - name: Móvil y ordenador (fotos, gesto atrás, idioma desde la web, aviso de la dirección nueva)
+      - name: Móvil y ordenador (fotos, gesto atrás, idioma desde la web)
         run: python tests/e2e_mobile.py
+
+      - name: La dirección antigua lleva a la nueva sin perder relojes
+        run: |
+          node tests/worker-harness.mjs ../worker/index.js 8714 > /tmp/worker-moved.log 2>&1 &
+          sleep 2
+          python tests/e2e_moved.py 8714
 
       - name: Avisos en el móvil (service worker real y notificaciones)
         run: python tests/e2e_reminders.py

@@ -2,7 +2,7 @@
 
 Guía paso a paso para empaquetar la PWA **Rotor** como app Android (TWA, *Trusted Web Activity*) y publicarla. La app de Play abre **`https://rotor.pedicode-app.workers.dev/app/`**: la app dentro de la web de Rotor, en el mismo repositorio (ver `web/README.md`). La TWA es un envoltorio que la abre a pantalla completa, sin barra del navegador. Cada `git push` actualiza también la app de Play, sin volver a subir nada (salvo cambios del envoltorio).
 
-Esa dirección es gratuita y no caduca. Un dominio propio, si lo compras, va solo para la web (escaparate): si algún día lo dejas, la app de Play y los datos de los usuarios no se enteran. **No cambies nunca el host de la app de Play a un dominio comprado.** La copia de GitHub Pages (`https://delfos-iq.github.io/horlogerie/`) sigue funcionando para quien la use desde el navegador.
+Esa dirección es gratuita y no caduca. Un dominio propio, si lo compras, va solo para la web (escaparate): si algún día lo dejas, la app de Play y los datos de los usuarios no se enteran. **No cambies nunca el host de la app de Play a un dominio comprado.** La dirección antigua de GitHub Pages (`https://delfos-iq.github.io/horlogerie/`) ya no se usa: lleva a la nueva y, si había relojes guardados allí, ofrece llevarlos con un toque (`js/modules/moved.js`).
 
 Material listo en esta carpeta:
 

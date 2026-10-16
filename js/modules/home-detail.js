@@ -174,8 +174,8 @@ export function renderInspiration() {
   if (location.hostname === 'delfos-iq.github.io') {   // the old address: point to the new one instead
     el.innerHTML = `<aside class="insp-card moved-card" aria-label="${t('Rotor tiene una dirección nueva')}">
       <div class="insp-year" aria-hidden="true"><i class="ti ti-world"></i></div>
-      <div><p class="insp-text"><b>${t('Rotor tiene una dirección nueva.')}</b> ${t('Ábrela, instálala desde el navegador y trae tus relojes con tu clave o un código (Ajustes → Usar una clave o código). La app de Google Play usará esa dirección.')}</p>
-      <a class="moved-link" href="https://rotor.pedicode-app.workers.dev/app/?lang=${lang()}">${t('Abrir Rotor en la nueva dirección')} <i class="ti ti-chevron-right" aria-hidden="true"></i></a></div>
+      <div><p class="insp-text"><b>${t('Rotor tiene una dirección nueva.')}</b> ${t('Esta dirección antigua ya no se usa: con un toque llevamos tus relojes a la nueva.')}</p>
+      <button type="button" class="moved-link" data-action="openMoveSheet">${t('Llevar mis relojes')} <i class="ti ti-chevron-right" aria-hidden="true"></i></button></div>
       <button type="button" class="insp-close" aria-label="${t('Cerrar')}"><i class="ti ti-x" aria-hidden="true"></i></button>
     </aside>`;
     el.querySelector('.insp-close').addEventListener('click', () => { _inspClosed = true; el.innerHTML = ''; });

@@ -1,5 +1,5 @@
 {
-  "version": "2.19.0",
+  "version": "2.19.1",
   "date": "2026-10-16",
-  "notes": "Fotos: la cámara y la galería abren siempre en el móvil, y en el ordenador «Hacer una foto» usa la webcam. El gesto «atrás» vuelve a la colección. La app abre en el idioma de la web."
+  "notes": "La dirección antigua (GitHub Pages) lleva a la nueva y, con un toque, se trae tus relojes."
 }

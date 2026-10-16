@@ -1574,4 +1574,4 @@ a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold
 .insp-close { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0; background: none; color: var(--mid); cursor: pointer; border-radius: 50%; }
 .insp-close:hover { color: var(--light); }
 .moved-card { border-color: var(--gold); }
-.moved-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--gold-light); text-decoration: none; }
+.moved-link { background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--gold-light); text-decoration: none; }

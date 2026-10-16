@@ -1,6 +1,6 @@
 """
 Móvil y ordenador: fotos (cámara y galería), gesto «atrás», idioma al llegar desde la web
-y aviso de la dirección nueva en la copia antigua de GitHub Pages.
+(la dirección antigua se prueba en e2e_moved.py).
 
 Uso (con la app en :8080):  python3 tests/e2e_mobile.py
 """
@@ -125,22 +125,6 @@ async def main():
         check("si ya elegiste idioma en la app, se respeta", await page.evaluate("lang()") == 'pt')
         await ctx.close()
 
-        # ── Copia antigua (GitHub Pages): aviso de la dirección nueva ──
-        ctx = await b.new_context(locale="es-ES", service_workers="block", bypass_csp=True)
-        async def serve(route):
-            path = route.request.url.split("delfos-iq.github.io/horlogerie/", 1)[1].split("?")[0].split("#")[0] or "index.html"
-            f = ROOT / path
-            if not f.is_file():
-                return await route.fulfill(status=404, body="")
-            await route.fulfill(status=200, body=f.read_bytes(), content_type=mimetypes.guess_type(str(f))[0] or "application/octet-stream")
-        await ctx.route("https://delfos-iq.github.io/horlogerie/**", serve)
-        page = await ctx.new_page()
-        await page.goto("https://delfos-iq.github.io/horlogerie/")   # test helpers are only global on localhost
-        await page.wait_for_selector("#inspiration-card .moved-link", timeout=8000)
-        card = await page.text_content("#inspiration-card") or ''
-        href = await page.get_attribute("#inspiration-card .moved-link", "href")
-        check("en la dirección antigua, avisa de la nueva con un enlace", 'dirección nueva' in card and href and href.startswith("https://rotor.pedicode-app.workers.dev/app/"), card[:80])
-        await ctx.close()
         await b.close()
     ok = sum(1 for _, c in results if c)
     print(f"--- {ok}/{len(results)} OK")
