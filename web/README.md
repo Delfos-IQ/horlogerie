@@ -10,7 +10,7 @@ dirección: el dominio puede caducar sin romper la app.
 
 - `content/es.mjs`, `en.mjs`, `pt.mjs` — textos de la portada.
 - `posts/` — artículos del blog, una carpeta por artículo con un archivo por idioma.
-- `legal/` — términos de uso. La privacidad y la ayuda se toman de las páginas de la app
+- `legal/` — términos de uso, política de cookies y aviso legal (`.md`, uno por idioma). El aviso legal toma nombre, NIF y dirección de `legal/titular.json` y **no se publica** (ni su enlace en el pie) mientras falte alguno. La privacidad y la ayuda se toman de las páginas de la app
   (`privacidad.html`, `ayuda.html`… en la raíz del repositorio), para no tener dos versiones.
 - `build.mjs` — lo junta todo en `dist/`. Configuración de Cloudflare: `../wrangler.toml`.
 

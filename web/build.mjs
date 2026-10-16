@@ -126,7 +126,8 @@ function footer(c) {
   return `<footer class="foot"><div class="wrap">
 <span>${esc(c.foot.made)}</span>
 <nav aria-label="${esc(c.foot.made)}">
-<a href="${url(c.privacyUrl)}">${c.foot.privacy}</a>
+${NOTICE_READY ? `<a href="${url(c.noticeUrl)}">${c.foot.notice}</a>\n` : ''}<a href="${url(c.privacyUrl)}">${c.foot.privacy}</a>
+<a href="${url(c.cookiesUrl)}">${c.foot.cookies}</a>
 <a href="${url(c.termsUrl)}">${c.foot.terms}</a>
 <a href="${url(c.helpUrl)}">${c.foot.help}</a>
 <a href="mailto:${EMAIL}">${c.foot.contact}</a>
@@ -368,7 +369,7 @@ function sitemap(posts) {
 ${paths.map(([l2, p2]) => `<xhtml:link rel="alternate" hreflang="${l2}" href="${abs(p2)}"/>`).join('')}</url>`).join('\n');
   const homes = Object.entries(LANGS).map(([l, x]) => [l, x.path]);
   const blogs = Object.entries(LANGS).map(([l, x]) => [l, x.path + 'blog/']);
-  const legal = [LEGAL.filter(x => x.group === 'privacy'), LEGAL.filter(x => x.group === 'help'), TERMS].map(l => group(l.map(x => [x.lang, x.file]))).join('\n');
+  const legal = [LEGAL.filter(x => x.group === 'privacy'), LEGAL.filter(x => x.group === 'help'), ...MD_DOCS].map(l => group(l.map(x => [x.lang, x.file]))).join('\n');
   const postUrls = posts.map(p => `<url><loc>${abs(`blog/${p.slug}/`)}</loc><lastmod>${p.date}</lastmod></url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
@@ -389,6 +390,14 @@ const LEGAL = [
   { file: 'ayuda.html', lang: 'es', group: 'help' }, { file: 'help.html', lang: 'en', group: 'help' }, { file: 'ajuda-pt.html', lang: 'pt', group: 'help' },
 ];
 const TERMS = [{ file: 'terminos.html', lang: 'es', src: 'terminos.md' }, { file: 'terms.html', lang: 'en', src: 'terms.md' }, { file: 'termos.html', lang: 'pt', src: 'termos.md' }];
+const COOKIES = [{ file: 'politica-cookies.html', lang: 'es', src: 'politica-cookies.md' }, { file: 'cookie-policy.html', lang: 'en', src: 'cookie-policy.md' },
+  { file: 'politica-cookies-pt.html', lang: 'pt', src: 'politica-cookies-pt.md' }];
+const NOTICE = [{ file: 'aviso-legal.html', lang: 'es', src: 'aviso-legal.md' }, { file: 'legal-notice.html', lang: 'en', src: 'legal-notice.md' },
+  { file: 'aviso-legal-pt.html', lang: 'pt', src: 'aviso-legal-pt.md' }];
+/* Aviso legal: solo se publica (y se enlaza) cuando legal/titular.json tiene nombre, NIF y dirección */
+const TITULAR = JSON.parse(readFileSync(join(ROOT, 'legal/titular.json'), 'utf8'));
+const NOTICE_READY = ['nombre', 'nif', 'direccion'].every(k => String(TITULAR[k] || '').trim());
+const MD_DOCS = [TERMS, COOKIES, ...(NOTICE_READY ? [NOTICE] : [])];
 const groupAlternates = list => Object.fromEntries(list.map(x => [x.lang, x.file]));
 
 function legalPages() {
@@ -406,13 +415,14 @@ function legalPages() {
       out.push([it.file, page({ c, title, description: desc, path: it.file, alternates: groupAlternates(list), body: `<article class="article legal">${main}</article>` })]);
     }
   }
-  for (const it of TERMS) {
-    const raw = readFileSync(join(ROOT, 'legal', it.src), 'utf8');
+  for (const list of MD_DOCS) for (const it of list) {
+    const raw = readFileSync(join(ROOT, 'legal', it.src), 'utf8')
+      .replace(/\{\{(nombre|nif|direccion)\}\}/g, (m0, k) => esc(String(TITULAR[k]).trim()));
     const m = raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
     const title = (m[1].match(/titulo:\s*(.*)/) || [])[1].trim();
     const c = LANGS[it.lang];
     out.push([it.file, page({ c, title: `${title} · Rotor`, description: (m[1].match(/descripcion:\s*(.*)/) || [])[1].trim(),
-      path: it.file, alternates: groupAlternates(TERMS), body: `<article class="article legal"><h1>${esc(title)}</h1>${marked.parse(m[2])}</article>` })]);
+      path: it.file, alternates: groupAlternates(list), body: `<article class="article legal"><h1>${esc(title)}</h1>${marked.parse(m[2])}</article>` })]);
   }
   return out;
 }
@@ -471,4 +481,5 @@ if (ready) write('.well-known/assetlinks.json', JSON.stringify(links, null, 2));
 else console.log('· assetlinks.json sin publicar: faltan las huellas SHA-256 en docs/play/assetlinks.json');
 
 const pending = all.filter(p => p.draft || p.date > today).map(p => `${p.file} (${p.draft ? 'borrador' : 'programado para ' + p.date})`);
+if (!NOTICE_READY) console.log('· Aviso legal sin publicar: faltan datos del titular en web/legal/titular.json');
 console.log(`✓ Web generada en dist/: 3 portadas, la app en /app/, ${posts.length} artículo(s)` + (pending.length ? `; sin publicar: ${pending.join(', ')}` : ''));

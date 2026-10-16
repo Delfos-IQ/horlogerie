@@ -1,5 +1,5 @@
 {
-  "version": "2.20.2",
+  "version": "2.20.3",
   "date": "2026-10-16",
-  "notes": "Revisión de seguridad: cabeceras que impiden meter Rotor dentro de otra página y limitan cámara y pagos a Rotor. Privacidad actualizada."
+  "notes": "Nueva Política de cookies (Rotor no usa cookies) y textos legales enlazados a la web desde Ajustes."
 }

@@ -124,9 +124,10 @@ async def main():
         await page.evaluate("showView('settings')")
         await page.wait_for_timeout(500)
         s = await page.text_content("#view-settings")
-        check("ayuda y privacidad enlazan a las páginas en inglés",
+        check("ayuda, privacidad y cookies enlazan a las páginas en inglés",
               await page.get_attribute("#view-settings a[data-href-en*='help']", "href") == './help.html'
-              and await page.get_attribute("#view-settings a[data-href-en*='privacy']", "href") == './privacy.html')
+              and await page.get_attribute("#view-settings a[data-href-en*='privacy']", "href") == 'https://rotor.pedicode-app.workers.dev/privacy.html'
+              and await page.get_attribute("#view-settings a[data-href-en*='cookie']", "href") == 'https://rotor.pedicode-app.workers.dev/cookie-policy.html')
         check("ajustes en inglés", 'Preferences' in s and not spanish_left(s, ('ñ',)), str(spanish_left(s, ('ñ',))))
 
         # ── Theme ──
@@ -184,9 +185,10 @@ async def main():
         check("base de modelos en portugués", hit['cristal'] == 'Safira · Plano' and 'rubis' in hit['movimiento'], json.dumps(hit, ensure_ascii=False))
         await pt.evaluate("showView('settings')")
         await pt.wait_for_timeout(400)
-        check("ayuda y privacidad enlazan a las páginas en portugués",
+        check("ayuda, privacidad y cookies enlazan a las páginas en portugués",
               await pt.get_attribute("#view-settings a[data-href-pt*='ajuda']", "href") == './ajuda-pt.html'
-              and await pt.get_attribute("#view-settings a[data-href-pt*='privacidade']", "href") == './privacidade.html')
+              and await pt.get_attribute("#view-settings a[data-href-pt*='privacidade']", "href") == 'https://rotor.pedicode-app.workers.dev/privacidade.html'
+              and await pt.get_attribute("#view-settings a[data-href-pt*='cookies-pt']", "href") == 'https://rotor.pedicode-app.workers.dev/politica-cookies-pt.html')
         month = await pt.evaluate("showView('history'); document.getElementById('cal-title').textContent")
         check("calendario con meses en portugués", any(m in month.lower() for m in ('janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro')), month)
         check("sin errores de JavaScript (portugués)", not perrs, perrs[:3])

@@ -312,6 +312,8 @@ export default {
   "Preparando…": "A preparar…",
   "No se pudo activar la copia en la nube": "Não foi possível ativar a cópia na nuvem",
   "Navegador": "Navegador",
+  "Política de cookies": "Política de cookies",
+  "Sin cookies: qué guarda tu navegador y para qué": "Sem cookies: o que o teu navegador guarda e para quê",
   "Sin conexión para comprobar": "Sem ligação para verificar",
   "1 reloj en este dispositivo": "1 relógio neste dispositivo",
   "{n} relojes en este dispositivo": "{n} relógios neste dispositivo",

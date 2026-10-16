@@ -312,6 +312,8 @@ export default {
   "Preparando…": "Preparing…",
   "No se pudo activar la copia en la nube": "Could not turn on the cloud copy",
   "Navegador": "Browser",
+  "Política de cookies": "Cookie policy",
+  "Sin cookies: qué guarda tu navegador y para qué": "No cookies: what your browser keeps and why",
   "Sin conexión para comprobar": "Offline: unable to check",
   "1 reloj en este dispositivo": "1 watch on this device",
   "{n} relojes en este dispositivo": "{n} watches on this device",
