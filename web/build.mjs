@@ -423,6 +423,18 @@ mkdirSync(OUT, { recursive: true });
 cpSync(join(ROOT, 'assets'), join(OUT, 'assets'), { recursive: true });
 cpSync(join(ROOT, 'favicon.ico'), join(OUT, 'favicon.ico'));
 cpSync(join(APP_SRC, 'js/browser-check.js'), join(OUT, 'assets/js/browser-check.js'));   // the notice shared with the app
+/* Cabeceras de seguridad (Cloudflare las lee de _headers y no publica el archivo):
+   nadie puede meter la web o la app dentro de otra página (clickjacking), el navegador no adivina
+   tipos de archivo, las páginas externas solo ven el dominio de procedencia, y cámara/pago solo
+   para Rotor (webcam en el ordenador, compras de Play en la app). */
+writeFileSync(join(OUT, '_headers'), `/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(self), usb=()
+  Strict-Transport-Security: max-age=31536000
+`);
 for (const d of readdirSync(join(ROOT, 'posts'))) {
   const img = join(ROOT, 'posts', d, 'img');
   if (!d.startsWith('_') && existsSync(img)) cpSync(img, join(OUT, 'blog/img', d), { recursive: true });

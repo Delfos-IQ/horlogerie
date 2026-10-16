@@ -1,5 +1,5 @@
 {
-  "version": "2.20.1",
+  "version": "2.20.2",
   "date": "2026-10-16",
-  "notes": "El aviso de navegador vuelve cada mes como recordatorio y queda siempre en Ajustes (y en el pie de la web)."
+  "notes": "Revisión de seguridad: cabeceras que impiden meter Rotor dentro de otra página y limitan cámara y pagos a Rotor. Privacidad actualizada."
 }
