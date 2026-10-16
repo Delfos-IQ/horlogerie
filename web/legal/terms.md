@@ -9,7 +9,7 @@ descripcion: Conditions for using Rotor, the encrypted cloud and the one-time Ro
 
 ## Who provides Rotor
 
-Rotor is an app by Delfos-IQ. For anything, write to [pedicode.app@gmail.com](mailto:pedicode.app@gmail.com).
+Rotor is a Delfos-IQ project owned by Daniel Lanzas Martín (full details in the [Legal notice](legal-notice.html)). For anything, write to [pedicode.app@gmail.com](mailto:pedicode.app@gmail.com).
 
 ## What Rotor is
 

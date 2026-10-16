@@ -314,6 +314,8 @@ export default {
   "Navegador": "Browser",
   "Política de cookies": "Cookie policy",
   "Sin cookies: qué guarda tu navegador y para qué": "No cookies: what your browser keeps and why",
+  "Aviso legal": "Legal notice",
+  "Quién está detrás de Rotor": "Who is behind Rotor",
   "Sin conexión para comprobar": "Offline: unable to check",
   "1 reloj en este dispositivo": "1 watch on this device",
   "{n} relojes en este dispositivo": "{n} watches on this device",

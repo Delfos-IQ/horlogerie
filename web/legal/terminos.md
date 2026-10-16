@@ -9,7 +9,7 @@ descripcion: Condiciones para usar Rotor, la nube cifrada y la compra única de 
 
 ## Quién ofrece Rotor
 
-Rotor es una aplicación de Delfos-IQ. Para cualquier cuestión, escribe a [pedicode.app@gmail.com](mailto:pedicode.app@gmail.com).
+Rotor es un proyecto de Delfos-IQ cuyo titular es Daniel Lanzas Martín (datos completos en el [Aviso legal](aviso-legal.html)). Para cualquier cuestión, escribe a [pedicode.app@gmail.com](mailto:pedicode.app@gmail.com).
 
 ## Qué es Rotor
 
