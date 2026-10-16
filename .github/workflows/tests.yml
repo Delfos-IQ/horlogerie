@@ -88,6 +88,9 @@ jobs:
           sleep 1
           python tests/e2e_webapp.py
 
+      - name: Móvil y ordenador (fotos, gesto atrás, idioma desde la web, aviso de la dirección nueva)
+        run: python tests/e2e_mobile.py
+
       - name: Avisos en el móvil (service worker real y notificaciones)
         run: python tests/e2e_reminders.py
 

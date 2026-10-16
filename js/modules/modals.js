@@ -2,6 +2,7 @@
 import { dbGet, dbLoad, dbSearch } from '../db.js';
 import { MOMENT_GROUPS, addWatch, cleanMoments, compressPhoto, getWatch, photoSrc, updateWatch } from '../storage.js';
 import { escHtml, showToast, ui } from './core.js';
+import { openSheet } from './sheet.js';
 import { openDetail, renderHome } from './home-detail.js';
 import { importEnabled, showImportedPreview } from './url-import.js';
 import { currencySymbol, t } from '../i18n.js';
@@ -108,9 +109,59 @@ export function closePhotoSheet() {
 export function closePhotoSheetIfOutside(e) {
   if (e.target.id === 'photo-sheet') closePhotoSheet();
 }
-export function choosePhotoSource(source) {
-  closePhotoSheet();
-  document.getElementById(source === 'camera' ? 'photo-input-camera' : 'photo-input-library').click();
+/* The two options are <label for> the file inputs, so the phone opens the camera or the gallery
+   itself. On a computer «Hacer una foto» uses the webcam (file inputs ignore capture there). */
+const usesWebcam = () => !!navigator.mediaDevices?.getUserMedia &&
+  matchMedia('(pointer: fine)').matches && !matchMedia('(any-pointer: coarse)').matches;
+function initPhotoSources() {
+  for (const id of ['photo-src-camera', 'photo-src-library']) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.addEventListener('click', e => {
+      if (id === 'photo-src-camera' && usesWebcam()) { e.preventDefault(); closePhotoSheet(); openWebcam(); return; }
+      closePhotoSheet();   // the label's default action still opens the picker
+    });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } });
+  }
+}
+initPhotoSources();
+
+function setPhoto(dataUrl) {
+  return compressPhoto(dataUrl, 900).then(resized => {
+    ui.editingPhotoData = resized;
+    const prev = document.getElementById('photo-preview');
+    prev.src = resized; prev.style.display = 'block';
+  });
+}
+
+async function openWebcam() {
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1600 } }, audio: false });
+  } catch {
+    showToast(t('No se pudo abrir la cámara. Revisa el permiso de cámara del navegador o elige una foto de la librería.'), 4200);
+    return;
+  }
+  const s = openSheet({
+    label: t('Hacer una foto'),
+    html: `<div class="modal-title">${t('Hacer una foto')}</div>
+      <video class="cam-video" autoplay playsinline muted></video>
+      <div class="modal-actions mt-14">
+        <button class="modal-btn modal-btn-cancel" data-close>${t('Cancelar')}</button>
+        <button class="modal-btn modal-btn-save" id="cam-shot"><i class="ti ti-camera" aria-hidden="true"></i> ${t('Hacer foto')}</button>
+      </div>`,
+    onClose: () => stream.getTracks().forEach(tr => tr.stop()),
+  });
+  const video = s.$('.cam-video');
+  video.srcObject = stream;
+  s.$('#cam-shot').addEventListener('click', () => {
+    if (!video.videoWidth) return;
+    const c = document.createElement('canvas');
+    c.width = video.videoWidth; c.height = video.videoHeight;
+    c.getContext('2d').drawImage(video, 0, 0);
+    setPhoto(c.toDataURL('image/jpeg', 0.92));
+    s.close();
+  });
 }
 
 export function handlePhotoUpload(e) {
@@ -119,13 +170,7 @@ export function handlePhotoUpload(e) {
   // Reset input so same file can be re-selected
   e.target.value = '';
   const reader = new FileReader();
-  reader.onload = ev => {
-    compressPhoto(ev.target.result, 900).then(resized => {
-      ui.editingPhotoData = resized;
-      const prev = document.getElementById('photo-preview');
-      prev.src = resized; prev.style.display = 'block';
-    });
-  };
+  reader.onload = ev => setPhoto(ev.target.result);
   reader.readAsDataURL(file);
 }
 

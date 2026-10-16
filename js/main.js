@@ -68,7 +68,6 @@ const actions = {
   closeAddModal:     () => modals.closeAddModal(),
   openPhotoSheet:    () => modals.openPhotoSheet(),
   closePhotoSheet:   () => modals.closePhotoSheet(),
-  choosePhotoSource: arg => modals.choosePhotoSource(arg),
   // receive the event (click on the dark backdrop closes the sheet)
   closeModalIfOutside:         e => modals.closeModalIfOutside(e),
   closePhotoSheetIfOutside:    e => modals.closePhotoSheetIfOutside(e),

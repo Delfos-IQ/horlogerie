@@ -10,7 +10,7 @@
 ══════════════════════════════════════════════════════ */
 
 import { errText } from '../api.js';
-import { getWatches } from '../storage.js';
+import { getWatches, getWishlist } from '../storage.js';
 import { deleteCloudData, getSessionId, getSyncMeta, importSession, isCloudEnabled, normalizeKey, normalizePairCode, pairClaim, pairCreate, rotateSessionKey, setCloudEnabled, setSyncMeta } from '../sync.js';
 import { escHtml, showToast } from './core.js';
 import { renderHome } from './home-detail.js';
@@ -179,7 +179,25 @@ export function openLinkSheet(prefill = '') {
 }
 
 /* ─── Cloud on/off, new key, delete ─── */
-export async function handleCloudToggle(on) {
+/* Turning the cloud on in an empty Rotor usually means «I already have my collection elsewhere»:
+   offer the key or code first, so an empty new copy is not created by mistake. */
+export async function handleCloudToggle(on, { fresh = false } = {}) {
+  if (on && !fresh && !getWatches().length && !getWishlist().length) {
+    const input0 = document.getElementById('cloud-toggle');
+    if (input0) input0.checked = false;
+    const { $, close } = openSheet({
+      label: t('¿Ya usas Rotor en otro dispositivo?'),
+      html: `<div class="sheet-title">${t('¿Ya usas Rotor en otro dispositivo?')}</div>
+        <div class="sheet-msg">${t('Este Rotor está vacío. Si ya tienes tu colección en otro móvil u ordenador, usa tu clave o un código para traerla aquí. Si activas la nube ahora, se crea una copia nueva y vacía.')}</div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-cancel" id="cf-new">${t('Empezar de cero')}</button>
+          <button class="modal-btn modal-btn-save" id="cf-link">${t('Usar mi clave o código')}</button>
+        </div>`,
+    });
+    $('#cf-link').addEventListener('click', () => { close(); openLinkSheet(); });
+    $('#cf-new').addEventListener('click', () => { close(); handleCloudToggle(true, { fresh: true }); });
+    return;
+  }
   const input = document.getElementById('cloud-toggle');
   if (input) input.disabled = true;
   try {

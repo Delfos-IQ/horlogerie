@@ -16,6 +16,7 @@ const ORIGIN = 'https://rotor.pedicode-app.workers.dev';   // la web, servida po
 const BASE = '/';
 const SITE = ORIGIN + BASE;
 const APP = ORIGIN + '/app/';                      // la app vive dentro de la web (y la app de Play abre esta dirección)
+const appLink = lang => `${APP}?lang=${lang}`;   // the app opens in the language of the page (if you have not chosen one in the app)
 const PLAY = '';                                   // ← cuando Rotor esté publicado en Google Play, pon aquí su enlace
 const EMAIL = 'pedicode.app@gmail.com';
 const LANGS = { es, en, pt };
@@ -139,7 +140,7 @@ function langHint(c, alternates) {
 }
 
 const ctas = (c, small = false) => `<div class="btns">
-<a class="btn btn-gold" href="${APP}">${esc(small ? c.final.cta : c.hero.cta)}</a>
+<a class="btn btn-gold" href="${appLink(c.lang)}">${esc(small ? c.final.cta : c.hero.cta)}</a>
 ${PLAY ? `<a class="btn btn-line" href="${PLAY}">Google Play</a>` : `<a class="btn btn-line" href="${mailBeta(c)}">${esc(c.hero.cta2)}</a>`}
 </div>`;
 
@@ -323,7 +324,7 @@ function postPage(p, posts) {
 <div class="body">${renderMd(p.md, p.dir)}</div>
 ${p.ai ? `<p class="ai-note">${esc(c.blog.ai)}</p>` : ''}
 <aside class="post-cta"><h2>${esc(c.blog.ctaH)}</h2><p>${esc(c.blog.ctaP)}</p>
-<div class="btns"><a class="btn btn-gold" href="${APP}">${esc(c.final.cta)}</a></div></aside>
+<div class="btns"><a class="btn btn-gold" href="${appLink(p.lang)}">${esc(c.final.cta)}</a></div></aside>
 </article>`;
   const jsonld = [{
     '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.description,
@@ -394,7 +395,7 @@ function legalPages() {
       const raw = readFileSync(join(APP_SRC, it.file), 'utf8');
       const title = (raw.match(/<title>([^<]*)<\/title>/) || [])[1] || 'Rotor';
       let main = (raw.match(/<main>([\s\S]*?)<\/main>/) || [])[1] || '';
-      main = main.replace(/ style="[^"]*"/g, "").replace(/href="\.\/"/g, `href="${APP}"`)
+      main = main.replace(/ style="[^"]*"/g, "").replace(/href="\.\/"/g, `href="${appLink(it.lang)}"`)
                  .replace(/href="\.\/((?:privacidad|privacy|privacidade|ayuda|help|ajuda-pt)\.html)"/g, (m, f) => `href="${url(f)}"`);
       const c = LANGS[it.lang];
       const desc = (main.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').match(/[^.]{40,200}\./) || [c.meta.description])[0].trim();

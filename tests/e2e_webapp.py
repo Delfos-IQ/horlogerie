@@ -28,7 +28,7 @@ async def main():
 
         await page.goto(SITE)
         hrefs = await page.eval_on_selector_all("a.btn-gold", "els => els.map(e => e.getAttribute('href'))")
-        check("la web enlaza a la app en /app/", hrefs and all(h.endswith('/app/') for h in hrefs), str(hrefs))
+        check("la web enlaza a la app en /app/, con el idioma de la página", hrefs and all(h.endswith('/app/?lang=es') for h in hrefs), str(hrefs))
 
         await page.goto(APP)
         await page.wait_for_function("typeof renderHome === 'function'")

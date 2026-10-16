@@ -66,10 +66,12 @@ document.addEventListener('keydown', e => {
 //    to the browser) UNLESS we're already at the root with nothing to
 //    pop — only then does the gesture exit the app, which is correct.
 export let _navState = null; // state of the entry currently shown (popstate only gives the new one)
-export function navPush(st)    { _navState = st; history.pushState(st, '', ''); }
+export function navPush(st)    { st = { ...st, above: true }; _navState = st; history.pushState(st, '', ''); }   // above: there is an entry of ours below
 export function navReplace(st) { _navState = st; history.replaceState(st, '', ''); }
+let _quietPop = false;   // showView('home') already drew the collection: the pop only drops our entry
 window.addEventListener('popstate', e => {
   const targetView = e.state?.view || 'home';
+  if (_quietPop) { _quietPop = false; _navState = e.state || { view: 'home' }; syncBackWatcher(); return; }
 
   // An open sheet or modal closes first instead of navigating away
   if (closeTopOverlay()) {
@@ -96,9 +98,47 @@ window.addEventListener('popstate', e => {
   if (targetView === 'settings') renderSettings();
   if (targetView === 'wishlist') renderWishlist();
   updateFab(targetView);
+  syncBackWatcher();
   // When targetView is 'home' and the user gestures back again, there is
   // no further pushState entry above home, so the browser/OS takes over
   // and correctly exits the app — exactly the behaviour requested.
+});
+
+/* ─── Back gesture on Android (Chrome 120+): CloseWatcher ───
+   Android can skip history entries when it decides the page added them on its own, and then the
+   back gesture leaves the app from any screen. A CloseWatcher receives the gesture first, so:
+   an open sheet closes; another section goes back to the collection; from the collection, the
+   gesture leaves the app (no watcher there). Browsers without CloseWatcher use the history above. */
+let _watcher = null;
+const overlayOpen = () => !!document.querySelector('body > .modal-overlay:not([id])') ||
+  STATIC_MODALS.some(id => { const el = document.getElementById(id); return el && el.style.display !== 'none'; });
+function handleBack() {
+  if (closeTopOverlay()) return syncBackWatcher();
+  if (history.state?.above) history.back();          // popstate renders the screen below (the collection)
+  else if ((_navState?.view || 'home') !== 'home') showView('home');
+  syncBackWatcher();
+}
+export function syncBackWatcher() {
+  if (typeof window.CloseWatcher !== 'function') return;
+  const need = (_navState?.view || 'home') !== 'home' || !!_navState?.hw || overlayOpen();
+  if (need && !_watcher) {
+    try { _watcher = new window.CloseWatcher(); _watcher.onclose = () => { _watcher = null; handleBack(); }; }
+    catch { _watcher = null; }
+  } else if (!need && _watcher) {
+    const w = _watcher; _watcher = null; w.onclose = null; w.destroy();
+  }
+}
+let _syncQueued = false;
+new MutationObserver(() => {
+  if (_syncQueued) return;
+  _syncQueued = true;
+  queueMicrotask(() => { _syncQueued = false; syncBackWatcher(); });
+}).observe(document.body, { childList: true });
+document.addEventListener('DOMContentLoaded', () => {
+  for (const id of STATIC_MODALS) {
+    const el = document.getElementById(id);
+    if (el) new MutationObserver(() => syncBackWatcher()).observe(el, { attributes: true, attributeFilter: ['style'] });
+  }
 });
 
 // Set initial history state on load so there's always a 'home' entry
@@ -192,11 +232,17 @@ export function showView(v) {
   // Push a history state so Android back gesture navigates within the app
   // When on 'home', replace state (no back from home → exits app, correct behaviour)
   // When on any other view, push so back returns to previous view
-  if (v === 'home' || sameView) {
-    navReplace({ view: v });
+  // Every section sits one step above the collection: back always returns to the collection,
+  // and from the collection the gesture leaves the app.
+  if (v === 'home') {
+    if (history.state?.above) { _navState = { view: 'home' }; _quietPop = true; history.back(); }   // drop our entry: back from here exits
+    else navReplace({ view: 'home' });
+  } else if (sameView || history.state?.above) {
+    navReplace({ view: v, above: !!history.state?.above });
   } else {
     navPush({ view: v });
   }
+  syncBackWatcher();
 }
 
 /* FAB shows only on views where "add" makes sense, and calls the right handler */

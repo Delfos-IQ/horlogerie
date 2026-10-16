@@ -50,6 +50,19 @@ function defaultCurrency() {
 
 export const prefs = readPrefs();
 
+/* Opened from the website (…/app/?lang=en): use the language of the page if none has been chosen
+   in the app yet, then tidy the address */
+try {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q) {
+    if (['es', 'en', 'pt'].includes(q) && prefs.lang === 'auto') {
+      prefs.lang = q;
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    }
+    history.replaceState(history.state, '', location.pathname + location.hash);
+  }
+} catch {}
+
 export function setPref(key, value) {
   prefs[key] = value;
   try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}

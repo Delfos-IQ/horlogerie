@@ -153,9 +153,21 @@ async def main():
         await d.wait_for_function("getWatches().length === 2", timeout=8000)
         check("y con un toque se vincula", True)
 
+        # ── Rotor vacío: antes de crear una nube nueva, ofrece traer la colección ──
+        cv, v, ev = await device(b)
+        await v.evaluate("showView('settings')")
+        await v.click("label[for='cloud-toggle']")
+        await v.wait_for_selector("#cf-link", timeout=5000)
+        check("vacío: al activar la nube pregunta si ya usas Rotor en otro dispositivo",
+              'otro dispositivo' in await v.inner_text(".sheet-title") and not await v.evaluate("isCloudEnabled()"))
+        await v.click("#cf-link")
+        await v.wait_for_selector("#link-input", timeout=5000)
+        check("«Usar mi clave o código» abre la recuperación, sin crear una copia vacía", not await v.evaluate("isCloudEnabled()"))
+        await cv.close()
+
         # ── Worker v12 todavía en producción: se mantiene la clave larga ──
         ce, e, ee = await device(b, health='{"status":"ok","version":"12.0","caps":{"importUrl":true}}')
-        await e.evaluate("handleCloudToggle(true)"); await e.wait_for_timeout(800)
+        await e.evaluate("handleCloudToggle(true, { fresh: true })"); await e.wait_for_timeout(800)
         k12 = await e.evaluate("getSessionId()")
         check("con el Worker v12 la clave sigue siendo un UUID (compatibilidad)", len(k12) == 36, k12)
         await e.click("#sk-done")
