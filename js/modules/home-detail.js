@@ -198,6 +198,7 @@ export function renderInspiration() {
    the current season first and reminds which one has been in the box the longest.
    Hidden once something is logged for today. */
 let _moment = null;   // chip chosen in this session (not kept: every opening starts fresh)
+let _surprise = null; // «Sorpréndeme»: a watch picked at random from the rotation
 
 export function renderRecommendation(ws, activeW) {
   const banner = document.getElementById('recommendation-banner');
@@ -213,7 +214,11 @@ export function renderRecommendation(ws, activeW) {
   const fitsSeason = r => (r.watch.moments?.includes(season) ? 1 : 0);
 
   let list, label;
-  if (_moment) {
+  if (_surprise && !pool.some(r => r.watch.id === _surprise)) _surprise = null;
+  if (_surprise) {
+    list = [pool.find(r => r.watch.id === _surprise)];
+    label = t('Al azar');
+  } else if (_moment) {
     list = pool.filter(r => r.watch.moments?.includes(_moment));
     label = t('Para «{m}»', { m: t(momentById(_moment).label) });
   } else {
@@ -241,7 +246,7 @@ export function renderRecommendation(ws, activeW) {
   const showIdle = idlest && idlest.watch.id !== w.id;
   banner.innerHTML = `${chips}
     <div class="recommendation-card" role="button" tabindex="0" aria-label="${t('Recomendación')}: ${name(w)}">
-      <div class="rec-icon"><i class="ti ${_moment ? momentById(_moment).icon : 'ti-sparkles'}" aria-hidden="true"></i></div>
+      <div class="rec-icon"><i class="ti ${_surprise ? 'ti-sparkles' : _moment ? momentById(_moment).icon : 'ti-sparkles'}" aria-hidden="true"></i></div>
       <div class="rec-body">
         <div class="rec-label">${label}</div>
         <div class="rec-watch">${name(w)}${w.favorite ? ` <i class="ti ti-star" aria-label="${t('Favorito')}"></i>` : ''}</div>
@@ -250,7 +255,9 @@ export function renderRecommendation(ws, activeW) {
       </div>
       <button class="rec-wear" id="rec-wear" aria-label="${t('Ponérmelo')}: ${name(w)}"><i class="ti ti-hand-finger" aria-hidden="true"></i><span>${t('Ponérmelo')}</span></button>
     </div>
-    ${showIdle ? `<button type="button" class="rec-idle" id="rec-idle"><i class="ti ti-hourglass" aria-hidden="true"></i>
+    ${pool.length > 1 ? `<button type="button" class="rec-idle rec-dice" id="rec-dice"><i class="ti ti-sparkles" aria-hidden="true"></i>
+      <span>${_surprise ? t('Otro al azar') : t('Sorpréndeme: uno al azar')}</span></button>` : ''}
+    ${showIdle && !_surprise ? `<button type="button" class="rec-idle" id="rec-idle"><i class="ti ti-hourglass" aria-hidden="true"></i>
       <span>${t('Más tiempo en la caja')}: <b>${name(idlest.watch)}</b> · ${formatLastWorn(idlest.stats).toLowerCase()}</span></button>` : ''}`;
   const card = banner.querySelector('.recommendation-card');
   card.addEventListener('click', () => openDetail(w.id));
@@ -261,11 +268,19 @@ export function renderRecommendation(ws, activeW) {
     renderHome();
   });
   banner.querySelector('#rec-idle')?.addEventListener('click', () => openDetail(idlest.watch.id));
+  banner.querySelector('#rec-dice')?.addEventListener('click', () => {
+    const choices = pool.filter(r => r.watch.id !== w.id);
+    _surprise = choices[Math.floor(Math.random() * choices.length)].watch.id;
+    _moment = null;
+    renderRecommendation(ws, activeW);
+    banner.querySelector('#rec-dice')?.focus();
+  });
   bindChips(banner, ws, activeW);
 }
 function bindChips(banner, ws, activeW) {
   banner.querySelectorAll('.rec-chip').forEach(b => b.addEventListener('click', () => {
     _moment = _moment === b.dataset.moment ? null : b.dataset.moment;
+    _surprise = null;
     renderRecommendation(ws, activeW);
     banner.querySelector(`.rec-chip[data-moment="${b.dataset.moment}"]`)?.focus();
   }));

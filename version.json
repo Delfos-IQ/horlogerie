@@ -1,5 +1,5 @@
 {
-  "version": "2.21.0",
+  "version": "2.22.0",
   "date": "2026-10-17",
-  "notes": "Un solo reloj puesto a la vez: «Ponérmelo» lo pone y cuenta el tiempo, y quita el anterior. La colección marca el que llevas. El logo abre la web también en la app instalada."
+  "notes": "Horas reales en la muñeca, «Más tiempo en la caja» y «Horas en la muñeca» en el ranking, y «Sorpréndeme» para que Rotor te proponga uno al azar."
 }

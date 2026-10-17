@@ -4,7 +4,7 @@
  */
 
 /** A wear interval: from start to end, in ms. Each calendar day touched counts as one day worn. */
-interface HistoryEntry { start: number; end: number }
+interface HistoryEntry { start: number; end: number; /** real time on the wrist (put on → taken off), not a logged day */ timed?: boolean }
 
 interface Watch {
   id: string;
@@ -67,5 +67,7 @@ interface WearStats {
   lastWorn: number | null;
   daysSinceLast: number | null;
   active: boolean;
+  /** hours on the wrist, from timed sessions (put on → taken off) and the one in progress */
+  hoursWorn: number;
   costPerWear: number | null;
 }

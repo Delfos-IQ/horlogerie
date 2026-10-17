@@ -1126,8 +1126,9 @@ button:focus-visible,
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 0; background: transparent; border: none;
   color: var(--light); font-family: var(--font-body); font-size: 13px; text-align: left; cursor: pointer;
 }
-.rk-least-item span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rk-least-item > span:not(.cal-chip) { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rk-least-item em { font-style: normal; font-size: 11px; color: var(--danger); flex-shrink: 0; }
+.rk-least-item em.is-neutral { color: var(--gold-light); }
 
 .hw-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; padding-bottom: 8px; }
 .hw-card {
@@ -1168,7 +1169,7 @@ button:focus-visible,
   width: 36px; height: 36px; border-radius: 10px; border: 0.5px solid var(--glass-border); background: transparent;
   color: var(--mid); font-size: 16px; cursor: pointer; flex-shrink: 0;
 }
-.hw-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.hw-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-bottom: 14px; }
 .hw-stats .spec-card { cursor: default; }
 .hw-stats .spec-value { font-size: 16px; font-variant-numeric: tabular-nums; }
 .hw-bars { display: flex; align-items: flex-end; gap: 4px; height: 96px; margin-bottom: 14px; }
@@ -1586,3 +1587,5 @@ a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold
 
 /* Ficha del reloj puesto: «Lo llevas puesto desde las 09:12» sobre «Quitármelo» */
 .wearing-now { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 14px; color: var(--light); }
+
+.rk-note { font-size: 11px; color: var(--mid); margin-top: 6px; line-height: 1.4; }

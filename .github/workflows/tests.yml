@@ -79,6 +79,9 @@ jobs:
       - name: Momentos (ocasión, ánimo, estación) y bienvenida con historia
         run: python tests/e2e_moments.py
 
+      - name: Tiempo en la muñeca, métricas del historial y «Sorpréndeme»
+        run: python tests/e2e_metrics.py
+
       - name: Inglés, tema, moneda, bienvenida y ficha por secciones
         run: python tests/e2e_i18n.py
 

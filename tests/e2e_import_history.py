@@ -209,7 +209,7 @@ async def main():
         check("cada fila lleva miniatura", chips == 10)
         first_all = await page.inner_text("#ranking-body .rk-row:nth-of-type(1) .rk-name")
         check("en «Todo» gana el reloj con días del año pasado", 'Marca00' in first_all, first_all)
-        least = await page.locator("#ranking-body .rk-least-item").count()
+        least = await page.locator("#ranking-body .rk-least").first.locator(".rk-least-item").count()
         check("debajo, los 3 menos usados", least == 3, str(least))
         year = await page.evaluate("new Date().getFullYear() - 1")
         await page.click(f"#ranking-body .year-chip[data-year='{year}']")

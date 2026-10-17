@@ -25,8 +25,8 @@ export function calendarDaysBetween(a, b) {
 
 /** All intervals of a watch, including the live one */
 export function wearIntervals(w, now = Date.now()) {
-  const all = (w.history || []).map((h, i) => ({ start: h.start, end: h.end || h.start, idx: i }));
-  if (w.wearStart) all.push({ start: w.wearStart, end: now, active: true, idx: -1 });
+  const all = (w.history || []).map((h, i) => ({ start: h.start, end: h.end || h.start, idx: i, timed: !!h.timed }));
+  if (w.wearStart) all.push({ start: w.wearStart, end: now, active: true, timed: true, idx: -1 });
   return all.sort((a, b) => a.start - b.start);
 }
 
@@ -71,6 +71,7 @@ export function wearStats(w, now = Date.now()) {
     lastWorn,
     daysSinceLast: lastWorn === null ? null : (w.wearStart ? 0 : calendarDaysBetween(lastWorn, now)),
     active: !!w.wearStart,
+    hoursWorn: ivs.filter(i => i.timed).reduce((h, i) => h + (i.end - i.start), 0) / 3600000,
     costPerWear: price && keys.size ? price / keys.size : null,
   };
 }

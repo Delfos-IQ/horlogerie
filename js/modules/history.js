@@ -74,6 +74,12 @@ export function daysIn(w, year = _histYear) {
 }
 export function periodLabel(year = _histYear) { return year === 'all' ? t('desde el principio') : t('en {y}', { y: year }); }
 const dd = n => n === 1 ? t('1 día') : t('{n} días', { n });
+/** «3 h 20 min» · «45 min» */
+export function fmtDur(ms) {
+  const m = Math.max(1, Math.round(ms / 60000)), h = Math.floor(m / 60), r = m % 60;
+  return h ? (r ? t('{h} h {m} min', { h, m: r }) : t('{h} h', { h })) : t('{m} min', { m });
+}
+const hhmm = ts => new Date(ts).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 export function yearChipsHTML() {
   const ys = histYears();
   if (_histYear !== 'all' && !ys.includes(_histYear)) _histYear = 'all';
@@ -150,9 +156,31 @@ export function renderRanking() {
         <span>${escHtml(d.w.brand)} ${escHtml(d.w.model)}</span><em>${d.days ? `${d.days} d` : t('sin uso')}</em></button>`).join('')}
     </div>` : '';
 
+  // Longest in the box: watches in rotation by days since last worn (never worn first)
+  const idle = ws.filter(w => w.rotation !== false && !w.wearStart).map(w => ({ w, st: wearStats(w) }))
+    .sort((a, b) => (b.st.daysSinceLast ?? 1e9) - (a.st.daysSinceLast ?? 1e9)).slice(0, 5);
+  const idleHTML = idle.length > 1 ? `
+    <div class="rk-least">
+      <div class="rk-least-title">${t('Más tiempo en la caja')}</div>
+      ${idle.map(d => `<button class="rk-least-item" data-wid="${escHtml(d.w.id)}">${watchChip(d.w, 26)}
+        <span>${escHtml(d.w.brand)} ${escHtml(d.w.model)}</span><em>${d.st.daysSinceLast === null ? t('sin estrenar')
+          : d.st.daysSinceLast === 0 ? t('hoy') : d.st.daysSinceLast === 1 ? t('ayer') : t('{n} días', { n: d.st.daysSinceLast })}</em></button>`).join('')}
+    </div>` : '';
+  // Hours on the wrist (only real time: put on → taken off), in the chosen period
+  const inYear = i => _histYear === 'all' || new Date(i.start).getFullYear() === Number(_histYear);
+  const hours = ws.map(w => ({ w, ms: wearIntervals(w).filter(i => i.timed && inYear(i)).reduce((s, i) => s + i.end - i.start, 0) }))
+    .filter(d => d.ms > 0).sort((a, b) => b.ms - a.ms).slice(0, 5);
+  const hoursHTML = hours.length ? `
+    <div class="rk-least">
+      <div class="rk-least-title">${t('Horas en la muñeca')} ${periodLabel()}</div>
+      ${hours.map(d => `<button class="rk-least-item" data-wid="${escHtml(d.w.id)}">${watchChip(d.w, 26)}
+        <span>${escHtml(d.w.brand)} ${escHtml(d.w.model)}</span><em class="is-neutral">${fmtDur(d.ms)}</em></button>`).join('')}
+      <div class="rk-note">${t('Cuenta desde que te lo pones hasta que te lo quitas o te pones otro.')}</div>
+    </div>` : '';
+
   body.innerHTML = usageInsightsHTML(ws) + yearChipsHTML() + (top.length
     ? `<div class="rk-head">${t('{d} con reloj {p} · los {n} más usados', { d: dd(total), p: periodLabel(), n: top.length })}</div>${rows}`
-    : `<div class="history-empty pad-32">${t('Sin usos apuntados {p}.', { p: periodLabel() })}</div>`) + leastHTML;
+    : `<div class="history-empty pad-32">${t('Sin usos apuntados {p}.', { p: periodLabel() })}</div>`) + leastHTML + idleHTML + hoursHTML;
   bindYearChips(body, renderRanking);
   body.querySelectorAll('[data-wid]').forEach(b => b.addEventListener('click', () => openHistWatch(b.dataset.wid)));
 }
@@ -237,6 +265,7 @@ export function renderHistoryBody() {
       <div class="spec-card"><div class="spec-label">${t('Días de uso')}</div><div class="spec-value">${keys.length}</div></div>
       <div class="spec-card"><div class="spec-label">${t('De tus días')}</div><div class="spec-value">${share}%</div></div>
       <div class="spec-card"><div class="spec-label">${t('Última vez')}</div><div class="spec-value">${last}</div></div>
+      ${st.hoursWorn > 0 ? `<div class="spec-card"><div class="spec-label">${t('En la muñeca')}</div><div class="spec-value">${fmtDur(st.hoursWorn * 3600000)}</div></div>` : ''}
     </div>
     ${barsHTML}
     <button class="chip-btn" id="hist-add"><i class="ti ti-calendar-plus" aria-hidden="true"></i> ${t('Apuntar un uso')}</button>
@@ -274,8 +303,9 @@ export function intervalsHTML(w, year = 'all') {
       <div class="month-label">${month}</div>
       ${intervals.map(i => {
         const days = calendarDaysBetween(i.start, i.end) + 1;
-        const dates = days === 1 ? formatDate(i.start) : `${formatDate(i.start)} → ${i.active ? t('ahora') : formatDate(i.end)}`;
-        const dur = i.active ? elapsedSince(i.start) : dd(days);
+        const dates = i.timed && days === 1 ? `${formatDate(i.start)} · ${hhmm(i.start)}–${i.active ? t('ahora') : hhmm(i.end)}`
+          : days === 1 ? formatDate(i.start) : `${formatDate(i.start)} → ${i.active ? t('ahora') : formatDate(i.end)}`;
+        const dur = i.active ? elapsedSince(i.start) : i.timed ? fmtDur(i.end - i.start) : dd(days);
         return `<div class="interval-row">
           <div class="interval-dates">${dates}</div>
           <div class="interval-duration">${dur}${i.active ? ' <span class="c-ok">●</span>' : ''}</div>

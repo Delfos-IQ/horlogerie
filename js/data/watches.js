@@ -112,7 +112,7 @@ export function stopWearing(id) {
   if (!w || !w.wearStart) return false;
   if (!w.history) w.history = [];
   const now = Date.now();
-  w.history.push({ start: w.wearStart, end: now });
+  w.history.push({ start: w.wearStart, end: now, timed: true });   // real time on the wrist
   w.wearStart = null;
   w.updatedAt = now;
   save();

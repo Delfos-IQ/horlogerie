@@ -108,7 +108,7 @@ export function sanitizeWatch(raw) {
   const specs = {};
   for (const k of SPEC_KEYS) if (raw.specs?.[k]) specs[k] = _str(raw.specs[k], 200);
   const history = (Array.isArray(raw.history) ? raw.history : [])
-    .map(h => ({ start: _num(h?.start), end: _num(h?.end) }))
+    .map(h => ({ start: _num(h?.start), end: _num(h?.end), ...(h?.timed === true ? { timed: true } : {}) }))
     .filter(h => h.start && h.end && h.end >= h.start);
   const w = {
     id, brand, model,
