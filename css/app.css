@@ -1583,3 +1583,6 @@ a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold
 .bn-actions { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; flex-wrap: wrap; }
 .bn-open { font-size: 13px; font-weight: 500; color: var(--gold-light); text-decoration: none; padding: 6px 4px; }
 .bn-ok { font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 999px; border: 0.5px solid var(--glass-border); background: none; color: var(--light); cursor: pointer; }
+
+/* Ficha del reloj puesto: «Lo llevas puesto desde las 09:12» sobre «Quitármelo» */
+.wearing-now { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 14px; color: var(--light); }

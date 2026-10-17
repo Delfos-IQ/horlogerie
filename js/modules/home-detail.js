@@ -1,5 +1,5 @@
 /* ─── HOME ─── */
-import { MOMENTS, currentSeason, momentById, addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, photoSrc, maintenanceAlerts, markWornToday, removeWearDay, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
+import { MOMENTS, currentSeason, momentById, addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, photoSrc, maintenanceAlerts, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
 import { openSheet, showConfirm } from './sheet.js';
 import { dialArt, elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui } from './core.js';
 import { openEditModal } from './modals.js';
@@ -95,10 +95,10 @@ export function renderToday(ws, activeW) {
   } else if (today.length) {
     box.innerHTML = `<div class="today-card is-done">
       <div class="today-main">
-        <span class="today-label"><i class="ti ti-circle-check" aria-hidden="true"></i>${t('Hoy llevas')}</span>
+        <span class="today-label"><i class="ti ti-circle-check" aria-hidden="true"></i>${t('Hoy has llevado')}</span>
         <span class="today-name">${today.map(name).join(' · ')}</span>
       </div>
-      <button class="today-btn ghost" id="today-change">${t('Cambiar')}</button>
+      <button class="today-btn" id="today-change"><i class="ti ti-hand-finger" aria-hidden="true"></i>${t('Me pongo…')}</button>
     </div>`;
   } else {
     box.innerHTML = `<div class="today-card">
@@ -106,7 +106,7 @@ export function renderToday(ws, activeW) {
         <span class="today-label">${t('Hoy')}</span>
         <span class="today-name muted">${t('¿Qué reloj llevas?')}</span>
       </div>
-      <button class="today-btn" id="today-change"><i class="ti ti-hand-finger" aria-hidden="true"></i>${t('Hoy llevo…')}</button>
+      <button class="today-btn" id="today-change"><i class="ti ti-hand-finger" aria-hidden="true"></i>${t('Me pongo…')}</button>
     </div>`;
   }
   box.querySelector('#today-change')?.addEventListener('click', openTodaySheet);
@@ -117,42 +117,43 @@ export function renderToday(ws, activeW) {
   }
 }
 
-/** Sheet to pick today's watch: rotation order first (the one that is due on top) */
+/** Sheet «¿Qué reloj llevas?»: one watch on the wrist at a time. Picking one puts it on (the
+    previous one goes to the history); rotation order first, the one that is due on top. */
 export function openTodaySheet() {
-  const sh = openSheet({ label: t('Hoy llevo…'), html: '', onClose: () => renderHome() });
-  function paint() {
-    const ws = getWatches();
-    const ranked = rankWatchesForRotation(ws).map(r => r.watch);
-    const rest = ws.filter(w => !ranked.includes(w))
-      .sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
-    const todayIds = new Set(wornTodayList(ws).map(w => w.id));
-    const dueId = ranked.find(w => !todayIds.has(w.id))?.id;
-    const row = w => {
-      const on = todayIds.has(w.id);
-      return `<button class="today-pick${on ? ' on' : ''}" data-id="${escHtml(w.id)}" aria-pressed="${on}">
-        ${watchChip(w, 40)}
-        <span class="today-pick-txt"><b>${name(w)}</b><small>${w.id === dueId ? `<em>${t('Más tiempo en la caja')}</em> · ` : ''}${escHtml(shortLastWorn(w))}</small></span>
-        <i class="ti ${on ? 'ti-circle-check' : 'ti-circle'}" aria-hidden="true"></i>
-      </button>`;
-    };
-    sh.setContent(`<div class="modal-title">${t('Hoy llevo…')}</div>
-      <div class="sheet-text">${t('Toca el reloj que llevas hoy. Puedes marcar más de uno.')}</div>
-      <div class="today-list">${[...ranked, ...rest].map(row).join('')}</div>
-      <button class="modal-btn modal-btn-save sheet-done" data-close>${t('Hecho')}</button>`);
-    sh.$$('.today-pick').forEach(b => b.addEventListener('click', () => {
-      const id = b.dataset.id, w = getWatch(id);
-      if (todayIds.has(id)) {
-        const r = removeWearDay(id, Date.now());
-        if (r === 'active') { showToast(t('Lo llevas puesto ahora: quítatelo desde su ficha')); return; }
-        showToast(t('Quitado de hoy'));
-      } else {
-        markWornToday(id);
-        showToast(t('Apuntado: hoy llevas el {w}', { w: `${w.brand} ${w.model}` }));
-      }
-      paint();
-    }));
-  }
-  paint();
+  const sh = openSheet({ label: t('¿Qué reloj llevas?'), html: '', onClose: () => renderHome() });
+  const ws = getWatches();
+  const active = getActiveWatch();
+  const ranked = rankWatchesForRotation(ws).map(r => r.watch);
+  const rest = ws.filter(w => !ranked.includes(w))
+    .sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
+  const todayIds = new Set(wornTodayList(ws).map(w => w.id));
+  const dueId = ranked.find(w => !todayIds.has(w.id))?.id;
+  const row = w => {
+    const on = active?.id === w.id;
+    const sub = on ? `<em>${t('Puesto ahora')}</em> · ${escHtml(elapsedShort(w.wearStart))}`
+      : `${w.id === dueId ? `<em>${t('Más tiempo en la caja')}</em> · ` : ''}${escHtml(shortLastWorn(w))}`;
+    return `<button class="today-pick${on ? ' on' : ''}" data-id="${escHtml(w.id)}" role="radio" aria-checked="${on}">
+      ${watchChip(w, 40)}
+      <span class="today-pick-txt"><b>${name(w)}</b><small>${sub}</small></span>
+      <i class="ti ${on ? 'ti-circle-check' : 'ti-circle'}" aria-hidden="true"></i>
+    </button>`;
+  };
+  sh.setContent(`<div class="modal-title">${t('¿Qué reloj llevas?')}</div>
+    <div class="sheet-text">${t('Toca el que llevas ahora. Si cambias de reloj, el anterior se guarda en el historial.')}</div>
+    <div class="today-list" role="radiogroup">${[active, ...[...ranked, ...rest].filter(w => w !== active)].filter(Boolean).map(row).join('')}</div>
+    <div class="modal-actions">
+      ${active ? `<button class="modal-btn modal-btn-cancel" id="today-off"><i class="ti ti-player-stop" aria-hidden="true"></i> ${t('Me lo he quitado')}</button>` : ''}
+      <button class="modal-btn modal-btn-save" data-close>${t('Hecho')}</button>
+    </div>`);
+  sh.$$('.today-pick').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.id !== active?.id) handleSwitchWearing(b.dataset.id, { reopen: false });
+    sh.close();
+  }));
+  sh.$('#today-off')?.addEventListener('click', () => {
+    if (stopWearing(active.id)) showToast(t('Guardado en el historial'));
+    stopActiveTimer();
+    sh.close();
+  });
 }
 
 /* ─── Welcome: a different watch-history fact (or idea) every time the app opens ───
@@ -247,7 +248,7 @@ export function renderRecommendation(ws, activeW) {
         <div class="rec-reason">${formatLastWorn(top.stats)}</div>
         ${others.length ? `<div class="rec-others">${t('También')}: ${others.join(' · ')}</div>` : ''}
       </div>
-      <button class="rec-wear" id="rec-wear" aria-label="${t('Lo llevo hoy')}: ${name(w)}"><i class="ti ti-check" aria-hidden="true"></i><span>${t('Lo llevo hoy')}</span></button>
+      <button class="rec-wear" id="rec-wear" aria-label="${t('Ponérmelo')}: ${name(w)}"><i class="ti ti-hand-finger" aria-hidden="true"></i><span>${t('Ponérmelo')}</span></button>
     </div>
     ${showIdle ? `<button type="button" class="rec-idle" id="rec-idle"><i class="ti ti-hourglass" aria-hidden="true"></i>
       <span>${t('Más tiempo en la caja')}: <b>${name(idlest.watch)}</b> · ${formatLastWorn(idlest.stats).toLowerCase()}</span></button>` : ''}`;
@@ -256,8 +257,7 @@ export function renderRecommendation(ws, activeW) {
   card.addEventListener('keydown', e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(w.id); } });
   banner.querySelector('#rec-wear').addEventListener('click', e => {
     e.stopPropagation();
-    markWornToday(w.id);
-    showToast(t('Apuntado: hoy llevas el {w}', { w: `${w.brand} ${w.model}` }));
+    handleSwitchWearing(w.id, { reopen: false });
     renderHome();
   });
   banner.querySelector('#rec-idle')?.addEventListener('click', () => openDetail(idlest.watch.id));
@@ -428,27 +428,29 @@ export function stopActiveTimer() {
   if (ui.activeTimer) { clearInterval(ui.activeTimer); ui.activeTimer = null; }
 }
 
-/* Main action: «Lo llevo hoy» (one tap). Timing a session is optional. */
+/* Main action: «Ponérmelo». Only one watch is on the wrist at a time: putting one on takes the
+   previous one off (its time goes to the history) and starts counting for this one. */
 export function renderDetailActions(w) {
   const div = document.getElementById('d-actions');
   const activeW = getActiveWatch();
   const todayDone = wornDayKeys(w).has(dayKey(Date.now()));
   let main;
   if (w.wearStart) {
-    main = `<button class="action-btn btn-stop" data-act="stop"><i class="ti ti-player-stop" aria-hidden="true"></i> ${t('Quitármelo')}</button>
+    const since = new Date(w.wearStart).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+    main = `<div class="wearing-now"><span class="live-dot" aria-hidden="true"></span>${calendarDaysBetween(w.wearStart, Date.now()) === 0
+              ? t('Lo llevas puesto desde las {h}', { h: since }) : t('Lo llevas puesto desde el {d}', { d: formatDate(w.wearStart) })}</div>
+            <button class="action-btn btn-stop" data-act="stop"><i class="ti ti-player-stop" aria-hidden="true"></i> ${t('Quitármelo')}</button>
             <div class="action-hint">${t('El tiempo puesto se guarda en el historial.')}</div>`;
   } else {
-    main = `<button class="action-btn btn-wear" data-act="today" ${todayDone ? 'disabled' : ''}>
-              <i class="ti ti-${todayDone ? 'circle-check' : 'check'}" aria-hidden="true"></i> ${todayDone ? t('Hoy ya cuenta') : t('Lo llevo hoy')}</button>`;
+    const hint = activeW ? t('Te quitas el {w}: su tiempo se guarda en el historial.', { w: `${activeW.brand} ${activeW.model}` })
+      : todayDone ? t('Hoy ya lo llevaste: puedes volver a ponértelo.') : t('Rotor cuenta el tiempo hasta que te lo quites o te pongas otro.');
+    main = `<button class="action-btn btn-wear" data-act="wear"><i class="ti ti-hand-finger" aria-hidden="true"></i> ${t('Ponérmelo')}</button>
+            <div class="action-hint">${hint}</div>`;
   }
-  const timing = w.wearStart ? '' : activeW
-    ? `<button class="chip-btn" data-act="switch" title="${t('Ahora llevas el {w}: se cerrará su sesión.', { w: `${activeW.brand} ${activeW.model}` })}"><i class="ti ti-switch-horizontal" aria-hidden="true"></i> ${t('Cambiar a este reloj')}</button>`
-    : `<button class="chip-btn" data-act="start"><i class="ti ti-player-play" aria-hidden="true"></i> ${t('Medir tiempo puesto')}</button>`;
   div.innerHTML = `
     ${main}
     <div class="wear-quick">
       <button class="chip-btn" data-act="past"><i class="ti ti-calendar-plus" aria-hidden="true"></i> ${t('Otro día')}</button>
-      ${timing}
       <button class="chip-btn${w.favorite ? ' on' : ''}" data-act="fav" aria-pressed="${!!w.favorite}">
         <i class="ti ti-star" aria-hidden="true"></i> ${t('Favorito')}</button>
       <button class="chip-btn${w.rotation === false ? ' on' : ''}" data-act="rotation" aria-pressed="${w.rotation === false}">
@@ -457,13 +459,7 @@ export function renderDetailActions(w) {
   div.querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', () => {
     const act = btn.dataset.act;
     if (act === 'stop')   return handleStopWearing(w.id);
-    if (act === 'start')  return handleStartWearing(w.id);
-    if (act === 'switch') return handleSwitchWearing(w.id);
-    if (act === 'today') {
-      const r = markWornToday(w.id);
-      showToast(r === 'already' ? t('Hoy ya estaba apuntado') : t('Apuntado: lo llevas hoy'));
-      return openDetail(w.id);
-    }
+    if (act === 'wear')   return handleSwitchWearing(w.id);
     if (act === 'past') return openWearSheet(w.id);
     if (act === 'fav') { setWatchFlag(w.id, 'favorite', !w.favorite); return openDetail(w.id); }
     if (act === 'rotation') {
@@ -663,12 +659,12 @@ export function handleStartWearing(id) {
 export function handleStopWearing(id) {
   if (stopWearing(id)) { showToast(t('Guardado en el historial')); stopActiveTimer(); showView('home'); }
 }
-export function handleSwitchWearing(id) {
+export function handleSwitchWearing(id, { reopen = true } = {}) {
   const w = getWatch(id);
-  if (switchToWatch(id)) {
-    showToast(t('Ahora llevas el {w}', { w: `${w.brand} ${w.model}` }));
-    openDetail(id);
-  }
+  if (!switchToWatch(id)) return false;
+  showToast(t('Ahora llevas el {w}', { w: `${w.brand} ${w.model}` }));
+  if (reopen) openDetail(id);
+  return true;
 }
 
 /* ─── Date sheet: log a past wear or edit/delete a history entry ─── */

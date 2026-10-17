@@ -96,13 +96,13 @@ async def main():
         # ── Al apuntar el reloj del día, la sugerencia se va ──
         await page.click("#rec-wear")
         await page.wait_for_timeout(150)
-        check("con un reloj apuntado hoy, no hay sugerencia", (await page.inner_text("#recommendation-banner")).strip() == '')
+        check("al ponerte el reloj sugerido, la sugerencia se va", (await page.inner_text("#recommendation-banner")).strip() == '')
 
         # ── Inglés ──
         await page.evaluate("localStorage.setItem('rotor_prefs_v1', JSON.stringify({ lang: 'en', onboarded: true })); location.reload()")
         await page.wait_for_function("typeof renderHome === 'function'"); await page.wait_for_timeout(2200)
         await page.keyboard.press("Escape")
-        await page.evaluate("getWatches().forEach(w => removeWearDay(w.id, Date.now())); renderHome()")
+        await page.evaluate("getWatches().forEach(w => { if (w.wearStart) stopWearing(w.id); removeWearDay(w.id, Date.now()); }); renderHome()")
         rec = await page.text_content("#recommendation-banner")
         insp = await page.text_content("#inspiration-card .insp-text")
         check("en inglés: chips y bienvenida traducidos", 'What do you feel like today?' in rec and not any(x in insp for x in (' el ', ' la ', ' de ')), rec[:120])

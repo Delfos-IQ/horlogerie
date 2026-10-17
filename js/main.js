@@ -34,12 +34,11 @@ import { fillBrowserLine, mountBrowserNotice } from './browser-check.js';
 i18n.applyTheme();
 i18n.translateDOM();
 
-// Logo and name lead to the Rotor website in the browser. In the installed app
-// (Play or added to the home screen) they are not links: leaving the app by
-// tapping the logo would be a surprise. Settings → About keeps the web link.
+// Logo and name lead to the Rotor website. In the installed app (Play or added to the home
+// screen) the website opens in the browser, on top: the app stays as it was underneath.
 const installed = window.matchMedia?.('(display-mode: standalone)').matches
   || navigator.standalone === true || document.referrer.startsWith('android-app://');
-if (installed) document.querySelectorAll('[data-web-brand]').forEach(a => { a.removeAttribute('href'); a.removeAttribute('title'); });
+if (installed) document.querySelectorAll('[data-web-brand]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
 storage.setNotifier(msg => core.showToast(i18n.t(msg)));
 
 /* ── Actions available to data-action="…" (and data-arg) ── */

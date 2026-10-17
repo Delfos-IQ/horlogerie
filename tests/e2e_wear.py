@@ -130,12 +130,12 @@ async def main():
         # «Hoy llevo…»: the sheet puts the one that is due first
         await page.click("#today-change")
         first = await page.inner_text(".today-pick >> nth=0")
-        check("«Hoy llevo…» pone primero el que lleva más tiempo en la caja", 'Orient' in first and 'Más tiempo en la caja' in first, first)
+        check("«¿Qué reloj llevas?» pone primero el que lleva más tiempo en la caja", 'Orient' in first and 'Más tiempo en la caja' in first, first)
         await page.keyboard.press("Escape")
         await page.evaluate("getWatches().forEach(w => removeWearDay(w.id, Date.now())); showView('home')")
         await page.wait_for_timeout(100)
         today_txt = await page.inner_text("#today-card")
-        check("sin nada apuntado hoy, la portada pregunta qué reloj llevas", 'Hoy llevo' in today_txt, today_txt)
+        check("sin nada apuntado hoy, la portada pregunta qué reloj llevas", 'Me pongo' in today_txt, today_txt)
         rec = await page.inner_text("#recommendation-banner")
         check("recomienda el que nunca se ha puesto, sin el aviso alarmista del aceite",
               'Todavía no lo has llevado' in rec and 'aceite' not in rec.lower() and 'para hoy' in rec.lower(), rec)
@@ -145,7 +145,36 @@ async def main():
         st_o = await page.evaluate("id => wearStats(getWatch(id))", top)
         today_txt = await page.inner_text("#today-card")
         brand = await page.evaluate("id => getWatch(id).brand", top)
-        check("«Lo llevo hoy» desde la sugerencia apunta el día con un toque", st_o['daysSinceLast'] == 0 and brand in today_txt, today_txt)
+        check("«Ponérmelo» desde la sugerencia lo pone (cuenta hoy y el tiempo)",
+              st_o['daysSinceLast'] == 0 and brand in today_txt and await page.evaluate("id => !!getWatch(id).wearStart", top), today_txt)
+
+        # ── Solo un reloj puesto a la vez (ficha, portada y «¿Qué reloj llevas?») ──
+        other = await page.evaluate("id => getWatches().find(w => w.id !== id && w.rotation !== false).id", top)
+        await page.evaluate("id => openDetail(id)", other); await page.wait_for_timeout(150)
+        acts = await page.text_content("#d-actions")
+        check("en otro reloj: «Ponérmelo» (ni «Hoy ya cuenta» ni «Medir tiempo puesto») y avisa de que te quitas el actual",
+              'Ponérmelo' in acts and 'Hoy ya cuenta' not in acts and 'Medir tiempo' not in acts and 'Te quitas el' in acts, acts)
+        hist_top = await page.evaluate("id => getWatch(id).history.length", top)
+        await page.click("[data-act='wear']"); await page.wait_for_timeout(150)
+        st = await page.evaluate("([a, b]) => ({ top: !!getWatch(a).wearStart, other: !!getWatch(b).wearStart, h: getWatch(a).history.length, n: getWatches().filter(w => w.wearStart).length })", [top, other])
+        check("al ponerte otro, el anterior se quita y su tiempo pasa al historial (solo uno puesto)",
+              st['other'] and not st['top'] and st['h'] == hist_top + 1 and st['n'] == 1, str(st))
+        acts = await page.text_content("#d-actions")
+        check("la ficha del puesto dice desde cuándo y ofrece «Quitármelo»", 'desde las' in acts and 'Quitármelo' in acts, acts)
+        await page.evaluate("showView('home')"); await page.wait_for_timeout(150)
+        badges = await page.eval_on_selector_all(".watch-card .active-badge", "els => els.map(e => e.closest('.watch-card').dataset.id)")
+        check("en la colección, solo el puesto lleva la etiqueta «Puesto»", badges == [other], str(badges))
+        await page.click("#today-change"); await page.wait_for_timeout(150)
+        first = await page.inner_text(".today-pick >> nth=0")
+        check("«¿Qué reloj llevas?»: el puesto, arriba y marcado", 'Puesto ahora' in first, first)
+        await page.click(f".today-pick[data-id='{top}']"); await page.wait_for_timeout(150)
+        check("tocar otro en la hoja lo pone y quita el anterior",
+              await page.evaluate("([a, b]) => !!getWatch(a).wearStart && !getWatch(b).wearStart", [top, other]))
+        await page.click("#today-change"); await page.wait_for_timeout(150)
+        await page.click("#today-off"); await page.wait_for_timeout(150)
+        today_txt = await page.text_content("#today-card")
+        check("«Me lo he quitado»: nada puesto, y la portada recuerda lo llevado hoy",
+              await page.evaluate("getWatches().every(w => !w.wearStart)") and 'Hoy has llevado' in today_txt, today_txt)
 
         # ── Coste por uso y mantenimiento ──
         await page.evaluate("id => updateWatch(id, {purchasePrice: 120})", A)
