@@ -1,6 +1,6 @@
 /* ─── ADD / EDIT MODAL ─── */
 import { dbGet, dbLoad, dbSearch } from '../db.js';
-import { MOMENT_GROUPS, addWatch, cleanMoments, compressPhoto, getWatch, photoSrc, updateWatch } from '../storage.js';
+import { FAMILIES, MOMENT_GROUPS, addWatch, cleanFamily, cleanMoments, compressPhoto, getWatch, guessFamily, photoSrc, updateWatch } from '../storage.js';
 import { escHtml, showToast, ui } from './core.js';
 import { openSheet } from './sheet.js';
 import { openDetail, renderHome } from './home-detail.js';
@@ -21,6 +21,7 @@ export function openAddModal() {
   document.getElementById('f-ref').value    = '';
   document.getElementById('f-type').value   = 'automatic';
   document.getElementById('f-notes').value  = '';
+  setFamilyField(null, true);
   renderMomentsPicker([]);
   setMaintFields({});
   document.getElementById('photo-preview').style.display = 'none';
@@ -73,6 +74,8 @@ export function openEditModal(id, opts = {}) {
   document.getElementById('f-ref').value    = w.ref || '';
   document.getElementById('f-type').value   = w.type;
   document.getElementById('f-notes').value  = w.notes || '';
+  setFamilyField(w.family || null, !w.family);
+  if (!w.family) proposeFamily(w.specs);
   renderMomentsPicker(w.moments || []);
   setMaintFields(w);
   const prev = document.getElementById('photo-preview');
@@ -202,6 +205,7 @@ export function applyDbResult(w) {
   document.getElementById('f-ref').value   = w.ref || '';
   document.getElementById('f-type').value  = w.type;
   updateMaintVisibility();
+  proposeFamily(w.specs);
   document.getElementById('db-search-results').style.display = 'none';
   document.getElementById('db-search-input').value = `${w.brand} ${w.model}`;
   const hint = document.getElementById('db-hint');
@@ -221,6 +225,7 @@ export async function saveWatch() {
   const type  = document.getElementById('f-type').value;
   const notes = document.getElementById('f-notes').value.trim();
   const moments = readMomentsPicker();
+  const family = cleanFamily(document.getElementById('f-family').value);
   const maint = readMaintFields();
   if (!brand) { showToast(t('Introduce la marca')); return; }
   if (maint === null) return;
@@ -232,7 +237,7 @@ export async function saveWatch() {
   try {
     if (ui.editingWatchId) {
       // Only send the photo if it changed: updateWatch recompresses whatever it gets
-      const changes = { brand, model, ref, type, notes, moments, ...maint };
+      const changes = { brand, model, ref, type, notes, moments, family, ...maint };
       if (ui.editingPhotoData) changes.photo = ui.editingPhotoData;
       await updateWatch(ui.editingWatchId, changes);
       if (window._pendingDbSpecs) await updateWatch(ui.editingWatchId, pendingSpecChanges(getWatch(ui.editingWatchId)));
@@ -243,6 +248,7 @@ export async function saveWatch() {
       const newW = await addWatch({ brand, model, ref, type, notes, photo: ui.editingPhotoData });
       if (newW && Object.values(maint).some(v => v !== null)) await updateWatch(newW.id, maint);
       if (newW && moments.length) await updateWatch(newW.id, { moments });
+      if (newW && family) await updateWatch(newW.id, { family });
       // No specs chosen: try the local model database automatically
       let autoFilled = false;
       if (!window._pendingDbSpecs && typeof dbGet === 'function') {
@@ -348,4 +354,31 @@ export function renderMomentsPicker(selected) {
 }
 export function readMomentsPicker() {
   return cleanMoments([...document.querySelectorAll('#f-moments .moment-chip[aria-pressed="true"]')].map(b => b.dataset.moment));
+}
+
+/* ─── Familia: fixed list; Rotor proposes one from brand/model, the user decides ─── */
+let _familyAuto = true;   // true while the user has not picked one by hand
+export function familyOptions(selected) {
+  return `<option value="">${t('Sin familia')}</option>` +
+    FAMILIES.map(f => `<option value="${f.id}"${f.id === selected ? ' selected' : ''}>${t(f.label)}</option>`).join('');
+}
+/** @param {string|null} value @param {boolean} auto keep proposing while brand/model change */
+export function setFamilyField(value, auto) {
+  const sel = document.getElementById('f-family');
+  if (!sel) return;
+  sel.innerHTML = familyOptions(value);
+  sel.value = value || '';
+  _familyAuto = auto;
+  if (!sel.dataset.bound) {
+    sel.dataset.bound = '1';
+    sel.addEventListener('change', () => { _familyAuto = false; });
+    ['f-brand', 'f-model'].forEach(id => document.getElementById(id)?.addEventListener('input', () => proposeFamily()));
+  }
+}
+/** Propose a family (only if the user has not chosen one) @param {Record<string,string>} [specs] */
+export function proposeFamily(specs) {
+  const sel = document.getElementById('f-family');
+  if (!sel || !_familyAuto) return;
+  const g = guessFamily({ brand: document.getElementById('f-brand').value, model: document.getElementById('f-model').value, specs });
+  sel.value = g || '';
 }

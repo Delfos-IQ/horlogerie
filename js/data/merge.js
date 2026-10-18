@@ -3,6 +3,7 @@
  */
 import { readJSON } from './persist.js';
 import { cleanMoments } from './moments.js';
+import { cleanFamily } from './families.js';
 
 /* ═══════════════════════════════════════
    TOMBSTONES — ids deleted locally that the cloud still has to hear about.
@@ -127,6 +128,8 @@ export function sanitizeWatch(raw) {
   if (typeof raw.rotation === 'boolean') w.rotation = raw.rotation;
   const moments = cleanMoments(raw.moments);
   if (moments.length) w.moments = moments;
+  const family = cleanFamily(raw.family);
+  if (family) w.family = family;
   for (const k of ['purchasePrice', 'purchaseDate', 'lastService', 'batteryChanged']) {
     if (_num(raw[k])) w[k] = raw[k];
   }

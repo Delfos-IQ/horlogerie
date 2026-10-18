@@ -1,6 +1,6 @@
 /* ─────────────────── HISTORY ─────────────────── */
 
-import { addWearDays, calendarDaysBetween, dayKey, getWatch, getWatches, photoSrc, removeWearDay, startOfDay, wearIntervals, wearStats, wornDayKeys } from '../storage.js';
+import { addWearDays, calendarDaysBetween, dayKey, getWatch, getWatches, photoSrc, removeWearDay, startOfDay, wearIntervals, wearStats, wornDayKeys, familyById } from '../storage.js';
 import { elapsedSince, escHtml, formatDate, navPush, navReplace, showToast, ui } from './core.js';
 import { locale, t } from '../i18n.js';
 import { openDetail, openWearSheet } from './home-detail.js';
@@ -30,6 +30,8 @@ export const CATEGORY_RULES = [
 ];
 
 export function inferCategory(w) {
+  const fam = familyById(w.family);   // the family the user chose wins
+  if (fam) return { cat: fam.id, icon: fam.icon, color: fam.color };
   const text = `${w.brand} ${w.model} ${w.specs?.calibre || ''}`.toLowerCase();
   for (const rule of CATEGORY_RULES) {
     if (rule.kw.some(k => text.includes(k))) return rule;

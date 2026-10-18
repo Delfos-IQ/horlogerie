@@ -1,5 +1,5 @@
 /* ─── HOME ─── */
-import { MOMENTS, currentSeason, momentById, addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, photoSrc, maintenanceAlerts, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
+import { FAMILIES, MOMENTS, currentSeason, familyById, guessFamily, momentById, addWearDays, calendarDaysBetween, dayKey, deleteHistoryEntry, deleteWatch, getActiveWatch, getWatch, getWatches, photoSrc, maintenanceAlerts, setWatchFlag, startWearing, stopWearing, switchToWatch, updateHistoryEntry, updateWatch, wearStats, wornDayKeys } from '../storage.js';
 import { openSheet, showConfirm } from './sheet.js';
 import { dialArt, elapsedShort, elapsedSince, escHtml, formatDate, showToast, showView, typeLabel, ui } from './core.js';
 import { openEditModal } from './modals.js';
@@ -34,6 +34,7 @@ export function renderHome() {
   renderToday(ws, activeW);
 
   if (!ws.length) {
+    const ff = document.getElementById('family-filter'); if (ff) ff.innerHTML = '';
     grid.style.display = 'none';
     empty.style.display = 'flex';
     const rb = document.getElementById('recommendation-banner'); if (rb) rb.innerHTML = '';
@@ -44,7 +45,8 @@ export function renderHome() {
 
   renderRecommendation(ws, activeW);
 
-  grid.innerHTML = ws.map(w => {
+  const shown = renderFamilyFilter(ws);
+  grid.innerHTML = shown.map(w => {
     const isActive = !!w.wearStart;
     return `
       <div class="watch-card${isActive ? ' active-card' : ''}" data-id="${escHtml(w.id)}" role="button" tabindex="0" aria-label="${name(w)}${isActive ? ' — ' + t('puesto ahora') : ''}">
@@ -520,6 +522,7 @@ export function renderSpecs(w) {
       <i class="ti ti-pencil" aria-hidden="true"></i>
       ${t('Toca cualquier campo para editarlo')}
     </div>
+    ${familyCardHTML(w)}
     ${SPEC_DEFS.map(s => {
       const val = specs[s.k] || '';
       const l = t(s.l);
@@ -531,7 +534,10 @@ export function renderSpecs(w) {
       </div>`;
     }).join('')}`;
 
-  document.getElementById('d-specs').querySelectorAll('.spec-card').forEach(card => {
+  const famCard = document.getElementById('spec-family');
+  famCard?.addEventListener('click', () => openFamilySheet(w.id));
+  famCard?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFamilySheet(w.id); } });
+  document.getElementById('d-specs').querySelectorAll('.spec-card[data-key]').forEach(card => {
     const activate = () => editSpecInline(card.dataset.key, getWatch(ui.currentWatchId));
     card.addEventListener('click', activate);
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
@@ -755,5 +761,119 @@ export function handleDeleteWatch(id) {
   const nm = w ? `${w.brand} ${w.model}` : t('este reloj');
   showConfirm(t('¿Eliminar reloj?'), t('Se borrará {w} y todo su historial. Esta acción no se puede deshacer.', { w: nm }), () => {
     deleteWatch(id); showView('home'); showToast(t('Reloj eliminado'));
+  });
+}
+
+/* ══ Familias (v2.23): filtro de la colección y campo editable en la ficha ══ */
+const FAM_KEY = 'rotor_family_filter';
+const FAMILY_MIN = 6;          // below this the whole collection fits on one screen
+const famLabel = id => { const f = familyById(id); return f ? t(f.label) : t('Sin familia'); };
+function readFamFilter() { try { return localStorage.getItem(FAM_KEY) || 'all'; } catch { return 'all'; } }
+function writeFamFilter(v) { try { localStorage.setItem(FAM_KEY, v); } catch { /* private mode */ } }
+
+/** Draws the chips above the grid and returns the watches to show */
+export function renderFamilyFilter(ws) {
+  const box = document.getElementById('family-filter');
+  if (!box) return ws;
+  const counts = new Map();
+  ws.forEach(w => { const k = familyById(w.family) ? w.family : 'none'; counts.set(k, (counts.get(k) || 0) + 1); });
+  const used = FAMILIES.filter(f => counts.has(f.id));
+  const unclassified = counts.get('none') || 0;
+  if (ws.length < FAMILY_MIN) { box.innerHTML = ''; return ws; }
+  if (used.length < 2) {
+    // Not enough families yet: one quiet invitation to classify instead of useless chips
+    box.innerHTML = `<button class="fam-setup" id="fam-setup"><i class="ti ti-category" aria-hidden="true"></i>
+      <span>${t('Ordena tu colección por familias')}<small>${t('Buceo, cronógrafo, vestir… y filtra con un toque')}</small></span>
+      <i class="ti ti-chevron-right" aria-hidden="true"></i></button>`;
+    box.querySelector('#fam-setup').addEventListener('click', openClassifySheet);
+    return ws;
+  }
+  let cur = readFamFilter();
+  if (cur !== 'all' && !counts.has(cur)) cur = 'all';
+  const chip = (id, label, n, icon) => `<button class="fam-chip" data-fam="${id}" aria-pressed="${cur === id}">
+    ${icon ? `<i class="ti ${icon}" aria-hidden="true"></i>` : ''}${escHtml(label)} <span class="fam-n">${n}</span></button>`;
+  box.innerHTML = `<div class="fam-chips" role="group" aria-label="${escHtml(t('Filtrar por familia'))}">
+    ${chip('all', t('Todos'), ws.length)}
+    ${used.map(f => chip(f.id, t(f.label), counts.get(f.id), f.icon)).join('')}
+    ${unclassified ? chip('none', t('Sin familia'), unclassified, 'ti-help-circle') : ''}
+    ${unclassified ? `<button class="fam-chip fam-classify" id="fam-classify"><i class="ti ti-pencil" aria-hidden="true"></i>${t('Clasificar')}</button>` : ''}
+  </div>`;
+  box.querySelectorAll('.fam-chip[data-fam]').forEach(b => b.addEventListener('click', () => {
+    writeFamFilter(b.dataset.fam === cur ? 'all' : b.dataset.fam);
+    renderHome();
+  }));
+  box.querySelector('#fam-classify')?.addEventListener('click', openClassifySheet);
+  // Keep the chosen chip visible when the row scrolls
+  box.querySelector('.fam-chip[aria-pressed="true"]')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  if (cur === 'all') return ws;
+  return ws.filter(w => (familyById(w.family) ? w.family : 'none') === cur);
+}
+
+function familyCardHTML(w) {
+  const f = familyById(w.family);
+  return `<div class="spec-card spec-family${f ? '' : ' spec-empty'}" id="spec-family" role="button" tabindex="0"
+      aria-label="${escHtml(t('Editar {campo}: {valor}', { campo: t('Familia'), valor: f ? t(f.label) : t('vacío') }))}">
+    <div class="spec-label">${t('Familia')}</div>
+    <div class="spec-value">${f ? `<i class="ti ${f.icon}" aria-hidden="true" style="color:${f.color}"></i> ${t(f.label)}`
+      : `<span class="spec-placeholder">${t('Elegir…')}</span>`}</div>
+  </div>`;
+}
+
+/** Choose the family of one watch */
+export function openFamilySheet(id) {
+  const w = getWatch(id);
+  if (!w) return;
+  const guess = w.family ? null : guessFamily(w);
+  const opt = (fid, label, icon, color) => {
+    const on = (w.family || '') === fid;
+    return `<button class="today-pick fam-pick${on ? ' on' : ''}" data-fam="${fid}" role="radio" aria-checked="${on}">
+      <i class="ti ${icon} fam-ico" aria-hidden="true"${color ? ` style="color:${color}"` : ''}></i>
+      <span class="today-pick-txt"><b>${escHtml(label)}</b>${fid && fid === guess ? `<small><em>${t('Propuesta de Rotor')}</em></small>` : ''}</span>
+      <i class="ti ${on ? 'ti-circle-check' : 'ti-circle'}" aria-hidden="true"></i></button>`;
+  };
+  const sh = openSheet({ label: t('Familia'), html: `<div class="modal-title">${t('Familia')}</div>
+    <div class="sheet-text">${name(w)}</div>
+    <div class="today-list" role="radiogroup">
+      ${FAMILIES.map(f => opt(f.id, t(f.label), f.icon, f.color)).join('')}
+      ${opt('', t('Sin familia'), 'ti-help-circle')}
+    </div>
+    <div class="modal-actions"><button class="modal-btn modal-btn-cancel" data-close>${t('Cancelar')}</button></div>` });
+  sh.$$('.fam-pick').forEach(b => b.addEventListener('click', async () => {
+    await updateWatch(id, { family: b.dataset.fam || null });
+    sh.close();
+    if (ui.currentWatchId === id) renderSpecs(getWatch(id));
+    renderHome();
+    showToast(t('Familia: {f}', { f: famLabel(b.dataset.fam) }));
+  }));
+}
+
+/** Classify every watch without a family at once, starting from Rotor's proposals */
+export function openClassifySheet() {
+  const todo = getWatches().filter(w => !familyById(w.family))
+    .sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
+  if (!todo.length) return;
+  const options = sel => `<option value="">${t('Sin familia')}</option>` +
+    FAMILIES.map(f => `<option value="${f.id}"${f.id === sel ? ' selected' : ''}>${t(f.label)}</option>`).join('');
+  const proposed = todo.filter(w => guessFamily(w)).length;
+  const sh = openSheet({ label: t('Clasificar por familias'), html: `<div class="modal-title">${t('Clasificar por familias')}</div>
+    <div class="sheet-text">${proposed
+      ? t('Rotor propone una familia para {n} de {total} relojes según la marca y el modelo. Revísalas antes de guardar.', { n: proposed, total: todo.length })
+      : t('Elige la familia de cada reloj. Puedes dejar los que no tengas claros.')}</div>
+    <div class="fam-list">${todo.map(w => `<label class="fam-row">${watchChip(w, 36)}
+      <span class="fam-row-txt"><b>${name(w)}</b></span>
+      <select class="form-input form-select fam-select" data-id="${escHtml(w.id)}" aria-label="${escHtml(t('Familia de {w}', { w: `${w.brand} ${w.model}` }))}">${options(guessFamily(w))}</select>
+    </label>`).join('')}</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" data-close>${t('Cancelar')}</button>
+      <button class="modal-btn modal-btn-save" id="fam-save">${t('Guardar')}</button>
+    </div>` });
+  sh.$('#fam-save').addEventListener('click', async () => {
+    let n = 0;
+    for (const s of sh.$$('.fam-select')) {
+      if (s.value) { await updateWatch(s.dataset.id, { family: s.value }); n++; }
+    }
+    sh.close();
+    renderHome();
+    showToast(n === 1 ? t('1 reloj clasificado') : t('{n} relojes clasificados', { n }));
   });
 }

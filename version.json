@@ -1,5 +1,5 @@
 {
-  "version": "2.22.1",
+  "version": "2.23.0",
   "date": "2026-10-18",
-  "notes": "Arreglo: en Ajustes salía una fila «Navegador» vacía en Chrome."
+  "notes": "Familias: clasifica tus relojes (Buceo, Cronógrafo, GMT, Piloto, Campo, Vestir, Deportivo) y filtra la colección con un toque. Rotor propone la familia según la marca y el modelo; tú decides."
 }

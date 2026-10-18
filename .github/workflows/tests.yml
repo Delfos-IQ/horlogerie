@@ -82,6 +82,9 @@ jobs:
       - name: Tiempo en la muñeca, métricas del historial y «Sorpréndeme»
         run: python tests/e2e_metrics.py
 
+      - name: Familias (propuesta, filtro de la colección y ficha)
+        run: python tests/e2e_families.py
+
       - name: Inglés, tema, moneda, bienvenida y ficha por secciones
         run: python tests/e2e_i18n.py
 

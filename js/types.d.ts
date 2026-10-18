@@ -19,6 +19,8 @@ interface Watch {
   /** Wearing now since this time (only one watch at a time) */
   wearStart: number | null;
   favorite?: boolean;
+  /** «Familia»: diver, chrono, gmt, pilot, field, dress, sport, other (data/families.js) */
+  family?: string;
   /** false = out of rotation (not recommended) */
   rotation?: boolean;
   purchasePrice?: number | null;

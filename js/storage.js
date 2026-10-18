@@ -20,3 +20,4 @@ export * from './data/backup.js';
 export * from './data/wishlist.js';
 export * from './data/care.js';
 export * from './data/moments.js';
+export * from './data/families.js';
