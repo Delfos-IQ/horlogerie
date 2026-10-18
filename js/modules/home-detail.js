@@ -824,17 +824,17 @@ export function openFamilySheet(id) {
   const w = getWatch(id);
   if (!w) return;
   const guess = w.family ? null : guessFamily(w);
-  const opt = (fid, label, icon, color) => {
+  const opt = (fid, label, icon, color, hint) => {
     const on = (w.family || '') === fid;
     return `<button class="today-pick fam-pick${on ? ' on' : ''}" data-fam="${fid}" role="radio" aria-checked="${on}">
       <i class="ti ${icon} fam-ico" aria-hidden="true"${color ? ` style="color:${color}"` : ''}></i>
-      <span class="today-pick-txt"><b>${escHtml(label)}</b>${fid && fid === guess ? `<small><em>${t('Propuesta de Rotor')}</em></small>` : ''}</span>
+      <span class="today-pick-txt"><b>${escHtml(label)}</b>${hint ? `<small>${escHtml(hint)}</small>` : ''}${fid && fid === guess ? `<small><em>${t('Propuesta de Rotor')}</em></small>` : ''}</span>
       <i class="ti ${on ? 'ti-circle-check' : 'ti-circle'}" aria-hidden="true"></i></button>`;
   };
   const sh = openSheet({ label: t('Familia'), html: `<div class="modal-title">${t('Familia')}</div>
     <div class="sheet-text">${name(w)}</div>
     <div class="today-list" role="radiogroup">
-      ${FAMILIES.map(f => opt(f.id, t(f.label), f.icon, f.color)).join('')}
+      ${FAMILIES.map(f => opt(f.id, t(f.label), f.icon, f.color, f.hint && t(f.hint))).join('')}
       ${opt('', t('Sin familia'), 'ti-help-circle')}
     </div>
     <div class="modal-actions"><button class="modal-btn modal-btn-cancel" data-close>${t('Cancelar')}</button></div>` });

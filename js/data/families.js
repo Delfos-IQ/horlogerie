@@ -7,7 +7,7 @@
    Kept local so the data layer does not depend on i18n.js. */
 const tk = s => s;
 
-/** @type {{ id: string, label: string, icon: string, color: string }[]} */
+/** @type {{ id: string, label: string, icon: string, color: string, hint?: string }[]} */
 export const FAMILIES = [
   { id: 'diver',  label: tk('Buceo'),       icon: 'ti-ripple',       color: '#4FC3F7' },
   { id: 'chrono', label: tk('Cronógrafo'),  icon: 'ti-stopwatch',    color: '#EF9A9A' },
@@ -16,7 +16,8 @@ export const FAMILIES = [
   { id: 'field',  label: tk('Campo'),       icon: 'ti-mountain',     color: '#AED581' },
   { id: 'dress',  label: tk('Vestir'),      icon: 'ti-tie',          color: '#F48FB1' },
   { id: 'sport',  label: tk('Deportivo'),   icon: 'ti-run',          color: '#A5D6A7' },
-  { id: 'other',  label: tk('Otro'),        icon: 'ti-device-watch', color: '#C9BFAE' },
+  // «CUCO»: the watch for everything. id stays 'other' so saved data keeps working
+  { id: 'other',  label: tk('CUCO'),        icon: 'ti-infinity',     color: '#C9BFAE', hint: tk('Cualquier uso, cualquier ocasión') },
 ];
 export const FAMILY_IDS = FAMILIES.map(f => f.id);
 export const familyById = id => FAMILIES.find(f => f.id === id) || null;

@@ -747,5 +747,7 @@ export default {
   "Familia de {w}": "Família de {w}",
   "1 reloj clasificado": "1 relógio classificado",
   "{n} relojes clasificados": "{n} relógios classificados",
-  "Buceo, cronógrafo, vestir… Sirve para filtrar tu colección.": "Mergulho, cronógrafo, formal… Serve para filtrar a tua coleção.",
+  "CUCO": "Polivalente",
+  "Cualquier uso, cualquier ocasión": "Para qualquer uso e ocasião",
+  "Buceo, cronógrafo, vestir… o CUCO, el que vale para todo. Sirve para filtrar tu colección.": "Mergulho, cronógrafo, formal… ou polivalente, o que serve para tudo. Serve para filtrar a tua coleção.",
 };

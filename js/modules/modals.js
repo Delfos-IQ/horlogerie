@@ -360,7 +360,7 @@ export function readMomentsPicker() {
 let _familyAuto = true;   // true while the user has not picked one by hand
 export function familyOptions(selected) {
   return `<option value="">${t('Sin familia')}</option>` +
-    FAMILIES.map(f => `<option value="${f.id}"${f.id === selected ? ' selected' : ''}>${t(f.label)}</option>`).join('');
+    FAMILIES.map(f => `<option value="${f.id}"${f.id === selected ? ' selected' : ''}>${t(f.label)}${f.hint ? ' — ' + t(f.hint) : ''}</option>`).join('');
 }
 /** @param {string|null} value @param {boolean} auto keep proposing while brand/model change */
 export function setFamilyField(value, auto) {

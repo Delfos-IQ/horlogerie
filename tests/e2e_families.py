@@ -85,6 +85,8 @@ async def main():
         await page.evaluate("id => openDetail(id, 'specs')", cid); await page.wait_for_timeout(250)
         check("la ficha muestra «Familia» vacía", 'Elegir' in (await page.text_content("#spec-family")))
         await page.click("#spec-family"); await page.wait_for_timeout(200)
+        sheet = await page.text_content(".today-list")
+        check("entre las familias está «CUCO: cualquier uso, cualquier ocasión»", 'CUCO' in sheet and 'Cualquier uso, cualquier ocasión' in sheet and 'Otro' not in sheet, sheet[:300])
         await page.click(".fam-pick[data-fam='sport']"); await page.wait_for_timeout(300)
         check("se elige en la ficha y se guarda", await page.evaluate("id => getWatch(id).family", cid) == 'sport'
               and 'Deportivo' in (await page.text_content("#spec-family")))

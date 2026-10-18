@@ -747,5 +747,7 @@ export default {
   "Familia de {w}": "Family of {w}",
   "1 reloj clasificado": "1 watch classified",
   "{n} relojes clasificados": "{n} watches classified",
-  "Buceo, cronógrafo, vestir… Sirve para filtrar tu colección.": "Diver, chronograph, dress… Used to filter your collection.",
+  "CUCO": "GADA",
+  "Cualquier uso, cualquier ocasión": "Go anywhere, do anything",
+  "Buceo, cronógrafo, vestir… o CUCO, el que vale para todo. Sirve para filtrar tu colección.": "Diver, chronograph, dress… or GADA, the one for everything. Used to filter your collection.",
 };
