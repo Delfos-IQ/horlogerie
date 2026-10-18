@@ -766,6 +766,9 @@ button:focus-visible,
   overflow: hidden;
   margin-bottom: 8px;
 }
+/* The hidden attribute always wins over a class's display (rows shown only in some cases) */
+[hidden] { display: none !important; }
+
 .status-row {
   display: flex;
   align-items: center;

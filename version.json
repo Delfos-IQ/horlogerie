@@ -1,5 +1,5 @@
 {
-  "version": "2.22.0",
-  "date": "2026-10-17",
-  "notes": "Horas reales en la muñeca, «Más tiempo en la caja» y «Horas en la muñeca» en el ranking, y «Sorpréndeme» para que Rotor te proponga uno al azar."
+  "version": "2.22.1",
+  "date": "2026-10-18",
+  "notes": "Arreglo: en Ajustes salía una fila «Navegador» vacía en Chrome."
 }

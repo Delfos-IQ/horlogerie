@@ -2,7 +2,7 @@ import { escHtml, showToast } from './core.js';
 import { renderSystemStatus } from './settings.js';
 import { lang, t } from '../i18n.js';
 
-export const APP_VERSION = '2.22.0'; // Must match version.json
+export const APP_VERSION = '2.22.1'; // Must match version.json
 
 export async function initVersionCheck() {
   // Silent check on every launch — fetch version.json bypassing cache

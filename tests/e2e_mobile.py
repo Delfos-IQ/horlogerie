@@ -124,6 +124,9 @@ async def main():
         await boot(page)
         check("en Chrome no hay aviso de navegador (ni línea en Ajustes)",
               await page.evaluate("document.getElementById('browser-notice').hidden && document.getElementById('status-browser-row').hidden"))
+        await page.evaluate("showView('settings')"); await page.wait_for_timeout(200)
+        check("  y la fila «Navegador» no se ve en Ajustes (ni vacía)",
+              not await page.locator("#status-browser-row").is_visible() and not await page.locator("#status-browser-div").is_visible())
         await ctx.close()
         ctx = await b.new_context(**{**p.devices['Pixel 7'], 'user_agent': MI}, locale="es-ES", service_workers="block", bypass_csp=True)
         page = await ctx.new_page()
