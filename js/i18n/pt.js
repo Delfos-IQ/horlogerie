@@ -750,4 +750,5 @@ export default {
   "CUCO": "Polivalente",
   "Cualquier uso, cualquier ocasión": "Para qualquer uso e ocasião",
   "Buceo, cronógrafo, vestir… o CUCO, el que vale para todo. Sirve para filtrar tu colección.": "Mergulho, cronógrafo, formal… ou polivalente, o que serve para tudo. Serve para filtrar a tua coleção.",
+  "Secciones": "Secções",
 };

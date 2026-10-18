@@ -2,7 +2,7 @@
 
 Nombre de marca: **Rotor** (el rotor es la pieza que da cuerda a un reloj automático, y la app gira en torno a la rotación de tu colección). Antes se llamaba Horlogerie.
 
-Límites de Play: título ≤ 30 caracteres, descripción breve ≤ 80, descripción completa ≤ 4.000. Los recuentos de abajo están comprobados (descripciones completas: unos 1.450 caracteres).
+Límites de Play: título ≤ 30 caracteres, descripción breve ≤ 80, descripción completa ≤ 4.000. Los recuentos de abajo están comprobados (descripciones completas: unos 2.450 caracteres, límite 4.000). Actualizada para la v2.23.
 
 No uses nombres de marcas de terceros (Rolex, Submariner, Royal Oak…) ni en los textos ni en las capturas: es motivo de rechazo por propiedad intelectual.
 
@@ -21,13 +21,15 @@ Rotor es el cuaderno de tu colección de relojes. Apunta los que tienes, registr
 
 QUÉ PUEDES HACER
 • Tu colección de un vistazo: foto, tipo de movimiento y cuándo lo llevaste por última vez.
-• Registro de uso sin complicaciones: «Hoy llevo…» y un toque; apunta días pasados o, si quieres, cronometra el tiempo puesto.
+• Un reloj en la muñeca cada vez: «Ponérmelo» y un toque. Al cambiar de reloj, el anterior guarda las horas reales que lo llevaste. También puedes apuntar días pasados.
 • Según tu día: marca cada reloj con sus momentos (ocasión, ánimo, estación) y Rotor te propone el que encaja con tu día; también te recuerda el que más tiempo lleva en la caja. Puedes marcar favoritos o dejar alguno fuera de rotación.
+• Familias: buceo, cronógrafo, GMT, piloto, campo, vestir, deportivo o CUCO (cualquier uso, cualquier ocasión). Filtra la colección con un toque; Rotor propone la familia y tú decides.
+• «Sorpréndeme»: uno al azar cuando no sabes cuál ponerte.
 • Una bienvenida distinta cada vez que abres la app, con un hecho de la historia de la relojería.
 • Ficha técnica de cada reloj: calibre, cristal, diámetro, grosor, resistencia al agua, reserva de marcha y más. Incluye una base de modelos de microbrands y homenajes para autocompletar.
 • Coste por uso: añade lo que pagaste y verás cuánto te sale cada día que lo llevas.
 • Avisos de mantenimiento: cambio de pila en los de cuarzo y revisión periódica en los mecánicos.
-• Historial en calendario: toca un día para ver qué llevaste o apuntarlo. Ranking de tus 10 relojes más usados, los que tienes olvidados y el detalle de cada reloj por año.
+• Historial en calendario: toca un día para ver qué llevaste o apuntarlo. Ranking de tus 10 relojes más usados, el que más tiempo lleva en la caja, las horas en la muñeca y el detalle de cada reloj por año.
 • Lista de deseos con precio objetivo y especificaciones.
 • Exporta tu colección a PDF con fichas, fotos e historial.
 • Tema claro y oscuro. En español, inglés y portugués.
@@ -60,13 +62,15 @@ Rotor is the notebook for your watch collection. Log the watches you own, record
 
 WHAT YOU CAN DO
 • Your collection at a glance: photo, movement type and when you last wore it.
-• Effortless wear log: “Today I wear…” and one tap. Log past days or, if you like, time how long you wear it.
+• One watch on the wrist at a time: “Put it on” and one tap. When you switch, the previous one keeps the real hours you wore it. You can also log past days.
 • To suit your day: tag each watch with its moments (occasion, mood, season) and Rotor suggests the one that fits your day; it also reminds you which has spent longest in the box. Mark favourites or take a watch out of rotation.
+• Families: diver, chronograph, GMT, pilot, field, dress, sport or GADA (go anywhere, do anything). Filter your collection with one tap; Rotor suggests the family and you decide.
+• “Surprise me”: a random pick when you can't decide.
 • A different welcome every time you open the app, with a fact from watchmaking history.
 • Spec sheet for every watch: calibre, crystal, diameter, thickness, water resistance, power reserve and more. Fill it in from a shop or brand page: only what the page states is copied, nothing is guessed.
 • Cost per wear: enter what you paid and see what each day on the wrist costs you, in your currency.
 • Maintenance reminders: battery changes for quartz, regular service for mechanical watches.
-• Calendar history: tap a day to see or log what you wore. Your 10 most worn watches, the forgotten ones and each watch year by year.
+• Calendar history: tap a day to see or log what you wore. Your 10 most worn watches, the one longest in the box, hours on the wrist and each watch year by year.
 • Wishlist with target price and specs.
 • Export your collection to PDF with spec pages, photos and history.
 • Light and dark themes. In English, Spanish and Portuguese.
@@ -99,13 +103,15 @@ Rotor é o caderno da tua coleção de relógios. Regista os que tens, anota qua
 
 O QUE PODES FAZER
 • A tua coleção num relance: foto, tipo de movimento e quando o usaste pela última vez.
-• Registo de uso sem complicações: «Hoje uso…» e um toque. Regista dias passados ou, se quiseres, mede o tempo de uso.
+• Um relógio no pulso de cada vez: «Pôr este» e um toque. Ao trocar, o anterior guarda as horas reais em que o usaste. Também podes registar dias passados.
 • Conforme o teu dia: marca cada relógio com os seus momentos (ocasião, estado de espírito, estação) e o Rotor propõe-te o que combina com o teu dia; também te lembra o que está há mais tempo na caixa. Podes marcar favoritos ou deixar algum fora da rotação.
+• Famílias: mergulho, cronógrafo, GMT, piloto, campo, formal, desportivo ou polivalente (para qualquer uso e ocasião). Filtra a coleção com um toque; o Rotor sugere a família e tu decides.
+• «Surpreende-me»: um ao acaso quando não sabes qual pôr.
 • Boas-vindas diferentes sempre que abres a app, com um facto da história da relojoaria.
 • Ficha técnica de cada relógio: calibre, vidro, diâmetro, espessura, resistência à água, reserva de marcha e mais. Preenche-a a partir da página da loja ou da marca: só se copia o que a página indica, nada é inventado.
 • Custo por uso: indica quanto pagaste e vê quanto te custa cada dia em que o usas, na tua moeda.
 • Avisos de manutenção: troca de pilha nos de quartzo e revisão periódica nos mecânicos.
-• Histórico em calendário: toca num dia para ver o que usaste ou registá-lo. Os teus 10 relógios mais usados, os esquecidos e o detalhe de cada relógio por ano.
+• Histórico em calendário: toca num dia para ver o que usaste ou registá-lo. Os teus 10 relógios mais usados, o que está há mais tempo na caixa, as horas no pulso e o detalhe de cada relógio por ano.
 • Lista de desejos com preço-alvo e especificações.
 • Exporta a coleção para PDF com fichas, fotos e histórico.
 • Tema claro e escuro. Em português, espanhol e inglês.

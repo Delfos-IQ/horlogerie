@@ -1617,3 +1617,5 @@ a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold
 .fam-row-txt { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fam-row-txt b { font-weight: 500; }
 .fam-select { flex: 0 0 auto; width: 138px; min-height: 40px; padding-top: 6px; padding-bottom: 6px; font-size: 13px; }
+/* Las pestañas del menú van en un tablist sin cambiar el diseño */
+.nav-tabs { display: contents; }

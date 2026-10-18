@@ -32,7 +32,7 @@ CHROME = os.environ.get("CHROME")
 DAY = 86400000
 
 DEMO = """async (S) => {
-  // Esferas dibujadas (marcas de ejemplo; ninguna marca real de terceros en la imagen)
+  // Esferas dibujadas y marcas inventadas: nada de marcas reales en la ficha de Play (motivo de rechazo)
   function dial(bg, accent, hands = '#e8e2d8') {
     const c = document.createElement('canvas'); c.width = c.height = 600;
     const g = c.getContext('2d');
@@ -58,18 +58,18 @@ DEMO = """async (S) => {
     await updateWatch(w.id, extra);
     return w.id;
   };
-  const a = await add('Steeldive', 'SD1975S Tuna', 'automatic', ['#1f4a6e', '#0b1c2c'], '#f2a33a',
+  const a = await add('Marlow', 'Diver 200', 'automatic', ['#1f4a6e', '#0b1c2c'], '#f2a33a',
     { purchasePrice: 139, purchaseDate: now - 400 * D, favorite: true,
-      specs: { calibre: 'Seiko NH35', cristal: S.cristal, resistencia: '200 m', diametro: '44 mm', caja: S.caja, reserva: '41 h', asas: '22 mm' },
-      serial: 'SD-0457', currentValue: 155, lastService: now - 200 * D });
-  const b = await add('Seagull', '1963 Chronograph', 'manual', ['#f1ece0', '#cfc6b2'], '#b3261e',
-    { purchasePrice: 229, purchaseDate: now - 2200 * D, specs: { calibre: 'ST1901', cristal: S.acrylic, diametro: '38 mm' }, currentValue: 260 });
-  const c = await add('San Martin', 'Field SN0105', 'automatic', ['#2f3a2a', '#141a12'], '#e8e2d8',
+      specs: { calibre: 'A24', cristal: S.cristal, resistencia: '200 m', diametro: '44 mm', caja: S.caja, reserva: '41 h', asas: '22 mm' },
+      serial: 'MW-0457', currentValue: 155, lastService: now - 200 * D });
+  const b = await add('Kestrel', 'Chronograph 1960', 'manual', ['#f1ece0', '#cfc6b2'], '#b3261e',
+    { purchasePrice: 229, purchaseDate: now - 2200 * D, specs: { calibre: 'M19', cristal: S.acrylic, diametro: '38 mm' }, currentValue: 260 });
+  const c = await add('Halden', 'Field 38', 'automatic', ['#2f3a2a', '#141a12'], '#e8e2d8',
     { purchasePrice: 175, purchaseDate: now - 300 * D });
-  const d = await add('Casio', 'Duro MDV-106', 'quartz', ['#1d1d1d', '#050505'], '#c9c9c9',
+  const d = await add('Ostrom', 'Tool Quartz', 'quartz', ['#1d1d1d', '#050505'], '#c9c9c9',
     { purchasePrice: 59, batteryChanged: now - 800 * D });
-  const e = await add('Pagani Design', 'GMT', 'automatic', ['#2b1e4f', '#120b24'], '#e04a4a', { purchasePrice: 89 });
-  const f = await add('Cadisen', 'Classic', 'automatic', ['#e9e4d6', '#bdb5a0'], '#2a4c8f', { purchasePrice: 99, rotation: false });
+  const e = await add('Veyra', 'GMT', 'automatic', ['#2b1e4f', '#120b24'], '#e04a4a', { purchasePrice: 89 });
+  const f = await add('Aubel', 'Classic', 'automatic', ['#e9e4d6', '#bdb5a0'], '#2a4c8f', { purchasePrice: 99, rotation: false });
   // Historial plausible de los últimos meses
   const plan = [[a, [1, 2, 3, 9, 10, 16, 17, 24, 30, 31, 38, 45]], [b, [5, 6, 20, 41]], [c, [4, 12, 13, 26, 27, 33]],
                 [d, [7, 8, 14, 21, 22, 35]], [e, [11, 19, 40]]];
@@ -85,6 +85,14 @@ DEMO = """async (S) => {
   const mo = [[a, ['mar', 'deporte', 'verano', 'atrevido']], [b, ['evento', 'clasico', 'vintage', 'otono']],
               [c, ['finde', 'viaje', 'discreto', 'otono']], [d, ['deporte', 'trabajo', 'discreto']], [e, ['viaje', 'trabajo', 'atrevido']]];
   for (const [id, moments] of mo) await updateWatch(id, { moments });
+  // Familias (filtro de la colección) y el reloj puesto ahora, con su tiempo en la muñeca
+  const fam = [[a, 'diver'], [b, 'chrono'], [c, 'field'], [d, 'other'], [e, 'gmt'], [f, 'dress']];
+  for (const [id, family] of fam) await updateWatch(id, { family });
+  for (const [id, k, h] of [[c, 4, 9], [d, 7, 6], [b, 5, 3]]) {
+    startWearing(id); getWatch(id).wearStart = now - k * D; stopWearing(id);
+    const last = getWatch(id).history.slice(-1)[0]; last.end = last.start + h * 3600000;
+  }
+  startWearing(a); getWatch(a).wearStart = now - 4 * 3600000;
   return { a, b, c, d, e, f };
 }"""
 
@@ -113,8 +121,8 @@ async def capture(b, lang):
     await page.click("#today-change"); await page.wait_for_timeout(400)
     await shot("2-hoy-llevo")
     await page.keyboard.press("Escape"); await page.wait_for_timeout(300)
-    await page.evaluate("id => openDetail(id, 'summary')", ids["a"]); await page.wait_for_timeout(300)
-    await page.evaluate("document.getElementById('view-detail').scrollTop = 170")
+    await page.evaluate("id => openDetail(id, 'specs')", ids["a"]); await page.wait_for_timeout(300)
+    await page.evaluate("document.getElementById('view-detail').scrollTop = 250")
     await page.wait_for_timeout(200)
     await shot("3-ficha")
     await page.evaluate("id => openDetail(id, 'maint')", ids["a"]); await page.wait_for_timeout(300)
@@ -125,6 +133,10 @@ async def capture(b, lang):
     await shot("5-historial")
     await page.evaluate("showView('history'); setHistoryMode('value', true)"); await page.wait_for_timeout(300)
     await shot("6-valor-pro")
+    await page.evaluate("showView('history'); setHistoryMode('ranking', true)"); await page.wait_for_timeout(300)
+    await page.evaluate("const r = document.querySelector('#ranking-body .rk-least-title'); if (r) { r.scrollIntoView({block: 'start'}); document.getElementById('view-history').scrollTop -= 70; }")
+    await page.wait_for_timeout(200)
+    await shot("8-ranking")
     await page.evaluate("showView('settings')"); await page.wait_for_timeout(400)
     await page.evaluate("document.querySelector('.cloud-card').scrollIntoView({block: 'start'})")
     await page.evaluate("document.getElementById('view-settings').scrollTop -= 40")

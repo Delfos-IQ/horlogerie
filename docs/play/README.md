@@ -10,7 +10,7 @@ Material listo en esta carpeta:
 |---|---|
 | `ficha.md` | Título, descripciones (ES, EN y PT) y respuestas del cuestionario de contenido |
 | `seguridad-datos.md` | Respuestas del formulario «Seguridad de los datos» |
-| `capturas/es`, `capturas/en`, `capturas/pt` | 7 capturas 1080×1918 y el gráfico destacado 1024×500 por idioma (Pro incluido) |
+| `capturas/es`, `capturas/en`, `capturas/pt` | 8 capturas 1080×1918 y el gráfico destacado 1024×500 por idioma (Pro, familias y ranking incluidos; marcas inventadas) |
 | `assetlinks.json` | Plantilla del archivo que demuestra que la web y la app son tuyas |
 | `twa-manifest.json` | Configuración para Bubblewrap (alternativa a PWABuilder) |
 | `../../privacidad.html` | Política de privacidad pública: `https://rotor.pedicode-app.workers.dev/privacidad.html` (en inglés: `privacy.html`) |
@@ -21,8 +21,8 @@ Para regenerar las capturas: `python3 tools/play-screenshots.py` (con la app ser
 
 ## 0. Antes de empezar (pendiente)
 
-- [ ] Poner un email de contacto en `privacidad.html` (busca `[EMAIL DE CONTACTO]`). Es obligatorio.
-- [ ] Decidir el nombre del paquete. Propuesta: `com.delfosiq.rotor`. **No se puede cambiar después de publicar.**
+- [x] Email de contacto en la política de privacidad.
+- [x] Nombre del paquete: `com.delfosiq.rotor` (ya creado en Play Console; no se puede cambiar).
 
 ## 1. Generar el paquete Android (AAB)
 
