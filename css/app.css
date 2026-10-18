@@ -1619,3 +1619,14 @@ a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold
 .fam-select { flex: 0 0 auto; width: 138px; min-height: 40px; padding-top: 6px; padding-bottom: 6px; font-size: 13px; }
 /* Las pestañas del menú van en un tablist sin cambiar el diseño */
 .nav-tabs { display: contents; }
+/* v2.24 · Portada más ligera: «Sorpréndeme» y «En la caja» en una sola fila; la pregunta de momentos dentro de su fila */
+.rec-actions { display: flex; gap: 6px; margin: 6px 16px 0; min-width: 0; }
+.rec-actions:empty { display: none; }
+.rec-actions .rec-idle { width: auto; margin: 0; padding: 8px 6px; min-height: 40px; }
+.rec-actions .rec-dice { flex: 0 0 auto; }
+.rec-actions #rec-idle { flex: 1 1 auto; min-width: 0; }
+.rec-actions #rec-idle span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-chips .rec-moods-q { flex: 0 0 auto; display: inline-flex; align-items: center; margin: 0 2px 0 0; }
+.rec-hint > span { flex: 1; min-width: 0; }
+.rec-hint-close { flex: 0 0 auto; width: 32px; height: 32px; margin: -6px -6px 0 0; border: 0; background: none; color: var(--mid); cursor: pointer; border-radius: 50%; }
+.rec-hint-close:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }

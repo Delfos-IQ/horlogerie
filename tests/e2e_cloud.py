@@ -72,8 +72,9 @@ async def main():
               await a.locator("#view-settings [data-action='checkForUpdate']").count() == 1)
         links = await a.eval_on_selector_all(".about-links a", "as => as.map(a => a.getAttribute('href'))")
         check("Acerca de: ayuda, aviso legal, privacidad, cookies, web, términos, licencias y contacto (los textos legales, en la web)",
-              links == ['./ayuda.html', 'https://rotor.pedicode-app.workers.dev/aviso-legal.html', 'https://rotor.pedicode-app.workers.dev/privacidad.html', 'https://rotor.pedicode-app.workers.dev/politica-cookies.html', 'https://rotor.pedicode-app.workers.dev/',
-                        'https://rotor.pedicode-app.workers.dev/terminos.html', './licencias.html', 'mailto:pedicode.app@gmail.com?subject=Rotor'], str(links))
+              links[:-1] == ['./ayuda.html', 'https://rotor.pedicode-app.workers.dev/aviso-legal.html', 'https://rotor.pedicode-app.workers.dev/privacidad.html', 'https://rotor.pedicode-app.workers.dev/politica-cookies.html', 'https://rotor.pedicode-app.workers.dev/',
+                        'https://rotor.pedicode-app.workers.dev/terminos.html', './licencias.html']
+              and links[-1].startswith('mailto:pedicode.app@gmail.com?subject=Rotor'), str(links))
         vsub = await a.inner_text("#status-version-sub")
         check("versión con fecha de publicación", vsub.startswith('Publicada el'), vsub)
         check("con la nube apagada no hay botón de sincronizar", await a.evaluate("document.getElementById('status-sync-btn').hidden"))

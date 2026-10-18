@@ -158,10 +158,12 @@ export function openTodaySheet() {
   });
 }
 
-/* ─── Welcome: a different watch-history fact (or idea) every time the app opens ───
-   Chosen once per opening, never the same as the previous one; × hides it until next time. */
+/* ─── Welcome: a watch-history fact, the first time the app is opened each day ───
+   Never the same as the previous one; × hides it until the next day. Only one tip
+   at a time on the home screen: while it shows, the «momentos» hint waits. */
 const INSP_KEY = 'rotor_inspiration_last';
-let _insp = null, _inspClosed = false;
+const INSP_DAY = 'rotor_inspiration_day';
+let _insp = null, _inspClosed = false, _inspToday = null;
 function pickInspiration() {
   let last = -1;
   try { last = Number(localStorage.getItem(INSP_KEY) ?? -1); } catch {}
@@ -170,10 +172,23 @@ function pickInspiration() {
   try { localStorage.setItem(INSP_KEY, String(i)); } catch {}
   return INSPIRATION[i];
 }
+/** Decided once per opening: true only on the first opening of the day */
+function inspirationDue() {
+  if (_inspToday !== null) return _inspToday;
+  const today = String(dayKey(Date.now()));
+  let seen = null;
+  try { seen = localStorage.getItem(INSP_DAY); } catch {}
+  _inspToday = seen !== today;
+  try { localStorage.setItem(INSP_DAY, today); } catch {}
+  return _inspToday;
+}
+/** Is the welcome card on screen now? (the «momentos» hint waits for it) */
+export const inspirationShowing = () => !!document.querySelector('#inspiration-card .insp-card');
 export function renderInspiration() {
   const el = document.getElementById('inspiration-card');
   if (!el) return;
   if (_inspClosed) { el.innerHTML = ''; return; }
+  const close = () => { _inspClosed = true; el.innerHTML = ''; renderHome(); };
   if (location.hostname === 'delfos-iq.github.io') {   // the old address: point to the new one instead
     el.innerHTML = `<aside class="insp-card moved-card" aria-label="${t('Rotor tiene una dirección nueva')}">
       <div class="insp-year" aria-hidden="true"><i class="ti ti-world"></i></div>
@@ -181,9 +196,10 @@ export function renderInspiration() {
       <button type="button" class="moved-link" data-action="openMoveSheet">${t('Llevar mis relojes')} <i class="ti ti-chevron-right" aria-hidden="true"></i></button></div>
       <button type="button" class="insp-close" aria-label="${t('Cerrar')}"><i class="ti ti-x" aria-hidden="true"></i></button>
     </aside>`;
-    el.querySelector('.insp-close').addEventListener('click', () => { _inspClosed = true; el.innerHTML = ''; });
+    el.querySelector('.insp-close').addEventListener('click', close);
     return;
   }
+  if (!inspirationDue()) { el.innerHTML = ''; return; }
   _insp ||= pickInspiration();
   const text = _insp[lang()] || _insp.es;
   el.innerHTML = `<aside class="insp-card" aria-label="${t('Historia de la relojería')}">
@@ -191,7 +207,7 @@ export function renderInspiration() {
     <p class="insp-text">${escHtml(text)}</p>
     <button type="button" class="insp-close" aria-label="${t('Cerrar')}"><i class="ti ti-x" aria-hidden="true"></i></button>
   </aside>`;
-  el.querySelector('.insp-close').addEventListener('click', () => { _inspClosed = true; el.innerHTML = ''; });
+  el.querySelector('.insp-close').addEventListener('click', close);
 }
 
 /* ─── Recommendation banner ───
@@ -231,11 +247,11 @@ export function renderRecommendation(ws, activeW) {
 
   const chips = used.length
     ? `<div class="rec-moods" role="group" aria-label="${t('¿Qué te apetece hoy?')}">
-        <span class="rec-moods-q">${t('¿Qué te apetece hoy?')}</span>
-        <div class="rec-chips">${used.map(m => `<button type="button" class="rec-chip" data-moment="${m.id}" aria-pressed="${m.id === _moment}">
+        <div class="rec-chips"><span class="rec-moods-q">${t('¿Qué te apetece hoy?')}</span>${used.map(m => `<button type="button" class="rec-chip" data-moment="${m.id}" aria-pressed="${m.id === _moment}">
           <i class="ti ${m.icon}" aria-hidden="true"></i>${t(m.label)}</button>`).join('')}</div>
       </div>`
-    : (ws.length >= 2 ? `<div class="rec-hint"><i class="ti ti-sparkles" aria-hidden="true"></i>${t('Marca en cada reloj sus momentos (ocasión, ánimo, estación) y Rotor te propondrá opciones según tu día.')}</div>` : '');
+    : (ws.length >= 2 && momentsHintDue() ? `<div class="rec-hint"><i class="ti ti-sparkles" aria-hidden="true"></i><span>${t('Marca en cada reloj sus momentos (ocasión, ánimo, estación) y Rotor te propondrá opciones según tu día.')}</span>
+        <button type="button" class="rec-hint-close" id="rec-hint-close" aria-label="${t('Cerrar')}"><i class="ti ti-x" aria-hidden="true"></i></button></div>` : '');
 
   if (!list.length) {
     banner.innerHTML = chips;
@@ -257,10 +273,12 @@ export function renderRecommendation(ws, activeW) {
       </div>
       <button class="rec-wear" id="rec-wear" aria-label="${t('Ponérmelo')}: ${name(w)}"><i class="ti ti-hand-finger" aria-hidden="true"></i><span>${t('Ponérmelo')}</span></button>
     </div>
+    <div class="rec-actions">
     ${pool.length > 1 ? `<button type="button" class="rec-idle rec-dice" id="rec-dice"><i class="ti ti-sparkles" aria-hidden="true"></i>
-      <span>${_surprise ? t('Otro al azar') : t('Sorpréndeme: uno al azar')}</span></button>` : ''}
-    ${showIdle && !_surprise ? `<button type="button" class="rec-idle" id="rec-idle"><i class="ti ti-hourglass" aria-hidden="true"></i>
-      <span>${t('Más tiempo en la caja')}: <b>${name(idlest.watch)}</b> · ${formatLastWorn(idlest.stats).toLowerCase()}</span></button>` : ''}`;
+      <span>${_surprise ? t('Otro al azar') : t('Sorpréndeme')}</span></button>` : ''}
+    ${showIdle && !_surprise ? `<button type="button" class="rec-idle" id="rec-idle" aria-label="${escHtml(t('Más tiempo en la caja'))}: ${name(idlest.watch)} · ${escHtml(formatLastWorn(idlest.stats).toLowerCase())}"><i class="ti ti-hourglass" aria-hidden="true"></i>
+      <span>${t('En la caja')}: <b>${name(idlest.watch)}</b> · ${escHtml(formatLastWorn(idlest.stats).toLowerCase())}</span></button>` : ''}
+    </div>`;
   const card = banner.querySelector('.recommendation-card');
   card.addEventListener('click', () => openDetail(w.id));
   card.addEventListener('keydown', e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(w.id); } });
@@ -279,7 +297,18 @@ export function renderRecommendation(ws, activeW) {
   });
   bindChips(banner, ws, activeW);
 }
+/* The «momentos» hint: only while no watch has moments, never next to the welcome card,
+   and gone for good with × */
+const HINT_KEY = 'rotor_moments_hint_off';
+function momentsHintDue() {
+  if (inspirationShowing()) return false;
+  try { return localStorage.getItem(HINT_KEY) !== '1'; } catch { return true; }
+}
 function bindChips(banner, ws, activeW) {
+  banner.querySelector('#rec-hint-close')?.addEventListener('click', () => {
+    try { localStorage.setItem(HINT_KEY, '1'); } catch { /* private mode: hidden until next opening */ }
+    banner.querySelector('.rec-hint')?.remove();
+  });
   banner.querySelectorAll('.rec-chip').forEach(b => b.addEventListener('click', () => {
     _moment = _moment === b.dataset.moment ? null : b.dataset.moment;
     _surprise = null;

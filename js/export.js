@@ -1,6 +1,6 @@
 /**
  * export.js — PDF export of the entire watch collection
- * Uses jsPDF 2.5.1 (bundled in js/vendor, MIT) — runs 100% in the browser, offline.
+ * Uses jsPDF 4.2.1 (bundled in js/vendor, MIT) — runs 100% in the browser, offline.
  *
  * generateCollectionPDF()
  *   → one cover page + one full-page card per watch
@@ -26,7 +26,7 @@ export const PDF_WHITE   = [250, 248, 244];
 export async function generateCollectionPDF() {
   // jsPDF is bundled with the app (js/vendor) and loaded only when needed
   if (typeof window.jspdf === 'undefined') {
-    await loadScript('./js/vendor/jspdf-2.5.1.umd.min.js');
+    await loadScript('./js/vendor/jspdf-4.2.1.umd.min.js');
   }
 
   const { jsPDF } = window.jspdf;
@@ -545,7 +545,7 @@ export function roundedRect(doc, x, y, w, h, r, fillColor) {
 }
 
 /**
- * jsPDF 2.5 cannot read WebP (the format photos are stored in) and stretches
+ * jsPDF cannot read WebP (the format photos are stored in) and stretches
  * non-square images. Re-encode as a centre-cropped square JPEG.
  */
 export function photoToSquareJpeg(dataUrl, size = 600) {

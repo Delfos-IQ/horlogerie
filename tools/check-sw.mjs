@@ -16,6 +16,14 @@ const missing = [];
   if (!new RegExp('\\$\\{BASE\\}/' + rel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\?v=[^`]*)?`').test(sw)) missing.push(rel);
   const src = readFileSync(file, 'utf8');
   for (const m of src.matchAll(/^\s*(?:import|export)\s[^'"]*?from\s+['"](\.[^'"]+)['"]/gm)) walk(join(dirname(file), m[1]));
+  // Loaded on demand: import('./…') and scripts injected with s.src = './js/…' (paths relative to the page)
+  for (const m of src.matchAll(/\bimport\(\s*['"](\.[^'"]+)['"]\s*\)/g)) walk(join(dirname(file), m[1]));
+  for (const m of src.matchAll(/\.src\s*=\s*['"]\.\/(js\/[^'"]+)['"]/g)) {
+    const f = join(root, m[1]);
+    if (seen.has(f)) continue;
+    seen.add(f);
+    if (!new RegExp('\\$\\{BASE\\}/' + m[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\?v=[^`]*)?`').test(sw)) missing.push(m[1]);
+  }
 })(join(root, 'js/main.js'));
 // Classic scripts loaded by index.html
 const html = readFileSync(join(root, 'index.html'), 'utf8');

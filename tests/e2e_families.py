@@ -102,6 +102,13 @@ async def main():
         txt = await page.text_content("#family-filter")
         check("traducido al inglés", 'Diver' in txt and 'All' in txt, txt[:200])
 
+        # ── «Enviar comentario» (v2.24): correo con versión, idioma y navegador ya escritos ──
+        href = await page.get_attribute("#feedback-link", "href")
+        ver = await page.evaluate("fetch('./version.json').then(r => r.json()).then(d => d.version)")
+        from urllib.parse import unquote
+        check("«Send feedback» lleva versión, idioma y navegador en el correo",
+              href.startswith('mailto:pedicode.app@gmail.com?subject=') and ver in unquote(href) and 'Version' in unquote(href) and 'Chrome' in unquote(href), unquote(href)[:200])
+
         check("sin errores de JavaScript", not errs, errs[:3])
         await b.close()
 

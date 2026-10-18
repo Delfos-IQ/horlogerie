@@ -21,7 +21,7 @@ export const KIND_LABELS = { service: tk('Revisión'), battery: tk('Cambio de pi
 export async function generateInsurancePDF({ holder = '' } = {}) {
   const ws = getWatches();
   if (!ws.length) { showToast(t('No hay relojes en la colección')); return null; }
-  if (typeof window.jspdf === 'undefined') await loadScript('./js/vendor/jspdf-2.5.1.umd.min.js');
+  if (typeof window.jspdf === 'undefined') await loadScript('./js/vendor/jspdf-4.2.1.umd.min.js');
   showToast(t('Generando PDF…'));
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });

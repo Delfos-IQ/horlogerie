@@ -323,7 +323,6 @@ export default {
   "En la muñeca": "On the wrist",
   "Al azar": "At random",
   "Otro al azar": "Another at random",
-  "Sorpréndeme: uno al azar": "Surprise me: one at random",
   "Sin conexión para comprobar": "Offline: unable to check",
   "1 reloj en este dispositivo": "1 watch on this device",
   "{n} relojes en este dispositivo": "{n} watches on this device",
@@ -527,7 +526,6 @@ export default {
   "La nube, tu clave y cómo recuperar tus relojes": "The cloud, your key and how to restore your watches",
   "Política de privacidad": "Privacy policy",
   "Licencias de terceros": "Third-party licences",
-  "Contacto": "Contact",
   "Navegación principal": "Main navigation",
   "Colección de relojes": "Watch collection",
   "Problema con la copia en la nube. Ver en Ajustes": "Problem with the cloud backup. See Settings",
@@ -751,4 +749,12 @@ export default {
   "Cualquier uso, cualquier ocasión": "Go anywhere, do anything",
   "Buceo, cronógrafo, vestir… o CUCO, el que vale para todo. Sirve para filtrar tu colección.": "Diver, chronograph, dress… or GADA, the one for everything. Used to filter your collection.",
   "Secciones": "Sections",
+  // v2.24
+  "Sorpréndeme": "Surprise me",
+  "En la caja": "In the box",
+  "Rotor {v} · comentario": "Rotor {v} · feedback",
+  "Cuéntanos qué ha pasado o qué echas de menos:": "Tell us what happened or what you miss:",
+  "Versión": "Version",
+  "Enviar comentario": "Send feedback",
+  "Fallos, ideas o dudas: pedicode.app@gmail.com": "Bugs, ideas or questions: pedicode.app@gmail.com",
 };

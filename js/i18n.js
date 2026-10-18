@@ -11,11 +11,11 @@
  * placeholder / aria-label / title / alt whose exact text is a key is replaced.
  * tools/check-i18n.mjs (CI) checks that every key used has an entry in every dictionary.
  */
-import en from './i18n/en.js';
-import pt from './i18n/pt.js';
-
 const PREFS_KEY = 'rotor_prefs_v1';
-const DICTS = { en, pt };
+/* Only the dictionary of the active language is downloaded (about 50 KB each).
+   Changing the language reloads the app, so it is loaded once, before anything is shown. */
+const LOADERS = { en: () => import('./i18n/en.js'), pt: () => import('./i18n/pt.js') };
+const DICTS = {};
 
 export const LANGS = [
   { id: 'auto', label: 'Automático' },
@@ -77,6 +77,10 @@ export function lang() {
   if (/^(es|gl|ca|eu)\b/.test(nl)) return 'es';
   if (/^pt\b/.test(nl)) return 'pt';
   return 'en';
+}
+
+if (LOADERS[lang()]) {
+  try { DICTS[lang()] = (await LOADERS[lang()]()).default; } catch { /* offline and not cached: Spanish */ }
 }
 
 /** BCP-47 locale for dates and numbers */

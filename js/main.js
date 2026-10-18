@@ -117,6 +117,7 @@ setTimeout(() => {
 
 storage.loadPhotos().then(() => {
   homeDetail.renderHome(); core.updateFab('home');
+  settings.setupFeedbackLink();
   if (moved.checkMoved()) return;
   mountBrowserNotice(document.getElementById('browser-notice'), i18n.lang());
   if (fillBrowserLine(document.getElementById('status-browser-sub'), i18n.lang())) {   // Ajustes → Estado del sistema

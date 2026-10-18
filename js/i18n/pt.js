@@ -323,7 +323,6 @@ export default {
   "En la muñeca": "No pulso",
   "Al azar": "Ao acaso",
   "Otro al azar": "Outro ao acaso",
-  "Sorpréndeme: uno al azar": "Surpreende-me: um ao acaso",
   "Sin conexión para comprobar": "Sem ligação para verificar",
   "1 reloj en este dispositivo": "1 relógio neste dispositivo",
   "{n} relojes en este dispositivo": "{n} relógios neste dispositivo",
@@ -527,7 +526,6 @@ export default {
   "La nube, tu clave y cómo recuperar tus relojes": "A nuvem, a tua chave e como recuperar os teus relógios",
   "Política de privacidad": "Política de privacidade",
   "Licencias de terceros": "Licenças de terceiros",
-  "Contacto": "Contacto",
   "Navegación principal": "Navegação principal",
   "Colección de relojes": "Coleção de relógios",
   "Problema con la copia en la nube. Ver en Ajustes": "Problema com a cópia na nuvem. Ver nas Definições",
@@ -751,4 +749,12 @@ export default {
   "Cualquier uso, cualquier ocasión": "Para qualquer uso e ocasião",
   "Buceo, cronógrafo, vestir… o CUCO, el que vale para todo. Sirve para filtrar tu colección.": "Mergulho, cronógrafo, formal… ou polivalente, o que serve para tudo. Serve para filtrar a tua coleção.",
   "Secciones": "Secções",
+  // v2.24
+  "Sorpréndeme": "Surpreende-me",
+  "En la caja": "Na caixa",
+  "Rotor {v} · comentario": "Rotor {v} · comentário",
+  "Cuéntanos qué ha pasado o qué echas de menos:": "Conta-nos o que aconteceu ou o que te falta:",
+  "Versión": "Versão",
+  "Enviar comentario": "Enviar comentário",
+  "Fallos, ideas o dudas: pedicode.app@gmail.com": "Erros, ideias ou dúvidas: pedicode.app@gmail.com",
 };

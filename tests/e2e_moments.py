@@ -39,8 +39,13 @@ async def main():
         check("cerrada, no vuelve hasta la próxima apertura", (await page.inner_html("#inspiration-card")).strip() == '')
         await page.reload(); await page.wait_for_function("typeof renderHome === 'function'"); await page.wait_for_timeout(2200)
         await page.keyboard.press("Escape")
+        check("el mismo día no vuelve a salir (una sola vez al día)", (await page.inner_html("#inspiration-card")).strip() == '')
+        await page.evaluate("localStorage.removeItem('rotor_inspiration_day')")   # al día siguiente
+        await page.reload(); await page.wait_for_function("typeof renderHome === 'function'"); await page.wait_for_timeout(2200)
+        await page.keyboard.press("Escape")
         second = (await page.text_content("#inspiration-card .insp-text") or '').strip()
-        check("al volver a abrir, otra distinta", second and second != first, f"{first[:40]} / {second[:40]}")
+        check("al día siguiente, otra distinta", second and second != first, f"{first[:40]} / {second[:40]}")
+        await page.click("#inspiration-card .insp-close")
 
         # ── Sin momentos: sugerencia por días en la caja y una pista ──
         ids = await page.evaluate(f"""async () => {{
@@ -55,6 +60,9 @@ async def main():
         rec = await page.text_content("#recommendation-banner")
         check("sin momentos: «Para hoy», nunca «Toca ponerse»", 'Para hoy' in rec and 'toca' not in rec.lower(), rec)
         check("sin momentos: pista para marcarlos", 'momentos' in rec.lower(), rec)
+        await page.click("#rec-hint-close")
+        await page.evaluate("renderHome()")
+        check("la pista se cierra con × y no vuelve", 'momentos' not in (await page.text_content("#recommendation-banner")).lower())
         check("sin momentos: propone el que lleva más tiempo en la caja", 'Longines' in await page.inner_text(".rec-watch"))
 
         # ── Momentos en el formulario ──
@@ -78,7 +86,7 @@ async def main():
         # ── Portada: estación, chips y «más tiempo en la caja» ──
         rec = await page.text_content("#recommendation-banner")
         check("de la estación actual primero (aunque no sea el más olvidado)", 'Presage' in await page.inner_text(".rec-watch"), rec)
-        check("y recuerda cuál lleva más tiempo en la caja", 'Más tiempo en la caja' in rec and 'Longines' in rec, rec)
+        check("y recuerda cuál lleva más tiempo en la caja", 'En la caja' in rec and 'Longines' in rec, rec)
         chips = await page.eval_on_selector_all(".rec-chip", "els => els.map(e => e.dataset.moment)")
         check("chips solo de los momentos que tienen tus relojes", set(chips) == {'mar', 'atrevido', 'evento', 'clasico', season}, str(chips))
         await page.click(".rec-chip[data-moment='mar']")
@@ -99,7 +107,7 @@ async def main():
         check("al ponerte el reloj sugerido, la sugerencia se va", (await page.inner_text("#recommendation-banner")).strip() == '')
 
         # ── Inglés ──
-        await page.evaluate("localStorage.setItem('rotor_prefs_v1', JSON.stringify({ lang: 'en', onboarded: true })); location.reload()")
+        await page.evaluate("localStorage.setItem('rotor_prefs_v1', JSON.stringify({ lang: 'en', onboarded: true })); localStorage.removeItem('rotor_inspiration_day'); location.reload()")
         await page.wait_for_function("typeof renderHome === 'function'"); await page.wait_for_timeout(2200)
         await page.keyboard.press("Escape")
         await page.evaluate("getWatches().forEach(w => { if (w.wearStart) stopWearing(w.id); removeWearDay(w.id, Date.now()); }); renderHome()")

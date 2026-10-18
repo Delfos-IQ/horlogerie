@@ -11,7 +11,7 @@ import { disableReminders, enableReminders, reminderSupport, remindersOn } from 
 import { isPro } from '../billing.js';
 
 import { APP_VERSION } from './updates.js';
-import { CURRENCIES, LANGS, THEMES, currencySymbol, locale, prefs, setPref, t } from '../i18n.js';
+import { CURRENCIES, LANGS, THEMES, currencySymbol, lang, locale, prefs, setPref, t } from '../i18n.js';
 
 export function renderSettings() {
   renderProCard();
@@ -293,4 +293,23 @@ export function renderRemindersCard() {
     } else { await disableReminders(); showToast(t('Avisos desactivados')); }
     renderRemindersCard();
   });
+}
+
+/* ─── «Enviar comentario»: an email with the version, language and browser already written.
+   Nothing leaves the phone unless the person sends it from their own mail app. ─── */
+export function deviceSummary(ua = navigator.userAgent) {
+  const android = ua.match(/Android (\d+(?:\.\d+)?)/)?.[1];
+  const os = android ? `Android ${android}` : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac OS X/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : '';
+  const b = [['Samsung Internet', /SamsungBrowser\/(\d+)/], ['Mi Browser', /(?:MiuiBrowser|XiaoMi)\/(\d+)/], ['Edge', /EdgA?\/(\d+)/],
+             ['Opera', /OPR\/(\d+)/], ['Firefox', /Firefox\/(\d+)/], ['Chrome', /Chrome\/(\d+)/], ['Safari', /Version\/(\d+).*Safari/]]
+    .find(([, r]) => r.test(ua));
+  const installed = window.matchMedia?.('(display-mode: standalone)').matches ? ' · app' : '';
+  return [os, b ? `${b[0]} ${ua.match(b[1])[1]}` : ''].filter(Boolean).join(' · ') + installed;
+}
+export function setupFeedbackLink() {
+  const a = document.getElementById('feedback-link');
+  if (!a) return;
+  const subject = t('Rotor {v} · comentario', { v: APP_VERSION });
+  const body = `${t('Cuéntanos qué ha pasado o qué echas de menos:')}\n\n\n\n— \n${t('Versión')}: ${APP_VERSION} · ${t('Idioma')}: ${lang()} · ${deviceSummary()}`;
+  a.href = `mailto:pedicode.app@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

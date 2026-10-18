@@ -26,6 +26,20 @@ function sessionSheet(html, { onClose } = {}) { return openSheet({ html, onClose
 
 export function fmtPairCode(c) { return `${c.slice(0, 3)}-${c.slice(3)}`; }
 
+/** The QR generator (55 KB) is only needed to pair a device: loaded the first time */
+let _qrLoading = null;
+export function loadQr() {
+  if (typeof qrcode === 'function') return Promise.resolve(true);
+  _qrLoading ||= new Promise(resolve => {
+    const s = document.createElement('script');
+    s.src = './js/vendor/qrcode-generator-1.4.4.js';
+    s.onload = () => resolve(true);
+    s.onerror = () => { _qrLoading = null; resolve(false); };   // without QR the code still works
+    document.head.appendChild(s);
+  });
+  return _qrLoading;
+}
+
 export function qrSvg(text, size = 180) {
   try {
     const qr = qrcode(0, 'M');
@@ -103,7 +117,7 @@ export async function openPairSheet() {
     body.textContent = t('Generando código…');
     clearInterval(timer);
     let data;
-    try { data = await pairCreate(); }
+    try { [data] = await Promise.all([pairCreate(), loadQr()]); }
     catch (e) {
       body.innerHTML = `<p>${escHtml(errText(e))}.</p><p>${t('Mientras tanto, puedes escribir tu clave de recuperación en el otro dispositivo:')}</p>
         <div class="cloud-key big">${escHtml(getSessionId())}</div>`;

@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.23.2';
+const CACHE   = 'horlogerie-v2.24.0';
 // '/horlogerie' on GitHub Pages, '/app' on the Rotor website: taken from where the SW lives
 const BASE    = new URL(self.registration.scope).pathname.replace(/\/$/, '');
 const API_HOST = 'horlogerie.pedicode-app.workers.dev';
@@ -24,9 +24,9 @@ const SHELL = [
   `${BASE}/help.html`,
   `${BASE}/privacidade.html`,
   `${BASE}/ajuda-pt.html`,
-  `${BASE}/css/app.css?v=2.23.2`,
-  `${BASE}/css/fonts.css?v=2.23.2`,
-  `${BASE}/css/icons.css?v=2.23.2`,
+  `${BASE}/css/app.css?v=2.24.0`,
+  `${BASE}/css/fonts.css?v=2.24.0`,
+  `${BASE}/css/icons.css?v=2.24.0`,
   `${BASE}/css/icons/tabler-icons-e550d3ed.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
@@ -36,7 +36,7 @@ const SHELL = [
   `${BASE}/css/fonts/jost-latin-500-normal.woff2`,
   `${BASE}/css/fonts/jost-latin-600-normal.woff2`,
   `${BASE}/css/fonts/jost-latin-400-italic.woff2`,
-  `${BASE}/js/vendor/jspdf-2.5.1.umd.min.js`,
+  `${BASE}/js/vendor/jspdf-4.2.1.umd.min.js`,
   `${BASE}/js/db.js`,              // módulo ES: se importa sin ?v (la caché cambia de nombre con cada versión)
   `${BASE}/js/storage.js`,
   `${BASE}/js/data/persist.js`,
@@ -66,9 +66,9 @@ const SHELL = [
   `${BASE}/js/i18n.js`,
   `${BASE}/js/i18n/en.js`,
   `${BASE}/js/i18n/pt.js`,
-  `${BASE}/js/theme-boot.js?v=2.23.2`,
-  `${BASE}/js/spec-parser.js?v=2.23.2`,
-  `${BASE}/js/main.js?v=2.23.2`,
+  `${BASE}/js/theme-boot.js?v=2.24.0`,
+  `${BASE}/js/spec-parser.js?v=2.24.0`,
+  `${BASE}/js/main.js?v=2.24.0`,
   `${BASE}/js/modules/url-import.js`,
   `${BASE}/js/modules/onboarding.js`,
   `${BASE}/js/modules/pro.js`,
