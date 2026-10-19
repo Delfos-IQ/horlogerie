@@ -5,8 +5,7 @@
       "namespace": "android_app",
       "package_name": "com.delfosiq.rotor",
       "sha256_cert_fingerprints": [
-        "AA:BB:CC:... huella SHA-256 de tu clave de subida (sale en el ZIP de PWABuilder)",
-        "DD:EE:FF:... huella SHA-256 de Play App Signing (Play Console → Integridad de la app)"
+        "DC:9E:54:E6:81:2F:F5:21:07:9B:E6:6A:29:15:E9:C0:6B:11:3A:2B:ED:7E:39:04:38:EE:84:9A:6F:91:99:F1"
       ]
     }
   }
