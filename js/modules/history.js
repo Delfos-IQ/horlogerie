@@ -1,5 +1,6 @@
 /* ─────────────────── HISTORY ─────────────────── */
 
+import { onReady } from '../ready.js';
 import { addWearDays, calendarDaysBetween, dayKey, getWatch, getWatches, photoSrc, removeWearDay, startOfDay, wearIntervals, wearStats, wornDayKeys, familyById } from '../storage.js';
 import { elapsedSince, escHtml, formatDate, navPush, navReplace, showToast, ui } from './core.js';
 import { locale, t } from '../i18n.js';
@@ -412,7 +413,7 @@ export function shiftCalendarMonth(delta) {
   _calMonth = new Date(base.getFullYear(), base.getMonth() + delta, 1);
   renderCalendar();
 }
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   document.getElementById('cal-prev')?.addEventListener('click', () => shiftCalendarMonth(-1));
   document.getElementById('cal-next')?.addEventListener('click', () => shiftCalendarMonth(1));
   // Swipe left/right on the grid to change month

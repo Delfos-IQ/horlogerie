@@ -112,11 +112,18 @@ async function records() {
 }
 
 /** At start: object URLs and tags for every stored photo */
-export async function loadPhotoIndex() {
-  const recs = await records();
-  for (const r of recs) { tags.set(r.id, r.tag || ''); if (!urls.has(r.id)) setUrl(r.id, r.blob); }
-  return recs.length;
+let _indexed = null;
+export function loadPhotoIndex() {
+  _indexed = (async () => {
+    const recs = await records();
+    for (const r of recs) { tags.set(r.id, r.tag || ''); if (!urls.has(r.id)) setUrl(r.id, r.blob); }
+    return recs.length;
+  })();
+  return _indexed;
 }
+/** Resolves once the tags of the stored photos are known. The cloud waits for it:
+    before that, every photo looks missing (v2.24.1 fix). */
+export function photosIndexed() { return _indexed || loadPhotoIndex(); }
 
 /** id → tag of every stored photo (cheap: no photo is read) */
 export function photoTags() { return new Map(tags); }

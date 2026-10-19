@@ -16,8 +16,8 @@
 import { CONFIG, apiError } from './api.js';
 import { t } from './i18n.js';
 import {
-  getWatches, getWishlist, setWishlistSilently, getTombstones, clearTombstones, getPhotoDataUrl, photoTags,
-  sanitizeWatch, sanitizeWishlistItem, itemStamp, enforceSingleActive, applyWatchList, idbDeletePhoto, readJSON,
+  getWatches, getWishlist, setWishlistSilently, getTombstones, clearTombstones, getPhotoDataUrl, photoTags, photosIndexed,
+  sanitizeWatch, sanitizeWishlistItem, itemStamp, enforceSingleActive, applyWatchList, idbDeletePhoto, idbSavePhoto, readJSON,
 } from './storage.js';
 
 const META_KEY = 'horlogerie_cloud2_v1';
@@ -91,7 +91,7 @@ async function api(path, key, { method = 'GET', body } = {}) {
 function readMeta(key) {
   const all = readJSON(META_KEY, {}, v => v && typeof v === 'object');
   const m = all[canonicalKey(key)] || {};
-  return { rev: m.rev || 0, sent: m.sent || {}, photos: m.photos || {} };
+  return { rev: m.rev || 0, sent: m.sent || {}, photos: m.photos || {}, photos1: !!m.photos1 };
 }
 function writeMeta(key, m) {
   const all = readJSON(META_KEY, {}, v => v && typeof v === 'object');
@@ -121,6 +121,13 @@ const BATCH_ITEMS = 40, BATCH_BYTES = 3 * 1024 * 1024, OVERLAP_REV = 5_000 * 100
 export async function sync2(key, { full = false } = {}) {
   const { aes } = await deriveKeys(key);
   const m = full ? { rev: 0, sent: {}, photos: {} } : readMeta(key);
+  await photosIndexed();   // without this, a sync right after opening thinks every photo is gone
+
+  // Photos this device should have but doesn't (the cloud had one, or this device never checked
+  // since v2.24.1): download everything again in this round to get them back
+  const REPAIR = 'photos1';
+  const known = photoTags();
+  const repair = !full && getWatches().some(w => !known.has(w.id) && (m.photos[w.id] || !m[REPAIR]));
 
   // ── 1. Upload ──
   // Photos are only read when they changed (the tag says so without reading them)
@@ -132,7 +139,9 @@ export async function sync2(key, { full = false } = {}) {
   for (const w of ws) {
     const k = 'w:' + w.id, stamp = itemStamp(w);
     const tag = tags.get(w.id) || '';
-    const photoChanged = (m.photos[w.id] || '') !== tag;
+    // A photo missing on this device is never «removed» in the cloud: there is no way to remove a
+    // photo in Rotor, so a missing one is a local loss and must not spread to the other devices
+    const photoChanged = !!tag && (m.photos[w.id] || '') !== tag;
     if (m.sent[k] === stamp && !photoChanged) continue;
     const { photo: _p, ...rest } = w;
     const ch = { id: w.id, kind: 'w', updated: stamp, data: await encryptText(aes, JSON.stringify(rest), k) };
@@ -172,7 +181,7 @@ export async function sync2(key, { full = false } = {}) {
 
   // ── 2. Download ──
   const remoteW = new Map(), remoteL = new Map();
-  let since = Math.max(0, m.rev - OVERLAP_REV), more = true, guard = 0;
+  let since = repair ? 0 : Math.max(0, m.rev - OVERLAP_REV), more = true, guard = 0;
   while (more && guard++ < 200) {
     const r = await api('/v2/sync', key, { method: 'POST', body: { since, changes: [] } });
     for (const it of r.items || []) (it.kind === 'w' ? remoteW : remoteL).set(it.id, it);
@@ -180,6 +189,7 @@ export async function sync2(key, { full = false } = {}) {
     since = r.rev || since;
   }
   m.rev = Math.max(m.rev, since);
+  if (repair || full) m[REPAIR] = true;
 
   let received = 0;
   // Watches
@@ -187,13 +197,28 @@ export async function sync2(key, { full = false } = {}) {
     const byId = new Map(getWatches().map(w => [w.id, { ...w }]));
     for (const [id, it] of remoteW) {
       const mine = byId.get(id);
-      if (mine && itemStamp(mine) > it.updated) continue;            // ours is newer: it goes up next time
+      if (mine && itemStamp(mine) > it.updated) {                     // ours is newer: it goes up next time…
+        if (it.photo && !tags.has(id)) {                               // …but take the photo we are missing
+          try {
+            const ph = await decryptText(aes, it.photo, 'p:' + id);
+            await idbSavePhoto(id, ph);
+            m.photos[id] = await photoTag(ph);
+            received++;
+          } catch { /* unreadable: leave it */ }
+        }
+        continue;
+      }
       if (it.deleted) {
         if (mine) { byId.delete(id); await idbDeletePhoto(id); received++; }
         delete m.sent['w:' + id]; delete m.photos[id];
         continue;
       }
-      if (mine && itemStamp(mine) === it.updated && it.photo === undefined) { m.sent['w:' + id] = it.updated; continue; }
+      // Same version as ours: nothing to do, unless it brings a photo this device is missing
+      if (mine && itemStamp(mine) === it.updated && (it.photo === undefined || it.photo === '' || tags.has(id))) {
+        m.sent['w:' + id] = it.updated;
+        if (it.photo === '' && tags.has(id)) m.photos[id] = '';   // the cloud lost it: ours goes up next time
+        continue;
+      }
       let w;
       try { w = sanitizeWatch(JSON.parse(await decryptText(aes, it.data, 'w:' + id))); } catch { continue; }
       if (!w || w.id !== id) continue;
@@ -204,7 +229,11 @@ export async function sync2(key, { full = false } = {}) {
         if (it.photo) {
           try { w.photo = await decryptText(aes, it.photo, 'p:' + id); photoTagNow = await photoTag(w.photo); }
           catch { w.photo = null; }
-        } else { w.photo = null; await idbDeletePhoto(id); photoTagNow = ''; }
+        } else {
+          // '' = no photo in the cloud. Ours (if any) stays and goes up again on the next sync
+          w.photo = null;
+          if (tags.has(id)) photoTagNow = '';
+        }
       } else w.photo = null;
       const fresh = sanitizeWatch({ ...w, photo: w.photo || undefined }) || w;
       fresh.updatedAt = it.updated;
@@ -215,6 +244,11 @@ export async function sync2(key, { full = false } = {}) {
       received++;
     }
     await applyWatchList(enforceSingleActive([...byId.values()]));
+  }
+  // After a repair round, what is still missing is not in the cloud either: stop looking for it
+  if (repair) {
+    const now = photoTags();
+    for (const w of getWatches()) if (!now.has(w.id)) m.photos[w.id] = '';
   }
   // Wishlist
   if (remoteL.size) {

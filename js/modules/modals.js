@@ -1,4 +1,5 @@
 /* ─── ADD / EDIT MODAL ─── */
+import { onReady } from '../ready.js';
 import { dbGet, dbLoad, dbSearch } from '../db.js';
 import { FAMILIES, MOMENT_GROUPS, addWatch, cleanFamily, cleanMoments, compressPhoto, getWatch, guessFamily, photoSrc, updateWatch } from '../storage.js';
 import { escHtml, showToast, ui } from './core.js';
@@ -325,7 +326,7 @@ export function readMaintFields() {
   }
   return out;
 }
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   document.getElementById('f-type')?.addEventListener('change', updateMaintVisibility);
 });
 

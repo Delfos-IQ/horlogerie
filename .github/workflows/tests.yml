@@ -76,6 +76,9 @@ jobs:
       - name: Nube, clave corta y vincular dispositivos
         run: python tests/e2e_cloud.py 8712
 
+      - name: Fotos y nube (una foto perdida no se propaga; recuperación) y arranque en inglés
+        run: python tests/e2e_photos_cloud.py 8711
+
       - name: Momentos (ocasión, ánimo, estación) y bienvenida con historia
         run: python tests/e2e_moments.py
 

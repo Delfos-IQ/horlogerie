@@ -8,6 +8,7 @@
  * - Arranque: pantalla de bienvenida, fotos, recomendación, service worker,
  *   comprobación de versión y sincronización.
  */
+import { onLoad } from './ready.js';
 import * as storage from './storage.js';
 import * as sync from './sync.js';
 import * as exporter from './export.js';
@@ -135,7 +136,7 @@ navigator.serviceWorker?.getRegistrations?.()
   .catch(() => {});
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  onLoad(() => {
     // Reload only when a new SW replaces one that already controlled the page, once
     const hadController = !!navigator.serviceWorker.controller;
     let reloading = false;
@@ -178,7 +179,7 @@ billing.onProChange(() => {
   else if (v === 'settings') settings.renderSettings();
 });
 
-window.addEventListener('load', () => {
+onLoad(() => {
   setTimeout(billing.recheckPro, 3000);
   setTimeout(async () => {
     await reminders.syncReminderPlan();

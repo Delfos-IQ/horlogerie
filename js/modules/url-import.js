@@ -11,6 +11,7 @@
  *      ticks what to apply. Nothing is overwritten without a tick.
  */
 
+import { onReady } from '../ready.js';
 import { getWatch, updateWatch } from '../storage.js';
 import { CONFIG, FEATURES, apiError } from '../api.js';
 import { workerCaps } from '../sync.js';
@@ -284,7 +285,7 @@ export function refreshImportButtons() {
     if (el && !(id === 'url-import-section' && ui.editingWatchId)) el.hidden = !on;
   });
 }
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   document.getElementById('f-import-btn')?.addEventListener('click', importIntoWatchForm);
   document.getElementById('wl-import-btn')?.addEventListener('click', importIntoWishlistForm);
   refreshImportButtons();

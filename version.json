@@ -1,5 +1,5 @@
 {
-  "version": "2.24.0",
-  "date": "2026-10-18",
-  "notes": "Portada más despejada: la historia del día sale una vez al día y la colección se ve antes. Arranque más ligero, PDF actualizado, «Enviar comentario» en Ajustes y ayuda sobre dónde se guardan tus relojes."
+  "version": "2.24.1",
+  "date": "2026-10-19",
+  "notes": "Arreglo importante: una foto que falta en un dispositivo ya no se borra en la nube ni en los demás, y quien las tiene las vuelve a subir. En inglés y portugués la app vuelve a sincronizar al abrir."
 }

@@ -9,6 +9,7 @@
    - "Usar una clave o código" accepts either and merges the cloud copy here.
 ══════════════════════════════════════════════════════ */
 
+import { onLoad } from '../ready.js';
 import { errText } from '../api.js';
 import { getWatches, getWishlist } from '../storage.js';
 import { deleteCloudData, getSessionId, getSyncMeta, importSession, isCloudEnabled, normalizeKey, normalizePairCode, pairClaim, pairCreate, rotateSessionKey, setCloudEnabled, setSyncMeta } from '../sync.js';
@@ -264,5 +265,5 @@ export function handleLinkFromUrl() {
   const code = normalizePairCode(m[1]);
   if (code) setTimeout(() => openLinkSheet(fmtPairCode(code)), 1800);   // after the splash
 }
-window.addEventListener('load', handleLinkFromUrl);
+onLoad(handleLinkFromUrl);
 

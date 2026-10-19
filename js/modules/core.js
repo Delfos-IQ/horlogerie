@@ -11,6 +11,7 @@
  * - Settings: stats, sync, PDF export, JSON backup
  */
 
+import { onReady, onLoad } from '../ready.js';
 import { t, locale } from '../i18n.js';
 import { renderHome, stopActiveTimer } from './home-detail.js';
 import { openAddModal } from './modals.js';
@@ -29,7 +30,7 @@ export const ui = {
 };
 
 /* ─── Keyboard: nav items respond to Enter/Space ─── */
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -134,7 +135,7 @@ new MutationObserver(() => {
   _syncQueued = true;
   queueMicrotask(() => { _syncQueued = false; syncBackWatcher(); });
 }).observe(document.body, { childList: true });
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   for (const id of STATIC_MODALS) {
     const el = document.getElementById(id);
     if (el) new MutationObserver(() => syncBackWatcher()).observe(el, { attributes: true, attributeFilter: ['style'] });
@@ -142,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Set initial history state on load so there's always a 'home' entry
-window.addEventListener('load', () => {
+onLoad(() => {
   if (!history.state) {
     navReplace({ view: 'home' });
   } else _navState = history.state;
