@@ -1,6 +1,6 @@
 /* ─── Rotor Pro: what it includes, buying it, and the locks on Pro features ─── */
-import { buyPro, isPro, proOffer, restorePro } from '../billing.js';
-import { t, tk } from '../i18n.js';
+import { buyPro, isPro, isProPurchased, proOffer, proPromoUntil, restorePro } from '../billing.js';
+import { locale, t, tk } from '../i18n.js';
 import { escHtml, showToast } from './core.js';
 import { openSheet } from './sheet.js';
 
@@ -84,7 +84,8 @@ export function renderProCard() {
     ? `<button class="settings-card pro-card on" data-pro-open>
         <div class="settings-card-icon tint-gold"><i class="ti ti-crown card-icon-gold" aria-hidden="true"></i></div>
         <div class="settings-card-text"><div class="settings-card-title">Rotor Pro</div>
-          <div class="settings-card-sub">${t('Activado. Gracias por apoyar la app.')}</div></div>
+          <div class="settings-card-sub">${isProPurchased() ? t('Activado. Gracias por apoyar la app.')
+            : t('Gratis durante la prueba, hasta el {d}.', { d: new Date(proPromoUntil()).toLocaleDateString(locale(), { day: 'numeric', month: 'long' }) })}</div></div>
         <i class="ti ti-chevron-right settings-card-arrow" aria-hidden="true"></i></button>`
     : `<button class="settings-card pro-card" data-pro-open>
         <div class="settings-card-icon tint-gold"><i class="ti ti-crown card-icon-gold" aria-hidden="true"></i></div>

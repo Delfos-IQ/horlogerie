@@ -1,8 +1,9 @@
 import { escHtml, showToast } from './core.js';
 import { renderSystemStatus } from './settings.js';
 import { lang, t } from '../i18n.js';
+import { setProPromo } from '../billing.js';
 
-export const APP_VERSION = '2.24.1'; // Must match version.json
+export const APP_VERSION = '2.24.2'; // Must match version.json
 
 export async function initVersionCheck() {
   // Silent check on every launch — fetch version.json bypassing cache
@@ -10,6 +11,9 @@ export async function initVersionCheck() {
     const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
+    // Pro free during the closed test: «proFreeUntil»: "2026-12-31" (end of that day, UTC)
+    const until = /^\d{4}-\d{2}-\d{2}$/.test(data.proFreeUntil || '') ? Date.parse(data.proFreeUntil + 'T23:59:59Z') : 0;
+    setProPromo(navigator.webdriver ? 0 : until);   // automated tests check Pro as sold
     if (data.version && data.version !== APP_VERSION) showUpdateBanner(data.version, data.notes);
   } catch { /* Offline — skip */ }
 }

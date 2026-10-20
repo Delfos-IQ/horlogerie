@@ -34,7 +34,22 @@ function writeState(s) {
   try { localStorage.setItem(PRO_KEY, JSON.stringify(s)); } catch {}
   listeners.forEach(fn => { try { fn(isPro()); } catch {} });
 }
-export function isPro() { return !!state.active; }
+/* Pro free for everyone until a date set in version.json («proFreeUntil»: the closed test).
+   Stored so it also works offline; a purchase is kept apart and never touched. */
+const PROMO_KEY = 'rotor_pro_promo_until';
+function readPromo() { try { return Number(localStorage.getItem(PROMO_KEY)) || 0; } catch { return 0; } }
+let promoUntil = readPromo();
+export function proPromoUntil() { return promoUntil > Date.now() ? promoUntil : 0; }
+/** @param {number} until timestamp (0 = no promotion) */
+export function setProPromo(until) {
+  const before = isPro();
+  promoUntil = Number(until) || 0;
+  try { if (promoUntil) localStorage.setItem(PROMO_KEY, String(promoUntil)); else localStorage.removeItem(PROMO_KEY); } catch {}
+  if (isPro() !== before) listeners.forEach(fn => { try { fn(isPro()); } catch {} });
+}
+export function isPro() { return !!state.active || promoUntil > Date.now(); }
+/** Bought (not just the promotion) */
+export function isProPurchased() { return !!state.active; }
 export function proInfo() { return { ...state }; }
 /** Called whenever Pro is switched on or off */
 export function onProChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }

@@ -92,6 +92,18 @@ async def main():
         await page.click("[data-action='openInsurance']")
         await page.wait_for_timeout(300)
         check("sin Pro: el inventario para el seguro pide Pro", await page.locator(".pro-sheet").count() == 1 and await page.locator("#in-go").count() == 0)
+        # ── Prueba cerrada: Pro gratis para todos hasta una fecha (version.json → proFreeUntil) ──
+        await page.keyboard.press("Escape")
+        await page.evaluate("setProPromo(Date.now() + 30 * 86400000); showView('settings'); renderSettings()")
+        await page.wait_for_timeout(200)
+        card = await page.text_content("#pro-card")
+        check("con la promoción de la prueba, Pro está activo y Ajustes dice hasta cuándo",
+              await page.evaluate("isPro() && !isProPurchased()") and 'Gratis durante la prueba' in card, card)
+        await page.evaluate("id => openDetail(id, 'maint')", A); await page.wait_for_timeout(150)
+        check("y el mantenimiento se puede usar", await page.locator("#care-add-service").count() == 1)
+        await page.evaluate("setProPromo(Date.now() - 1000)")
+        check("al acabar la fecha, Pro vuelve a estar bloqueado", not await page.evaluate("isPro()"))
+        await page.evaluate("setProPromo(0)")
         check("sin errores de JavaScript (navegador normal)", not errs, errs[:3])
         await ctx.close()
 

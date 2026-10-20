@@ -1,5 +1,6 @@
 {
-  "version": "2.24.1",
-  "date": "2026-10-19",
-  "notes": "Arreglo importante: una foto que falta en un dispositivo ya no se borra en la nube ni en los demás, y quien las tiene las vuelve a subir. En inglés y portugués la app vuelve a sincronizar al abrir."
+  "version": "2.24.2",
+  "date": "2026-10-20",
+  "notes": "Durante la prueba cerrada, Rotor Pro es gratis para todos hasta el 31 de diciembre.",
+  "proFreeUntil": "2026-12-31"
 }

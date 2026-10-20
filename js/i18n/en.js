@@ -757,4 +757,5 @@ export default {
   "Versión": "Version",
   "Enviar comentario": "Send feedback",
   "Fallos, ideas o dudas: pedicode.app@gmail.com": "Bugs, ideas or questions: pedicode.app@gmail.com",
+  "Gratis durante la prueba, hasta el {d}.": "Free during the test, until {d}.",
 };
