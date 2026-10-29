@@ -1,6 +1,6 @@
 {
-  "version": "2.26.0",
+  "version": "2.26.1",
   "date": "2026-10-29",
-  "notes": "Taller: reserva de marcha (cuándo se para cada automático y cuántos clics avanzar la fecha) y GMT, un segundo huso en esfera de 24 horas.",
+  "notes": "El Taller vuelve a lo esencial: fase lunar y medir la precisión.",
   "proFreeUntil": "2026-12-31"
 }

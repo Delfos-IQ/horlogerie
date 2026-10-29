@@ -1,6 +1,5 @@
 /* ─── Complicaciones: moon phase and accuracy measurement (both free; the accuracy history is Pro) ─── */
-import { GMT_CITIES, accuracyStats, addAccuracyReading, cityById, dateDangerZone, getActiveWatch, getWatch, getWatches, hasMoonPhase, moonAt, moonClicks,
-  reserveStatus, zoneDiffMinutes, zoneTime } from '../storage.js';
+import { accuracyStats, addAccuracyReading, getActiveWatch, getWatch, getWatches, hasMoonPhase, moonAt, moonClicks } from '../storage.js';
 import { isPro } from '../billing.js';
 import { locale, t, tk } from '../i18n.js';
 import { escHtml, showToast } from './core.js';
@@ -22,151 +21,9 @@ export function renderComplications() {
   const box = document.getElementById('complications-body');
   if (!box) return;
   box.innerHTML = `<section class="cx-card cx-moon" id="cx-moon" aria-labelledby="cx-moon-t"></section>
-    <section class="cx-card cx-res" id="cx-res" aria-labelledby="cx-res-t"></section>
-    <section class="cx-card cx-gmt" id="cx-gmt" aria-labelledby="cx-gmt-t"></section>
     <section class="cx-card cx-acc" id="cx-acc" aria-labelledby="cx-acc-t"></section>`;
   renderMoon();
-  renderReserve();
-  renderGmt();
   renderAccuracy();
-}
-
-/* ══ Power reserve: when each mechanical watch in the box stops, and the date to set ══ */
-const hm = ms => new Date(ms).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
-const whenText = ms => {
-  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
-  const diff = Math.round((new Date(ms).setHours(0, 0, 0, 0) - d0.getTime()) / DAY_MS);
-  if (diff === 0) return t('hoy a las {h}', { h: hm(ms) });
-  if (diff === 1) return t('mañana a las {h}', { h: hm(ms) });
-  if (diff === -1) return t('ayer a las {h}', { h: hm(ms) });
-  return t('el {d} a las {h}', { d: dayMonth(ms), h: hm(ms) });
-};
-/** Power-reserve indicator: a 240° arc from 0 to the reserve, as on a dial */
-export function reserveGauge(fraction, size = 58) {
-  const c = 29, r = 22, a0 = 150, sweep = 240;
-  const pt = deg => { const a = deg * Math.PI / 180; return `${(c + r * Math.cos(a)).toFixed(2)} ${(c + r * Math.sin(a)).toFixed(2)}`; };
-  const arc = (from, to) => `M${pt(from)} A${r} ${r} 0 ${to - from > 180 ? 1 : 0} 1 ${pt(to)}`;
-  const f = Math.max(0, Math.min(1, fraction));
-  const end = a0 + sweep * f;
-  const ha = (end * Math.PI) / 180;
-  return `<svg class="cx-gauge" viewBox="0 0 58 58" width="${size}" height="${size}" aria-hidden="true">
-    <circle cx="${c}" cy="${c}" r="27" class="cx-bezel"/>
-    <path d="${arc(a0, a0 + sweep)}" class="cx-g-track"/>
-    ${f > 0.01 ? `<path d="${arc(a0, end)}" class="cx-g-fill${f < 0.2 ? ' low' : ''}"/>` : ''}
-    <line x1="${c}" y1="${c}" x2="${(c + (r - 4) * Math.cos(ha)).toFixed(2)}" y2="${(c + (r - 4) * Math.sin(ha)).toFixed(2)}" class="cx-g-hand"/>
-    <circle cx="${c}" cy="${c}" r="2.4" class="cx-hand"/>
-  </svg>`;
-}
-
-function renderReserve() {
-  const el = document.getElementById('cx-res');
-  if (!el) return;
-  const now = Date.now();
-  const rows = getWatches().map(w => ({ w, st: reserveStatus(w, now) })).filter(x => x.st);
-  const head = `<div class="cx-eyebrow" id="cx-res-t">${t('Reserva de marcha')}</div>`;
-  if (!rows.length) {
-    el.innerHTML = `${head}<p class="cx-empty">${t('Aquí verás cuándo se para cada reloj mecánico que dejes en la caja, y cuántos clics avanzar la fecha.')}</p>`;
-    return;
-  }
-  const order = { wearing: 0, running: 1, stopped: 2, unknown: 3 };
-  rows.sort((a, b) => order[a.st.state] - order[b.st.state] || (a.st.stopAt || 0) - (b.st.stopAt || 0));
-  const danger = dateDangerZone(now);
-  const row = ({ w, st }) => {
-    let gauge = 0, main = '', sub = '';
-    if (st.state === 'wearing') { gauge = 1; main = t('En la muñeca'); sub = t('Se da cuerda mientras lo llevas'); }
-    else if (st.state === 'unknown') { main = t('Sin datos'); sub = t('Apunta cuándo lo llevas y Rotor sabrá cuándo se para'); }
-    else if (st.state === 'running') {
-      gauge = st.fraction;
-      main = st.remainingH < 1 ? t('Menos de 1 h') : t('Le quedan ~{h} h', { h: Math.round(st.remainingH) });
-      sub = t('Se parará {w}', { w: whenText(st.stopAt) });
-    } else {
-      main = t('Parado');
-      sub = t('Desde {w}', { w: whenText(st.stopAt) });
-    }
-    const clicks = st.state === 'stopped' && st.dateClicks > 0
-      ? `<div class="cx-r-date${danger ? ' warn' : ''}"><i class="ti ti-calendar" aria-hidden="true"></i>
-          ${danger ? t('Fecha: espera a las 3:00 para ajustarla') : st.dateClicks === 1 ? t('Fecha: avanza 1 clic') : t('Fecha: avanza {n} clics', { n: st.dateClicks })}</div>` : '';
-    return `<button class="cx-r-row" data-open="${escHtml(w.id)}">
-      ${reserveGauge(gauge)}
-      <span class="cx-r-txt"><b>${name(w)}</b><span class="cx-r-main${st.state === 'stopped' ? ' off' : ''}">${main}</span>
-        <small>${sub}${st.estimated && st.state !== 'unknown' ? ` · ${t('reserva estimada: {h} h', { h: st.hours })}` : ''}</small>${clicks}</span>
-    </button>`;
-  };
-  el.innerHTML = `${head}<div class="cx-r-list">${rows.map(row).join('')}</div>
-    ${danger ? `<div class="cx-r-warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${t('Entre las 21:00 y las 3:00 no cambies la fecha: el mecanismo ya está engranando el cambio de día y puede dañarse.')}</div>` : ''}
-    <div class="cx-foot">${t('Estimación: supone que tenía la cuerda completa al quitártelo.')}</div>`;
-  el.querySelectorAll('.cx-r-row').forEach(b => b.addEventListener('click', () => openDetail(b.dataset.open, 'specs')));
-}
-
-/* ══ GMT: a second time zone on a 24-hour dial ══ */
-const GMT_KEY = 'rotor_gmt_zone';
-let _gmtTimer = null;
-function gmtZone() { try { return localStorage.getItem(GMT_KEY) || 'UTC'; } catch { return 'UTC'; } }
-/** 24-hour dial: day half in gold, night half dark; gold hand = second zone, thin hand = here */
-export function gmtDial(zone, now = Date.now(), size = 124) {
-  const c = 74, R = 62, z = zoneTime(zone, now) || { h: 0, m: 0 };
-  const d = new Date(now);
-  const ang = (h, m) => ((h + m / 60) / 24) * 2 * Math.PI + Math.PI / 2;     // midnight at the bottom, noon at the top, clockwise
-  const p = (a, rr) => `${(c + rr * Math.cos(a)).toFixed(2)} ${(c + rr * Math.sin(a)).toFixed(2)}`;
-  const nums = [0, 6, 12, 18].map(h => { const a = ang(h, 0); return `<text x="${(c + (R - 12) * Math.cos(a)).toFixed(1)}" y="${(c + (R - 12) * Math.sin(a) + 3.5).toFixed(1)}" class="cx-g-num">${h === 0 ? 24 : h}</text>`; }).join('');
-  const ticks = Array.from({ length: 24 }, (_, h) => { const a = ang(h, 0), long = h % 6 === 0;
-    return `<line x1="${(c + (R - (long ? 6 : 3)) * Math.cos(a)).toFixed(2)}" y1="${(c + (R - (long ? 6 : 3)) * Math.sin(a)).toFixed(2)}" x2="${(c + R * Math.cos(a)).toFixed(2)}" y2="${(c + R * Math.sin(a)).toFixed(2)}" class="${long ? 'cx-tick-l' : 'cx-tick'}"/>`; }).join('');
-  // Day (6–18 h) on the upper half, night below — like a two-tone GMT bezel
-  const day = `M${p(ang(6, 0), R + 8)} A${R + 8} ${R + 8} 0 0 1 ${p(ang(18, 0), R + 8)} L${p(ang(18, 0), R)} A${R} ${R} 0 0 0 ${p(ang(6, 0), R)}Z`;
-  const az = ang(z.h, z.m), al = ang(d.getHours(), d.getMinutes());
-  return `<svg class="cx-dial" viewBox="0 0 148 148" width="${size}" height="${size}" role="img" aria-label="${escHtml(t('Esfera de 24 horas'))}">
-    <circle cx="${c}" cy="${c}" r="${R + 8}" class="cx-g-night"/>
-    <path d="${day}" class="cx-g-day"/>
-    <circle cx="${c}" cy="${c}" r="${R}" class="cx-g-face"/>
-    ${ticks}${nums}
-    <line x1="${c}" y1="${c}" x2="${p(al, R - 20).replace(' ', '" y2="')}" class="cx-g-local"/>
-    <line x1="${c}" y1="${c}" x2="${p(az, R - 4).replace(' ', '" y2="')}" class="cx-g-gmt"/>
-    <polygon points="${p(az, R + 1)} ${p(az + 0.09, R - 9)} ${p(az - 0.09, R - 9)}" class="cx-hand"/>
-    <circle cx="${c}" cy="${c}" r="3.2" class="cx-hand"/>
-  </svg>`;
-}
-function renderGmt() {
-  const el = document.getElementById('cx-gmt');
-  if (!el) return;
-  clearInterval(_gmtTimer);
-  const zone = gmtZone();
-  const draw = () => {
-    if (!el.isConnected) { clearInterval(_gmtTimer); return; }
-    const now = Date.now(), z = zoneTime(zone, now), diff = zoneDiffMinutes(zone, now);
-    const city = cityById(zone);
-    const sign = diff > 0 ? '+' : diff < 0 ? '−' : '±';
-    const dh = Math.abs(diff) / 60;
-    const diffTxt = diff === 0 ? t('misma hora que aquí') : t('{s}{h} h respecto a aquí', { s: sign, h: Number.isInteger(dh) ? dh : dh.toLocaleString(locale(), { maximumFractionDigits: 2 }) });
-    const local = new Date(now);
-    const localKey = `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, '0')}-${String(local.getDate()).padStart(2, '0')}`;
-    const dayTxt = !z || z.dayKey === localKey ? '' : (z.dayKey > localKey ? t('mañana') : t('ayer'));
-    el.querySelector('#cx-gmt-dial').innerHTML = gmtDial(zone, now);
-    el.querySelector('#cx-gmt-time').textContent = z ? `${String(z.h).padStart(2, '0')}:${String(z.m).padStart(2, '0')}` : '--:--';
-    el.querySelector('#cx-gmt-sub').textContent = [t(city.name), dayTxt].filter(Boolean).join(' · ');
-    el.querySelector('#cx-gmt-diff').textContent = diffTxt;
-  };
-  el.innerHTML = `
-    <div class="cx-eyebrow" id="cx-gmt-t">${t('GMT · segundo huso')}</div>
-    <div class="cx-moon-main">
-      <div id="cx-gmt-dial"></div>
-      <div class="cx-moon-txt">
-        <div class="cx-gmt-time" id="cx-gmt-time"></div>
-        <div class="cx-sub" id="cx-gmt-sub"></div>
-        <div class="cx-sub" id="cx-gmt-diff"></div>
-      </div>
-    </div>
-    <label class="cx-label cx-gmt-label" for="cx-gmt-city">${t('Ciudad')}</label>
-    <select class="form-input form-select cx-select" id="cx-gmt-city">${GMT_CITIES.map(c => `<option value="${c.id}"${c.id === zone ? ' selected' : ''}>${escHtml(t(c.name))}</option>`).join('')}</select>
-    <div class="cx-foot">${t('Aguja dorada: la otra ciudad · aguja fina: aquí. Mitad clara, de día.')}</div>`;
-  el.querySelector('#cx-gmt-city').addEventListener('change', e => {
-    try { localStorage.setItem(GMT_KEY, e.target.value); } catch {}
-    renderGmt();
-  });
-  draw();
-  _gmtTimer = setInterval(() => {
-    if (!document.getElementById('view-complications')?.classList.contains('active')) { clearInterval(_gmtTimer); return; }
-    draw();
-  }, 15000);
 }
 
 /* ══ Moon phase ══ */

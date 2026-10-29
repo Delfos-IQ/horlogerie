@@ -22,5 +22,3 @@ export * from './data/care.js';
 export * from './data/moments.js';
 export * from './data/families.js';
 export * from './data/moon.js';
-export * from './data/reserve.js';
-export * from './data/zones.js';

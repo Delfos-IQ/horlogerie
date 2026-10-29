@@ -1699,33 +1699,3 @@ a.app-brand[href]:hover .app-title, a.rail-brand[href]:hover { color: var(--gold
 .cx-empty { font-size: 13px; color: var(--cx-mute); margin: 0; }
 @media (min-width: 760px) { .cx-body { display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
 .pro-teaser span.pro-mark { display: inline-block; flex: none; gap: 0; }
-/* v2.26 · Reserva de marcha y GMT */
-.cx-r-list { display: flex; flex-direction: column; }
-.cx-r-row { display: flex; gap: 12px; align-items: center; width: 100%; padding: 10px 0; background: none; border: 0; border-top: .5px solid var(--cx-line);
-  color: var(--cx-ink); text-align: left; cursor: pointer; font: inherit; }
-.cx-r-row:first-child { border-top: 0; padding-top: 0; }
-.cx-r-row:focus-visible { outline: 2px solid var(--cx-gold); outline-offset: 3px; }
-.cx-gauge { flex: 0 0 auto; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .35)); }
-.cx-g-track { fill: none; stroke: rgba(233, 221, 184, .16); stroke-width: 4; stroke-linecap: round; }
-.cx-g-fill { fill: none; stroke: var(--cx-gold); stroke-width: 4; stroke-linecap: round; }
-.cx-g-fill.low { stroke: #E0876A; }
-.cx-g-hand { stroke: #F6EFDD; stroke-width: 1.4; stroke-linecap: round; }
-.cx-r-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
-.cx-r-txt b { font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cx-r-main { font-family: var(--font-display); font-size: 18px; color: var(--cx-gold); }
-.cx-r-main.off { color: var(--cx-mute); }
-.cx-r-txt small { font-size: 12px; color: var(--cx-mute); line-height: 1.35; }
-.cx-r-date { margin-top: 4px; font-size: 12.5px; color: var(--cx-ink); display: flex; gap: 6px; align-items: center; }
-.cx-r-date i { color: var(--cx-gold); }
-.cx-r-date.warn, .cx-r-date.warn i { color: #E0876A; }
-.cx-r-warn { margin-top: 10px; padding: 10px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.45; color: #F3D9CF;
-  background: rgba(224, 135, 106, .12); border: .5px solid rgba(224, 135, 106, .4); }
-.cx-r-warn i { color: #E0876A; }
-.cx-g-night { fill: #0E1524; stroke: var(--cx-gold); stroke-width: 1.2; }
-.cx-g-day { fill: rgba(217, 184, 101, .78); }
-.cx-g-face { fill: #111A2E; }
-.cx-g-num { fill: #E9DDB8; font: 500 10px var(--font-body); text-anchor: middle; }
-.cx-g-local { stroke: #F6EFDD; stroke-width: 1.4; stroke-linecap: round; opacity: .8; }
-.cx-g-gmt { stroke: var(--cx-gold); stroke-width: 2.2; stroke-linecap: round; }
-.cx-gmt-time { font-family: var(--font-display); font-size: 44px; line-height: 1; color: #F6EFDD; font-variant-numeric: tabular-nums; }
-.cx-gmt-label { margin-top: 14px; }
