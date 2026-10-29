@@ -1,5 +1,5 @@
 /*!
- * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (83 iconos)
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (84 iconos)
  * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
  * No editar a mano: vuelve a ejecutar el script.
  */
@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("./icons/tabler-icons-ccb421b4.woff2") format("woff2");
+  src: url("./icons/tabler-icons-87b82333.woff2") format("woff2");
 }
 .ti {
   font-family: "tabler-icons" !important;
@@ -26,6 +26,7 @@
 .ti-arrow-up-circle:before { content: "\ea20"; }
 .ti-ban:before { content: "\ea2e"; }
 .ti-briefcase:before { content: "\ea46"; }
+.ti-calendar:before { content: "\ea53"; }
 .ti-calendar-month:before { content: "\fd2f"; }
 .ti-calendar-plus:before { content: "\ebba"; }
 .ti-calendar-stats:before { content: "\ee20"; }

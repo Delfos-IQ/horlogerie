@@ -73,13 +73,45 @@ async def main():
         check("con Pro, «Ver el historial» abre la precisión del reloj", await page.evaluate("document.getElementById('view-detail').classList.contains('active')") and 'Precisión' in await page.text_content("#d-care"))
         await page.evaluate("setProPromo(0)")
 
+        # ── Reserva de marcha (v2.26) ──
+        r = await page.evaluate("""() => [parseReserveHours('41 h'), parseReserveHours('42 horas'), parseReserveHours('3 días'), parseReserveHours('70h'),
+            parseReserveHours(''), parseReserveHours('5 bar')]""")
+        check("lee la reserva de la ficha (41 h, 42 horas, 3 días, 70h; sin número → nada)", r == [41, 42, 72, 70, None, None], r)
+        clicks = await page.evaluate("""() => [dateClicks(new Date(2026, 8, 30, 10).getTime(), new Date(2026, 9, 2, 12).getTime()),
+            dateClicks(new Date(2026, 9, 10, 10).getTime(), new Date(2026, 9, 12, 9).getTime()), dateClicks(Date.now(), Date.now())]""")
+        check("clics de fecha: del 30 de septiembre al 2 de octubre son 3 (pasa por el 31)", clicks == [3, 2, 0], clicks)
+        check("entre las 21:00 y las 3:00 avisa de no tocar la fecha",
+              await page.evaluate("dateDangerZone(new Date(2026, 9, 1, 22).getTime()) && dateDangerZone(new Date(2026, 9, 1, 2).getTime()) && !dateDangerZone(new Date(2026, 9, 1, 12).getTime())"))
+        st = await page.evaluate("""async () => { const H = 3600000, now = Date.now();
+            const a = await addWatch({ brand: 'Res', model: 'Marcha', type: 'automatic' }); await updateWatch(a.id, { specs: { reserva: '41 h' } });
+            getWatch(a.id).history = [{ start: now - 20 * H, end: now - 10 * H, timed: true }];
+            const b = await addWatch({ brand: 'Res', model: 'Parado', type: 'manual' });
+            getWatch(b.id).history = [{ start: now - 100 * H, end: now - 90 * H, timed: true }];
+            const q = await addWatch({ brand: 'Res', model: 'Cuarzo', type: 'quartz' });
+            const sa = reserveStatus(getWatch(a.id)), sb = reserveStatus(getWatch(b.id));
+            return [sa.state, Math.round(sa.remainingH), sa.estimated, sb.state, sb.estimated, sb.hours, reserveStatus(getWatch(q.id))]; }""")
+        check("un automático de 41 h quitado hace 10 h: le quedan 31 h; uno sin dato usa 40 h y lo dice; el cuarzo no aparece",
+              st == ['running', 31, False, 'stopped', True, 40, None], st)
+        await page.evaluate("showView('complications')"); await page.wait_for_timeout(300)
+        res = await page.text_content("#cx-res")
+        check("la sección muestra cuándo se para y los clics de fecha del parado", 'Le quedan ~31 h' in res and 'Parado' in res and 'reserva estimada: 40 h' in res and 'Res Cuarzo' not in res, res[:300])
+
+        # ── GMT (v2.26) ──
+        d = await page.evaluate("[zoneDiffMinutes('Asia/Tokyo', Date.parse('2026-07-01T12:00Z')) - zoneDiffMinutes('UTC', Date.parse('2026-07-01T12:00Z')), zoneTime('Asia/Tokyo', Date.parse('2026-07-01T20:30Z')).h]")
+        check("Tokio va 9 h por delante de UTC (y a las 20:30 UTC allí son las 5)", d == [540, 5], d)
+        await page.select_option("#cx-gmt-city", "America/New_York"); await page.wait_for_timeout(200)
+        g = await page.text_content("#cx-gmt")
+        check("GMT: eliges una ciudad y muestra su hora, la diferencia y la esfera de 24 h",
+              'Nueva York' in g and 'respecto a aquí' in g and await page.locator("#cx-gmt svg.cx-dial").count() == 1
+              and await page.evaluate("localStorage.getItem('rotor_gmt_zone')") == 'America/New_York', g[:200])
+
         # ── Inglés ──
         await page.evaluate("localStorage.setItem('rotor_prefs_v1', JSON.stringify({ lang: 'en', onboarded: true }))")
         await page.reload(); await page.wait_for_function("typeof renderHome === 'function'"); await page.wait_for_timeout(2200)
         await page.keyboard.press("Escape")
         await page.click("#nav-complications"); await page.wait_for_timeout(300)
         txt = await page.text_content("#complications-body")
-        check("en inglés", 'Moon phase' in txt and 'Next full moon' in txt and 'Accuracy' in txt and 'Workshop' in await page.text_content("#nav-complications"), txt[:150])
+        check("en inglés", 'Moon phase' in txt and 'Next full moon' in txt and 'Accuracy' in txt and 'Power reserve' in txt and 'New York' in txt and 'Workshop' in await page.text_content("#nav-complications"), txt[:150])
 
         check("sin errores de JavaScript", not errs, errs[:3])
         await b.close()

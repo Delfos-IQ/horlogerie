@@ -25,7 +25,7 @@ QUÉ PUEDES HACER
 • Según tu día: marca cada reloj con sus momentos (ocasión, ánimo, estación) y Rotor te propone el que encaja con tu día; también te recuerda el que más tiempo lleva en la caja. Puedes marcar favoritos o dejar alguno fuera de rotación.
 • Familias: buceo, cronógrafo, GMT, piloto, campo, vestir, deportivo o CUCO (cualquier uso, cualquier ocasión). Filtra la colección con un toque; Rotor propone la familia y tú decides.
 • «Sorpréndeme»: uno al azar cuando no sabes cuál ponerte.
-• Complicaciones: la fase lunar de hoy con los clics exactos para ajustar tu reloj, y mide su precisión con un toque cuando el segundero pasa por las 12.
+• Complicaciones: la fase lunar de hoy con los clics exactos para ajustar tu reloj; la reserva de marcha de cada automático que dejas en la caja (cuándo se para y cuántos clics avanzar la fecha); un segundo huso GMT; y mide su precisión con un toque cuando el segundero pasa por las 12.
 • Cada día, al abrir la app, un hecho de la historia de la relojería.
 • Ficha técnica de cada reloj: calibre, cristal, diámetro, grosor, resistencia al agua, reserva de marcha y más. Incluye una base de modelos de microbrands y homenajes para autocompletar.
 • Coste por uso: añade lo que pagaste y verás cuánto te sale cada día que lo llevas.
@@ -67,7 +67,7 @@ WHAT YOU CAN DO
 • To suit your day: tag each watch with its moments (occasion, mood, season) and Rotor suggests the one that fits your day; it also reminds you which has spent longest in the box. Mark favourites or take a watch out of rotation.
 • Families: diver, chronograph, GMT, pilot, field, dress, sport or GADA (go anywhere, do anything). Filter your collection with one tap; Rotor suggests the family and you decide.
 • “Surprise me”: a random pick when you can't decide.
-• Complications: today's moon phase with the exact clicks to set your watch, and measure its accuracy with one tap as the seconds hand passes 12.
+• Complications: today's moon phase with the exact clicks to set your watch; the power reserve of every automatic you leave in the box (when it stops and how many clicks to advance the date); a second GMT time zone; and measure its accuracy with one tap as the seconds hand passes 12.
 • Every day, when you open the app, a fact from watchmaking history.
 • Spec sheet for every watch: calibre, crystal, diameter, thickness, water resistance, power reserve and more. Fill it in from a shop or brand page: only what the page states is copied, nothing is guessed.
 • Cost per wear: enter what you paid and see what each day on the wrist costs you, in your currency.
@@ -109,7 +109,7 @@ O QUE PODES FAZER
 • Conforme o teu dia: marca cada relógio com os seus momentos (ocasião, estado de espírito, estação) e o Rotor propõe-te o que combina com o teu dia; também te lembra o que está há mais tempo na caixa. Podes marcar favoritos ou deixar algum fora da rotação.
 • Famílias: mergulho, cronógrafo, GMT, piloto, campo, formal, desportivo ou polivalente (para qualquer uso e ocasião). Filtra a coleção com um toque; o Rotor sugere a família e tu decides.
 • «Surpreende-me»: um ao acaso quando não sabes qual pôr.
-• Complicações: a fase da lua de hoje com os cliques exatos para acertar o teu relógio, e mede a sua precisão com um toque quando o ponteiro dos segundos passa pelas 12.
+• Complicações: a fase da lua de hoje com os cliques exatos para acertar o teu relógio; a reserva de marcha de cada automático que deixas na caixa (quando para e quantos cliques avançar a data); um segundo fuso GMT; e mede a sua precisão com um toque quando o ponteiro dos segundos passa pelas 12.
 • Todos os dias, ao abrir a app, um facto da história da relojoaria.
 • Ficha técnica de cada relógio: calibre, vidro, diâmetro, espessura, resistência à água, reserva de marcha e mais. Preenche-a a partir da página da loja ou da marca: só se copia o que a página indica, nada é inventado.
 • Custo por uso: indica quanto pagaste e vê quanto te custa cada dia em que o usas, na tua moeda.
