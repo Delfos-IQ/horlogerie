@@ -17,9 +17,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <title>Rotor</title>
-<script src="./js/theme-boot.js?v=2.24.2"></script>
-<link rel="stylesheet" href="./css/fonts.css?v=2.24.2">
-<link rel="stylesheet" href="./css/icons.css?v=2.24.2">
+<script src="./js/theme-boot.js?v=2.25.0"></script>
+<link rel="stylesheet" href="./css/fonts.css?v=2.25.0">
+<link rel="stylesheet" href="./css/icons.css?v=2.25.0">
 <style>
 /* CRITICAL CSS - inlined to survive SW cache issues */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -121,7 +121,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 .loading-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--mid);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 </style>
-<link rel="stylesheet" href="./css/app.css?v=2.24.2">
+<link rel="stylesheet" href="./css/app.css?v=2.25.0">
 </head>
 <body>
 <a href="#view-home" class="sr-only skip-link">Saltar al contenido principal</a>
@@ -155,6 +155,10 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
     <div class="nav-item" role="tab" aria-selected="false" aria-controls="view-wishlist" tabindex="0" data-action="showView" data-arg="wishlist" id="nav-wishlist">
       <i class="ti ti-heart" aria-hidden="true"></i>
       <span class="nav-label">Deseos</span>
+    </div>
+    <div class="nav-item" role="tab" aria-selected="false" aria-controls="view-complications" tabindex="0" data-action="showView" data-arg="complications" id="nav-complications">
+      <i class="ti ti-moon" aria-hidden="true"></i>
+      <span class="nav-label">Taller</span>
     </div>
     <div class="nav-item" role="tab" aria-selected="false" aria-controls="view-settings" tabindex="0" data-action="showView" data-arg="settings" id="nav-settings">
       <i class="ti ti-settings" aria-hidden="true"></i>
@@ -322,6 +326,21 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
     <div id="history-detail-view" style="display:none;">
       <div class="history-body" id="history-body"></div>
     </div>
+  </div>
+
+  <!-- ========== COMPLICATIONS VIEW ========== -->
+  <div class="view" id="view-complications" role="region" aria-label="Complicaciones">
+    <div class="app-header">
+      <div class="hdr-row">
+        <div class="hdr-spacer"></div>
+        <div>
+          <div class="app-title icon-20">Complicaciones</div>
+          <div class="app-subtitle">Fase lunar y precisión</div>
+        </div>
+        <div class="hdr-spacer"></div>
+      </div>
+    </div>
+    <div class="cx-body" id="complications-body"></div>
   </div>
 
   <!-- ========== WISHLIST VIEW ========== -->
@@ -802,7 +821,7 @@ body{background:var(--dark);color:var(--light);font-family:var(--font-body);}
 
 </div><!-- #app -->
 
-<script src="./js/spec-parser.js?v=2.24.2"></script>
-<script type="module" src="./js/main.js?v=2.24.2"></script>
+<script src="./js/spec-parser.js?v=2.25.0"></script>
+<script type="module" src="./js/main.js?v=2.25.0"></script>
 </body>
 </html>

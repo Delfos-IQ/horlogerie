@@ -8,7 +8,7 @@
  *  - On new SW detected: force reload so user always gets latest app
  */
 
-const CACHE   = 'horlogerie-v2.24.2';
+const CACHE   = 'horlogerie-v2.25.0';
 // '/horlogerie' on GitHub Pages, '/app' on the Rotor website: taken from where the SW lives
 const BASE    = new URL(self.registration.scope).pathname.replace(/\/$/, '');
 const API_HOST = 'horlogerie.pedicode-app.workers.dev';
@@ -24,10 +24,10 @@ const SHELL = [
   `${BASE}/help.html`,
   `${BASE}/privacidade.html`,
   `${BASE}/ajuda-pt.html`,
-  `${BASE}/css/app.css?v=2.24.2`,
-  `${BASE}/css/fonts.css?v=2.24.2`,
-  `${BASE}/css/icons.css?v=2.24.2`,
-  `${BASE}/css/icons/tabler-icons-e550d3ed.woff2`,
+  `${BASE}/css/app.css?v=2.25.0`,
+  `${BASE}/css/fonts.css?v=2.25.0`,
+  `${BASE}/css/icons.css?v=2.25.0`,
+  `${BASE}/css/icons/tabler-icons-ccb421b4.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-400-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-500-normal.woff2`,
   `${BASE}/css/fonts/bodoni-moda-latin-600-normal.woff2`,
@@ -49,6 +49,7 @@ const SHELL = [
   `${BASE}/js/data/care.js`,
   `${BASE}/js/data/moments.js`,
   `${BASE}/js/data/families.js`,
+  `${BASE}/js/data/moon.js`,
   `${BASE}/js/data/inspiration.js`,
   `${BASE}/js/modules/sheet.js`,
   `${BASE}/js/api.js`,
@@ -66,14 +67,15 @@ const SHELL = [
   `${BASE}/js/i18n.js`,
   `${BASE}/js/i18n/en.js`,
   `${BASE}/js/i18n/pt.js`,
-  `${BASE}/js/theme-boot.js?v=2.24.2`,
-  `${BASE}/js/spec-parser.js?v=2.24.2`,
-  `${BASE}/js/main.js?v=2.24.2`,
+  `${BASE}/js/theme-boot.js?v=2.25.0`,
+  `${BASE}/js/spec-parser.js?v=2.25.0`,
+  `${BASE}/js/main.js?v=2.25.0`,
   `${BASE}/js/ready.js`,
   `${BASE}/js/modules/url-import.js`,
   `${BASE}/js/modules/onboarding.js`,
   `${BASE}/js/modules/pro.js`,
   `${BASE}/js/modules/care.js`,
+  `${BASE}/js/modules/complications.js`,
   `${BASE}/js/modules/moved.js`,
   `${BASE}/js/browser-check.js`,
   `${BASE}/js/billing.js`,

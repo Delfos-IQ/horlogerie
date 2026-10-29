@@ -27,6 +27,7 @@ import * as onboarding from './modules/onboarding.js';
 import * as billing from './billing.js';
 import * as pro from './modules/pro.js';
 import * as care from './modules/care.js';
+import * as complications from './modules/complications.js';
 import * as reminders from './reminders.js';
 import * as moved from './modules/moved.js';
 import { fillBrowserLine, mountBrowserNotice } from './browser-check.js';
@@ -194,7 +195,7 @@ onLoad(() => {
 /* ── Console and test access ──
    window.rotor exposes the modules for debugging. On localhost (tests,
    development) every exported function is also global, as before. */
-const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db, i18n, onboarding, billing, pro, care, reminders };
+const modulesApi = { storage, sync, exporter, core, homeDetail, modals, history, settings, wishlist, session, updates, urlImport, db, i18n, onboarding, billing, pro, care, reminders, complications };
 window.rotor = modulesApi;
 if (['localhost', '127.0.0.1'].includes(location.hostname)) {
   for (const mod of Object.values(modulesApi)) {

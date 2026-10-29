@@ -18,6 +18,7 @@ import { openAddModal } from './modals.js';
 import { renderHistory } from './history.js';
 import { renderSettings } from './settings.js';
 import { openWishlistAdd, renderWishlist } from './wishlist.js';
+import { renderComplications } from './complications.js';
 
 /* ─── State ─── */
 /** UI state shared between modules (one object, so every module sees changes) */
@@ -98,6 +99,7 @@ window.addEventListener('popstate', e => {
   if (targetView === 'history')  renderHistory();
   if (targetView === 'settings') renderSettings();
   if (targetView === 'wishlist') renderWishlist();
+  if (targetView === 'complications') renderComplications();
   updateFab(targetView);
   syncBackWatcher();
   // When targetView is 'home' and the user gestures back again, there is
@@ -227,6 +229,7 @@ export function showView(v) {
   if (v === 'history')  renderHistory();
   if (v === 'settings') renderSettings();
   if (v === 'wishlist') renderWishlist();
+  if (v === 'complications') renderComplications();
   if (!sameView) document.getElementById('view-' + v).scrollTop = 0;
   updateFab(v);
 

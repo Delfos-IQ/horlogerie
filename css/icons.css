@@ -1,5 +1,5 @@
 /*!
- * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (80 iconos)
+ * Tabler Icons 3.47.0 — subconjunto generado por tools/build-icons.py (83 iconos)
  * License (MIT): https://github.com/tabler/tabler-icons/blob/main/LICENSE
  * No editar a mano: vuelve a ejecutar el script.
  */
@@ -8,7 +8,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("./icons/tabler-icons-e550d3ed.woff2") format("woff2");
+  src: url("./icons/tabler-icons-ccb421b4.woff2") format("woff2");
 }
 .ti {
   font-family: "tabler-icons" !important;
@@ -33,6 +33,7 @@
 .ti-camera:before { content: "\ea54"; }
 .ti-category:before { content: "\f1f6"; }
 .ti-chart-bar:before { content: "\ea59"; }
+.ti-chart-line:before { content: "\ea5c"; }
 .ti-check:before { content: "\ea5e"; }
 .ti-chevron-left:before { content: "\ea60"; }
 .ti-chevron-right:before { content: "\ea61"; }
@@ -75,6 +76,8 @@
 .ti-list-details:before { content: "\ef40"; }
 .ti-lock:before { content: "\eae2"; }
 .ti-mail:before { content: "\eae5"; }
+.ti-minus:before { content: "\eaf2"; }
+.ti-moon:before { content: "\eaf8"; }
 .ti-mountain:before { content: "\ef97"; }
 .ti-pencil:before { content: "\eb04"; }
 .ti-photo:before { content: "\eb0a"; }

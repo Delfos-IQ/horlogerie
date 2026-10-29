@@ -88,6 +88,9 @@ jobs:
       - name: Familias (propuesta, filtro de la colección y ficha)
         run: python tests/e2e_families.py
 
+      - name: Complicaciones (fase lunar y medición de precisión)
+        run: python tests/e2e_complications.py
+
       - name: Inglés, tema, moneda, bienvenida y ficha por secciones
         run: python tests/e2e_i18n.py
 
