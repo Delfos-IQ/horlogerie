@@ -19,3 +19,6 @@ node_modules/
 
 # Web de Rotor (se genera en Cloudflare)
 web/dist/
+
+# Publicaciones de Instagram (solo en local, no van al repositorio)
+instagram_ROTOR/
